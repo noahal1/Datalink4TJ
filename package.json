@@ -14,8 +14,9 @@
     "@schedule-x/theme-default": "^2.18.0",
     "@schedule-x/vue": "^2.16.0",
     "@vuepic/vue-datepicker": "^11.0.1",
-    "echarts": "^5.6.0",
-    "roboto-fontface": "*", 
+    "element-plus": "^2.9.4",
+    "plus": "^0.1.0",
+    "roboto-fontface": "*",
     "v-calendar": "^3.1.2",
     "vue": "^3.4.31",
     "vuetify": "^3.6.14"
