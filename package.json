@@ -15,6 +15,7 @@
     "@schedule-x/vue": "^2.16.0",
     "@vuepic/vue-datepicker": "^11.0.1",
     "element-plus": "^2.9.4",
+    "pinia-plugin-persistedstate": "^4.2.0",
     "plus": "^0.1.0",
     "roboto-fontface": "*",
     "v-calendar": "^3.1.2",

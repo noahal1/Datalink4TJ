@@ -5,7 +5,7 @@
     <el-table-column label="焊接GP12" prop="welding" width="90"></el-table-column>
     <el-table-column label="冲压GP12" prop="stamping" width="90"></el-table-column>
     <el-table-column label="跨部门早会GP12">
-      <template #default="{ row }">
+      <template #default="{ row }"> 
         <el-input v-model="row.meeting" @input="handleInput"></el-input>
       </template>
     </el-table-column>
@@ -54,7 +54,14 @@
         <el-input v-model="row.scrapW01" @input="handleInput"></el-input>
       </template>
     </el-table-column>
-  </el-table>
+    </el-table>
+    <el-button
+    v-if="isDataChanged"
+    class="floating-button"
+    type="primary"
+    @click="confirmChanges">
+    确认
+  </el-button>
 </template>
 
 <script setup>
@@ -78,8 +85,9 @@
   const tableData = ref(generateDaysInSelectedMonth(selectedMonth.value));
 
   const handleInput = () => {
-    console.log('数据已更新');
-  }
+  console.log('数据已更新')
+  isDataChanged.value = true
+}
 
   const handleMonthChange = (newMonth) => {
     tableData.value = generateDaysInSelectedMonth(newMonth);
@@ -109,4 +117,19 @@
     }
     return tableData;
   }
+  const isDataChanged = ref(false)
+  const confirmChanges = () => {
+  console.log('修改已确认')
+  isDataChanged.value = false
+}
+
 </script>
+
+<style scoped>
+.floating-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+</style>

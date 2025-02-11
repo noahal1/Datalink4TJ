@@ -37,7 +37,7 @@
 </template>
 
 <script setup>
-import { useUserStore } from './stores/user'
+import { useUserStore } from './stores/user.js'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -52,7 +52,6 @@ const logout = () => {
 </script>
 
 <style>
-/* 全局样式 */
 .app-logo {
   height: 40px;
   margin-right: 10px;

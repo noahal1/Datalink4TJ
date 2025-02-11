@@ -33,7 +33,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useUserStore } from '../stores/user'
+import { useUserStore } from '../stores/user' 
 import { useRouter } from 'vue-router'
 
 const username = ref('')
@@ -44,7 +44,7 @@ const router = useRouter()
 const login = () => {
   const user = {
     name: username.value,
-    department: username.value === 'qa' ? 'qa' : 'assy',
+    department: username.value === 'qa' ? 'qa' : 'assy', 
   }
   userStore.login(user)
   router.push('/')
