@@ -3,13 +3,17 @@ DataLink4TJ is a project that aims to provide a platform for data exchange and u
 version log: 
 2025-02-05：
 项目启动
+
 2025-02-07：
 上传Github，初始化项目
+
 2025-02-10：
 1.Quality模块改版，采用表格形式，增加修改确认功能
+
 2025-02-11：
 1.实现持久化状态存储
 2.修改Quality模块，增加分页功能
+
 2025-02-12：
 1.新增EHS模块，用于记录LWD数量
 2.新增Admin模块，用于管理用户和部门
