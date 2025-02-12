@@ -5,6 +5,7 @@ export const useUserStore = defineStore('user', {
     user: null, // 用户信息
     isLogin: false // 用户登录标志
   }),
+  persist: true,
   actions: {
     login(user) {
       this.user = user

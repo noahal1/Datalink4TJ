@@ -1,28 +1,38 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Dashboard from '../pages/Dashboard.vue'
+import { useUserStore } from '../stores/user'
+import Home from '../pages/Dashboard.vue'
 import Login from '../pages/Login.vue'
+import Dashboard from '../pages/Dashboard.vue'
 import Quality from '../pages/Quality.vue'
-import { useUserStore } from '../stores/user.js'
 import EHS from '../pages/EHS.vue'
+import Assy from '../pages/Assy.vue'
+import Admin from '../pages/Admin.vue'
+
 
 const routes = [
-  { path: '/', component: Dashboard },
+  { path: '/', component: Home },
   { path: '/login', component: Login },
-  { path: '/quality', component: Quality, meta: { requiresAuth: true } },
-  { path: '/ehs', component: EHS},
+  { path: '/dashboard', component: Dashboard },
+  { path: '/quality', component: Quality },
+  { path: '/ehs', component: EHS },
+  { path: '/assy', component: Assy },
+  { path: '/admin', component: Admin },
 ]
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
 })
 
 router.beforeEach((to, from, next) => {
-  const userStore = useUserStore() 
-  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+  const userStore = useUserStore()
+  const isLogin = userStore.isLogin
+  const userRole = userStore.user?.role
 
-  if (requiresAuth && !userStore.isLogin) { 
+  if (to.path !== '/login' && !isLogin) {
     next('/login')
+  } else if (userRole !== 'admin' && to.path === '/admin') {
+    next('/') 
   } else {
     next()
   }
