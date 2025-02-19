@@ -27,13 +27,11 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore()
   const isLogin = userStore.isLogin
-  const userRole = userStore.user?.role
 
   if (to.path !== '/login' && !isLogin) {
     next('/login')
-  } else if (userRole !== 'admin' && to.path === '/admin') {
-    next('/') 
-  } else {
+  } 
+  else {
     next()
   }
 })

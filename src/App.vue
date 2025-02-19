@@ -15,22 +15,22 @@
       <v-btn text to="/">
         <v-icon>mdi-home</v-icon>主页
       </v-btn>
-      <v-btn v-if="user && (user.department === 'assy' || user.role === 'admin')" text to="/assy">
+      <v-btn v-if="user && (user.department === 'ASSY' || user.department === 'ADMIN')" text to="/assy">
         <v-icon>mdi-hammer-wrench</v-icon>生产
       </v-btn>
-      <v-btn v-if="user && (user.department === 'qa' || user.role === 'admin')" text to="/quality">
+      <v-btn v-if="user && (user.department === 'QA' || user.department === 'ADMIN')" text to="/quality">
         <v-icon>mdi-checkbox-multiple-marked-circle-outline</v-icon>质量
       </v-btn>
-      <v-btn v-if="user && (user.department === 'mat' || user.role === 'admin')" text to="/maintenance">
+      <v-btn v-if="user && (user.department === 'MAT' || user.department === 'ADMIN')" text to="/maintenance">
         <v-icon>mdi-wrench</v-icon>维修
       </v-btn>
-      <v-btn v-if="user && (user.department === 'pcl' || user.role === 'admin')" text to="/pcl">
+      <v-btn v-if="user && (user.department === 'PCL' || user.department === 'ADMIN')" text to="/pcl">
         <v-icon>mdi-truck</v-icon>物流
       </v-btn>
-      <v-btn v-if="user && (user.department === 'ehs' || user.role === 'admin')" text to="/ehs">
+      <v-btn v-if="user && (user.department === 'EHS' || user.department === 'ADMIN')" text to="/ehs">
         <v-icon>mdi-security</v-icon>EHS
       </v-btn>
-      <v-btn v-if="user && user.role === 'admin'" text to="/admin">
+      <v-btn v-if="user && user.department === 'ADMIN'" text to="/admin">
         <v-icon>mdi-shield-account</v-icon>管理
       </v-btn>
       <v-btn v-if="user" text @click="logout">
