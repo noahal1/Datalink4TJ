@@ -30,6 +30,9 @@
       <v-btn v-if="user && (user.department === 'EHS' || user.department === 'ADMIN')" text to="/ehs">
         <v-icon>mdi-security</v-icon>EHS
       </v-btn>
+      <v-btn v-if="user && (user.department === 'GMO' || user.department === 'ADMIN')"text to="/gmo">
+        <v-icon>mdi-earth</v-icon>GMO
+      </v-btn>
       <v-btn v-if="user && user.department === 'ADMIN'" text to="/admin">
         <v-icon>mdi-shield-account</v-icon>管理
       </v-btn>

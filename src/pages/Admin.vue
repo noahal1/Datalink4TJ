@@ -58,7 +58,7 @@
           <el-input type="password" v-model="userForm.password"  placeholder="请输入密码"></el-input>
         </el-form-item>
         <el-form-item label="部门" prop="departmentId">
-          <el-select v-model="userForm.departmentId"  placeholder="请选择部门">
+          <el-select v-model="userForm.department_id"  placeholder="请选择部门">
             <el-option 
               v-for="department in departments"
               :key="department.id" 
@@ -108,8 +108,7 @@ const userDialogType = ref('');
 const userForm = ref({
   name: '',
   password: '',
-  departmentId: '',
-  id: ''
+  department_id: ''
 });
 const userFormRef = ref(null);
  
@@ -156,15 +155,14 @@ const showUserDialog = (type, row = {}) => {
     userForm.value  = {
       name: '',
       password: '',
-      departmentId: '',
-      id: ''
+      department_id: '',
     };
   } else if (type === 'edit') {
     userDialogTitle.value  = '编辑用户';
     userDialogType.value  = 'edit';
     userForm.value  = {
       name: row.name, 
-      departmentId: row.department?.id  || '',
+      department_id: row.department?.id  || '',
       id: row.id  
     };
   }
@@ -179,7 +177,7 @@ const saveUser = async () => {
  
     let response;
     if (userDialogType.value  === 'add') {
-      response = await fetch('/users', {
+      response = await fetch('http://127.0.0.1:8000/users/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -187,14 +185,14 @@ const saveUser = async () => {
         body: JSON.stringify(userForm.value) 
       });
     } else if (userDialogType.value  === 'edit') {
-      response = await fetch(`/users/${userForm.value.id}`,  {
+      response = await fetch(`http://127.0.0.1:8000/users/${userForm.value.id}`,  {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ 
           name: userForm.value.name, 
-          departmentId: userForm.value.departmentId  
+          departmentId: userForm.value.department_id  
         })
       });
     }
@@ -266,7 +264,7 @@ const saveDepartment = async () => {
  
     let response;
     if (departmentForm.value.id)  {
-      response = await fetch(`/departments/${departmentForm.value.id}`,  {
+      response = await fetch(`http://127.0.0.1:8000/departments/${departmentForm.value.id}`,  {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -274,7 +272,7 @@ const saveDepartment = async () => {
         body: JSON.stringify({  name: departmentForm.value.name  })
       });
     } else {
-      response = await fetch('/departments', {
+      response = await fetch('http://127.0.0.1:8000/departments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -332,7 +330,7 @@ const editUser = (row) => {
 // 删除用户 
 const deleteUser = async (row) => {
   try {
-    const response = await fetch(`/users/${row.id}`,  {
+    const response = await fetch(`http://127.0.0.1:8000/users/${row.id}`,  {
       method: 'DELETE'
     });
     if (!response.ok)  {
