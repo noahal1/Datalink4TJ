@@ -85,7 +85,7 @@
   
   const fetchEvents = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/events')
+      const response = await fetch('http://10.227.122.217:8000/events')
       if (response.ok) {
         const data = await response.json()
         events.value = data.map(event => ({
@@ -118,7 +118,7 @@
       if (valid) {
         try {
           const method = eventForm.value.id ? 'PUT' : 'POST'
-          const url = eventForm.value.id ? `http://127.0.0.1:8000/events/${eventForm.value.id}` : 'http://127.0.0.1:8000/events'
+          const url = eventForm.value.id ? `http://10.227.122.217:8000/events/${eventForm.value.id}` : 'http://10.227.122.217:8000/events'
           const payload = {
             name: eventForm.value.name,
             department: eventForm.value.department,
@@ -152,7 +152,7 @@
   
   const deleteEvent = async (id) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/events/${id}`, {
+      const response = await fetch(`http://10.227.122.217:8000/events/${id}`, {
         method: 'DELETE'
       })
       if (response.ok) {

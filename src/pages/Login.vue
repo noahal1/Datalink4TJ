@@ -90,7 +90,7 @@ const login = async () => {
       password: password.value
     });
 
-    const response = await fetch('http://127.0.0.1:8000/users/token', {
+    const response = await fetch('http://10.227.122.217:8000/users/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
