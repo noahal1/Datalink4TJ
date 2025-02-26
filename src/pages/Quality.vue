@@ -71,6 +71,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 const currentMonth = new Date().getMonth() + 1; // 获取当前月份
 const selectedMonth = ref(currentMonth);   // 设置默认选择为当前月份
 const monthOptions = [
@@ -111,7 +112,7 @@ const handleMonthChange = async (newMonth) => {
 
 const fetchData = async (month) => {
   try {
-    const response = await fetch(`http://127.0.0.1:8000/qa/?month=${month}`);
+    const response = await fetch(`${API_BASE_URL}/qa/?month=${month}`);
     if (response.ok) {
       const fetchedData = await response.json();
       const daysInMonth = new Date(new Date().getFullYear(), month, 0).getDate();
@@ -162,7 +163,7 @@ const confirmChanges = async () => {
       if (row[line] !== originalRow[line]) {
         if (row[line] !== 0) {
           entries.push({
-            line: line.toUpperCase(),
+            line: line.toUpperCase(), 
             day: row.date,
             month: selectedMonth.value.toString(),
             year: new Date().getFullYear().toString(),
@@ -206,7 +207,7 @@ const confirmChanges = async () => {
   });
 
   try {
-    const response = await fetch('http://127.0.0.1:8000/qa/', {
+    const response = await fetch(`${API_BASE_URL}/qa/`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'

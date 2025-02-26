@@ -63,6 +63,8 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { de } from 'date-fns/locale'
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
 const username = ref('')
 const password = ref('')
 const rememberPassword = ref(false)
@@ -71,7 +73,6 @@ const loading = ref(false)
 const userStore = useUserStore()
 const router = useRouter()
 
-// 初始化 - 从 localStorage 中读取记住的密码 
 const savedUserInfo = localStorage.getItem('userInfo') 
 if (savedUserInfo) {
   const userInfo = JSON.parse(savedUserInfo) 
@@ -90,7 +91,7 @@ const login = async () => {
       password: password.value
     });
 
-    const response = await fetch('http://10.227.122.217:8000/users/token', {
+    const response = await fetch(`${API_BASE_URL}/users/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -105,7 +106,6 @@ const login = async () => {
 
     const data = await response.json()
 
-    // 记住密码功能 
     if (rememberPassword.value) {
       localStorage.setItem('userInfo', JSON.stringify({ 
         username: username.value, 
@@ -121,7 +121,6 @@ const login = async () => {
     }
     userStore.login(user) 
 
-    // 跳转到主页 
     router.push('/') 
     ElMessage({
       type: 'success',
@@ -132,9 +131,7 @@ const login = async () => {
       type: 'error',
       message: error.message || '登录失败，请重试'
     })
-  } finally {
-    loading.value = false 
-  }
+  } finally {loading.value = false }
 }
 </script>
 

@@ -76,7 +76,6 @@
       </template>
     </el-dialog>
  
-    <!-- 部门对话框 -->
     <el-dialog :title="departmentDialogTitle" v-model="isShowDepartmentDialog">
       <el-form :model="departmentForm" ref="departmentFormRef" label-width="80px">
         <el-form-item label="部门名称" prop="name">
@@ -97,7 +96,7 @@
 import { ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
  
-// 数据初始化 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const users = ref([]);
 const departments = ref([]);
  
@@ -124,7 +123,7 @@ const departmentFormRef = ref(null);
 // 获取用户列表 
 const fetchUsers = async () => {
   try {
-    const response = await fetch('http://127.0.0.1:8000/users');
+    const response = await fetch(`${API_BASE_URL}/users`);
     if (!response.ok)  {
       throw new Error('获取用户列表失败');
     }
@@ -137,7 +136,7 @@ const fetchUsers = async () => {
 // 获取部门列表 
 const fetchDepartments = async () => {
   try {
-    const response = await fetch('http://127.0.0.1:8000/departments');
+    const response = await fetch(`${API_BASE_URL}/departments`);
     if (!response.ok)  {
       throw new Error('获取部门列表失败');
     }
@@ -177,7 +176,7 @@ const saveUser = async () => {
  
     let response;
     if (userDialogType.value  === 'add') {
-      response = await fetch('http://127.0.0.1:8000/users/create', {
+      response = await fetch(`${API_BASE_URL}/users/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -185,7 +184,7 @@ const saveUser = async () => {
         body: JSON.stringify(userForm.value) 
       });
     } else if (userDialogType.value  === 'edit') {
-      response = await fetch(`http://127.0.0.1:8000/users/${userForm.value.id}`,  {
+      response = await fetch(`${API_BASE_URL}/users/${userForm.value.id}`,  {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -264,7 +263,7 @@ const saveDepartment = async () => {
  
     let response;
     if (departmentForm.value.id)  {
-      response = await fetch(`http://127.0.0.1:8000/departments/${departmentForm.value.id}`,  {
+      response = await fetch(`${API_BASE_URL}/departments/${departmentForm.value.id}`,  {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -272,7 +271,7 @@ const saveDepartment = async () => {
         body: JSON.stringify({  name: departmentForm.value.name  })
       });
     } else {
-      response = await fetch('http://127.0.0.1:8000/departments', {
+      response = await fetch(`${API_BASE_URL}/departments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -330,7 +329,7 @@ const editUser = (row) => {
 // 删除用户 
 const deleteUser = async (row) => {
   try {
-    const response = await fetch(`http://127.0.0.1:8000/users/${row.id}`,  {
+    const response = await fetch(`${API_BASE_URL}/users/${row.id}`,  {
       method: 'DELETE'
     });
     if (!response.ok)  {
@@ -361,7 +360,7 @@ const editDepartment = (row) => {
 // 删除部门 
 const deleteDepartment = async (row) => {
   try {
-    const response = await fetch(`/departments/${row.id}`,  {
+    const response = await fetch(`${API_BASE_URL}/departments/${row.id}`,  {
       method: 'DELETE'
     });
     if (!response.ok)  {
