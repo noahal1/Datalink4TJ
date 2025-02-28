@@ -7,6 +7,7 @@ import Quality from '../pages/Quality.vue'
 import EHS from '../pages/EHS.vue'
 import Assy from '../pages/Assy.vue'
 import Gmo from '../pages/Gmo.vue'
+import Events from '../pages/Events.vue'
 import Admin from '../pages/Admin.vue'
 import Pcl from '../pages/Pcl.vue'
 import Maintenance from '../pages/Maintenance.vue'
@@ -55,6 +56,11 @@ const routes = [
     path: '/maintenance', 
     component: Maintenance,
     meta: { title: '维修' } 
+  },
+  { 
+    path: '/events', 
+    component: Events,
+    meta: { title: '重要事件' } 
   },
   { 
     path: '/admin', 

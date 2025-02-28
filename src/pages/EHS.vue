@@ -47,6 +47,7 @@
 import { ref, onMounted } from 'vue'
 import { format, startOfWeek, endOfWeek, getISOWeek } from 'date-fns'
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 const generateWeeks = () => {
   const weeks = []
   const currentYear = new Date().getFullYear()
@@ -104,7 +105,7 @@ const confirmChanges = async () => {
   })
 
   try {
-    const response = await fetch('http://127.0.0.1:8000/ehs/', {
+    const response = await fetch(`${API_BASE_URL}/ehs/`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'
@@ -125,7 +126,7 @@ const confirmChanges = async () => {
 
 const fetchLWDData = async () => {
   try {
-    const response = await fetch('http://127.0.0.1:8000/ehs')
+    const response = await fetch(`${API_BASE_URL}/ehs/`)
     if (response.ok) {
       const fetchedData = await response.json()
       fetchedData.forEach(item => {

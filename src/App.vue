@@ -33,6 +33,9 @@
       <v-btn v-if="user && (user.department === 'GMO' || user.department === 'ADMIN')"text to="/gmo">
         <v-icon>mdi-earth</v-icon>GMO
       </v-btn>
+      <v-btn text to="/events">
+        <v-icon>mdi-calendar-text</v-icon>重要事件
+      </v-btn>
       <v-btn v-if="user && user.department === 'ADMIN'" text to="/admin">
         <v-icon>mdi-shield-account</v-icon>管理
       </v-btn>
