@@ -1,9 +1,9 @@
 <template>
-    <div>
-      <h1>Department Data</h1>
-      <p>这里是部门数据的浏览和修改页面。</p>
-    </div>
-  </template>
+  <v-card text="维修数据">
+    <v-text-field label="MTTR" v-model="mttr" variant="solo"/>
+    <v-text-field label="MTBF" v-model="mtbf" variant="solo"/>
+  </v-card>
+</template>
   
   <script setup>
   </script>

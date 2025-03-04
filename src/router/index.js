@@ -1,8 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '../stores/user'
-import Home from '../pages/Dashboard.vue'
 import Login from '../pages/Login.vue'
-import Dashboard from '../pages/Dashboard.vue'
 import Quality from '../pages/Quality.vue'
 import EHS from '../pages/EHS.vue'
 import Assy from '../pages/Assy.vue'
@@ -11,21 +9,13 @@ import Events from '../pages/Events.vue'
 import Admin from '../pages/Admin.vue'
 import Pcl from '../pages/Pcl.vue'
 import Maintenance from '../pages/Maintenance.vue'
+import Qa_others from '../pages/Qa_others.vue'
 
 const routes = [
-  { 
-    path: '/', 
-    component: Home,
-    meta: { title: '首页' } 
-  },
   { 
     path: '/login', 
     component: Login,
     meta: { title: '登录' }
-  },
-  { 
-    path: '/dashboard', 
-    component: Dashboard,
   },
   { 
     path: '/quality', 
@@ -67,6 +57,11 @@ const routes = [
     component: Admin,
     meta: { title: '管理' } 
   },
+  {
+    path: '/qa_others',
+    component: Qa_others,
+    meta: { title: '质量管理' }
+  }
 ]
 
 const router = createRouter({

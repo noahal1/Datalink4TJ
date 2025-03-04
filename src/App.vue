@@ -12,14 +12,14 @@
         </v-row>
       </v-container>
       <v-spacer></v-spacer>
-      <v-btn text to="/">
-        <v-icon>mdi-home</v-icon>主页
-      </v-btn>
       <v-btn v-if="user && (user.department === 'ASSY' || user.department === 'ADMIN')" text to="/assy">
         <v-icon>mdi-hammer-wrench</v-icon>生产
       </v-btn>
       <v-btn v-if="user && (user.department === 'QA' || user.department === 'ADMIN')" text to="/quality">
-        <v-icon>mdi-checkbox-multiple-marked-circle-outline</v-icon>质量
+        <v-icon>mdi-checkbox-multiple-marked-circle-outline</v-icon>GP12
+      </v-btn>
+      <v-btn v-if="user && (user.department === 'QA' || user.department === 'ADMIN')" text to="/qa_others">
+        <v-icon>mdi-account-group-outline</v-icon>质量杂项
       </v-btn>
       <v-btn v-if="user && (user.department === 'MAT' || user.department === 'ADMIN')" text to="/maintenance">
         <v-icon>mdi-wrench</v-icon>维修
