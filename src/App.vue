@@ -7,7 +7,6 @@
             <img src="@/assets/logo.png" alt="Logo" class="app-logo">
           </v-col>
           <v-col cols="auto">
-            <v-toolbar-title>数据上报系统</v-toolbar-title>
           </v-col>
         </v-row>
       </v-container>
