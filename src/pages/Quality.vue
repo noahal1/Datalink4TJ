@@ -1,79 +1,89 @@
 <template>
-  <el-segmented 
-    v-model="selectedMonth" 
-    :options="monthOptions" 
-    size="large" 
-    block 
-    @change="handleMonthChange" 
-    class="highlight-selected"
-  />
-  <el-table :data="paginatedData" style="width: 100%;" border stripe>
-    <el-table-column prop="date" label="日期" width="80" align="center"></el-table-column>
-    <el-table-column label="焊接QA" prop="welding" width="100" align="center"></el-table-column>
-    <el-table-column label="冲压QA" prop="stamping" width="100" align="center"></el-table-column>
-    <el-table-column label="QA-SWI">
-      <template #default="{ row }">
-        <el-input v-model="row.swi" @input="handleInput(row, 'swi')"></el-input>
+  <v-container class="quality-container">
+    <v-btn-toggle
+      v-model="selectedMonth"
+      mandatory
+      
+      
+      color="grey"
+      @update:modelValue="handleMonthChange"
+      class="month-selector"
+    >
+      <v-btn
+        v-for="month in monthOptions"
+        :key="month.value"
+        :value="month.value"
+        variant="flat"
+        size="large"
+      >
+        {{ month.label }}
+      </v-btn>
+    </v-btn-toggle>
+
+    <v-data-table
+      :headers="headers"
+      :items="paginatedData"
+      :items-per-page="pageSize"
+      hide-default-footer
+      class="quality-table elevation-2 mt-4"
+      density="compact"
+      width="100%"
+    >
+    <template v-slot:item="{ item }">
+        <tr>
+          <td class="text-center" style="min-width: 60px">{{ item.date }}</td>
+          <td class="text-center" style="min-width: 80px">{{ item.welding }}</td>
+          <td class="text-center" style="min-width: 80px">{{ item.stamping }}</td>
+          <!-- 正常品字段 -->
+          <td v-for="field in standardFields" :key="field" style="min-width: 90px">
+            <v-text-field
+              v-model="item[field]"
+              variant="outlined"
+              density="compact"
+              type="number"
+              @input="handleInput(item, field)"
+            />
+          </td>
+          <!-- 报废品字段 -->
+          <td v-for="field in scrapFields" :key="field" style="min-width: 90px">
+            <v-text-field
+              v-model="item[field]"
+              variant="outlined"
+              density="compact"
+              type="number"
+              @input="handleInput(item, field)"
+              class="scrap-field"
+            />
+          </td>
+        </tr>
       </template>
-    </el-table-column>
-    <el-table-column label="QA-RWH">
-      <template #default="{ row }">
-        <el-input v-model="row.rwh" @input="handleInput(row, 'rwh')"></el-input>
-      </template>
-    </el-table-column>
-    <el-table-column label="QA-W01">
-      <template #default="{ row }">
-        <el-input v-model="row.w01" @input="handleInput(row, 'w01')"></el-input>
-      </template>
-    </el-table-column>
-    <el-table-column label="QA-HF">
-      <template #default="{ row }">
-        <el-input v-model="row.hf" @input="handleInput(row, 'hf')"></el-input>
-      </template>
-    </el-table-column>
-    <el-table-column label="QA-LC">
-      <template #default="{ row }">
-        <el-input v-model="row.lc" @input="handleInput(row, 'lc')"></el-input>
-      </template>
-    </el-table-column>
-    <el-table-column label="报废-SWI">
-      <template #default="{ row }">
-        <el-input v-model="row.scrapswi" @input="handleInput(row, 'scrapswi')"></el-input>
-      </template>
-    </el-table-column>
-    <el-table-column label="报废-RWH">
-      <template #default="{ row }">
-        <el-input v-model="row.scraprwh" @input="handleInput(row, 'scraprwh')"></el-input>
-      </template>
-    </el-table-column>
-    <el-table-column label="报废-W01">
-      <template #default="{ row }">
-        <el-input v-model="row.scrapw01" @input="handleInput(row, 'scrapw01')"></el-input>
-      </template>
-    </el-table-column>
-  </el-table>
-  <el-pagination
-    background
-    layout="prev, pager, next"
-    :total="tableData.length"
-    :page-size="pageSize"
-    @current-change="handlePageChange"
-  />
-  <el-button
-    v-if="isDataChanged"
-    class="floating-button"
-    type="primary"
-    @click="confirmChanges">
-    修改确认
-  </el-button>
+    </v-data-table>
+
+    <v-pagination
+      v-model="currentPage"
+      :length="Math.ceil(tableData.length / pageSize)"
+      rounded="circle"
+      class="mt-4"
+    />
+
+    <v-btn
+      v-if="isDataChanged"
+      class="floating-button"
+      color="primary"
+      @click="confirmChanges"
+      fab
+      dark
+    >
+    <v-icon dark>mdi-content-save</v-icon>
+    </v-btn>
+  </v-container>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
-const currentMonth = new Date().getMonth() + 1; // 获取当前月份
-const selectedMonth = ref(currentMonth);   // 设置默认选择为当前月份
+const currentMonth = ref((new Date().getMonth() + 1).toString())
 const monthOptions = [
   { label: '一月', value: '1' },
   { label: '二月', value: '2' },
@@ -92,6 +102,28 @@ const tableData = ref([]);
 const pageSize = 16;
 const currentPage = ref(1);
 const originalData = ref([]);
+const editableFields = ['swi', 'rwh', 'w01', 'hf', 'lc'];
+const standardFields = ['swi', 'rwh', 'w01', 'hf', 'lc']
+const scrapFields = ['scrapswi', 'scraprwh', 'scrapw01']
+
+const headers = [
+  { title: '日期', key: 'date', align: 'center', width: '100' },
+  { title: '焊接', key: 'welding', align: 'center', width: '120' },
+  { title: '冲压', key: 'stamping', align: 'center', width: '120' },
+  ...standardFields.map(key => ({ 
+    title: key.toUpperCase(), 
+    key, 
+    align: 'center',
+    width: '130'
+  })),
+  ...scrapFields.map(key => ({ 
+    title: `报废 ${key.replace('scrap','').toUpperCase()}`, 
+    key, 
+    align: 'center',
+    width: '150'
+  }))
+]
+const selectedMonth = currentMonth;
 
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * pageSize;
@@ -100,10 +132,18 @@ const paginatedData = computed(() => {
 });
 
 const handleInput = (row, field) => {
-  row[field] = parseInt(row[field]) || 0;
+  try {
+    row[field] = parseInt(row[field]) || 0;
+    updateQAFields(row);
+    isDataChanged.value = true;
+  } catch (error) {
+    console.error('输入处理错误:', error);
+  }
+}
+
+const updateQAFields = (row) => {
   row.welding = row.swi + row.rwh + row.w01;
   row.stamping = row.hf + row.lc;
-  isDataChanged.value = true;
 }
 
 const handleMonthChange = async (newMonth) => {
@@ -134,24 +174,18 @@ const fetchData = async (month) => {
         const day = generatedData.find(d => d.date === item.day);
         if (day) {
           const line = item.line.toLowerCase();
-          if (item.scrapflag) {
-            day[`scrap${line}`] = parseInt(item.value, 10);
-          } else {
-            day[line] = parseInt(item.value, 10);
-          }
-          day.welding = day.swi + day.rwh + day.w01;
-          day.stamping = day.hf + day.lc;
+          day[item.scrapflag ? `scrap${line}` : line] = parseInt(item.value, 10);
+          updateQAFields(day);
         }
       });
 
       tableData.value = generatedData;
-      originalData.value = JSON.parse(JSON.stringify(generatedData)); // 深拷贝数据
-
+      originalData.value = JSON.parse(JSON.stringify(generatedData));
     } else {
-      console.error('Failed to fetch data');
+      console.error('获取数据失败');
     }
   } catch (error) {
-    console.error('Error:', error);
+    console.error('错误:', error);
   }
 }
 
@@ -159,50 +193,8 @@ const confirmChanges = async () => {
   const changedData = tableData.value.flatMap((row, index) => {
     const originalRow = originalData.value[index];
     const entries = [];
-    ['swi', 'rwh', 'w01', 'hf', 'lc'].forEach(line => {
-      if (row[line] !== originalRow[line]) {
-        if (row[line] !== 0) {
-          entries.push({
-            line: line.toUpperCase(), 
-            day: row.date,
-            month: selectedMonth.value.toString(),
-            year: new Date().getFullYear().toString(),
-            value: row[line].toString(),
-            scrapflag: false
-          });
-        } else if (originalRow[line] !== 0) {
-          entries.push({
-            line: line.toUpperCase(),
-            day: row.date,
-            month: selectedMonth.value.toString(),
-            year: new Date().getFullYear().toString(),
-            value: '0',
-            scrapflag: false
-          });
-        }
-      }
-      if (row[`scrap${line}`] !== originalRow[`scrap${line}`]) {
-        if (row[`scrap${line}`] !== 0) {
-          entries.push({
-            line: line.toUpperCase(),
-            day: row.date,
-            month: selectedMonth.value.toString(),
-            year: new Date().getFullYear().toString(),
-            value: row[`scrap${line}`].toString(),
-            scrapflag: true
-          });
-        } else if (originalRow[`scrap${line}`] !== 0) {
-          entries.push({
-            line: line.toUpperCase(),
-            day: row.date,
-            month: selectedMonth.value.toString(),
-            year: new Date().getFullYear().toString(),
-            value: '0',
-            scrapflag: true
-          });
-        }
-      }
-    });
+    checkFieldChanges(row, originalRow, entries, editableFields, false);
+    checkFieldChanges(row, originalRow, entries, scrapFields, true);
     return entries;
   });
 
@@ -217,17 +209,30 @@ const confirmChanges = async () => {
     if (response.ok) {
       console.log('修改确认');
       isDataChanged.value = false;
-      await fetchData(selectedMonth.value); // 确认后刷新数据
+      await fetchData(selectedMonth.value);
     } else {
-      console.error('Failed to confirm changes');
+      console.error('确认修改失败');
     }
   } catch (error) {
-    console.error('Error:', error);
+    console.error('错误:', error);
   }
 }
 
-const handlePageChange = (page) => {
-  currentPage.value = page;
+const checkFieldChanges = (row, originalRow, entries, fields, scrapflag) => {
+  fields.forEach(field => {
+    if (row[field] !== originalRow[field]) {
+      if (row[field] !== 0 || originalRow[field] !== 0) {
+        entries.push({
+          line: field.toUpperCase(),
+          day: row.date,
+          month: selectedMonth.value.toString(),
+          year: new Date().getFullYear().toString(),
+          value: row[field].toString(),
+          scrapflag: scrapflag
+        });
+      }
+    }
+  });
 }
 
 const isDataChanged = ref(false)
@@ -238,28 +243,30 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+
+.quality-container {
+  max-width: 98vw;
+  overflow-x: auto;
+}
 .floating-button {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  bottom: 28px;
+  right: 28px;
   z-index: 1000;
-  transition: background-color 0.3s;
+  transition: transform 0.4s;
 }
 
 .floating-button:hover {
-  background-color: #409eff;
+  transform: scale(1.5);
 }
 
-.el-table {
-  margin-top: 10px;
+.quality-table :deep(table) {
+  min-width: 1200px;
 }
 
-.el-input {
-  width: 100%;
-}
-
-.highlight-selected .el-segmented-item.is-active {
-  background-color: #8a8a8a; 
-  color: #fff; 
+.month-selector {
+  gap: 12px;
+  padding: 2px;
+  background: rgba(var(--v-theme-grey), 0.1);
 }
 </style>

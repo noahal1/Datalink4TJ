@@ -1,53 +1,102 @@
 <template>
-  <v-card>
-    <el-row>
-      <el-col :span="24" class="header">
-        <el-button type="primary" @click="openDialog">添加事件</el-button>
-      </el-col>
-      <el-col :span="24">
-        <el-table :data="events" style="width: 100%" size="large" border stripe>
-          <el-table-column prop="name" label="事件名称" width="600"></el-table-column>
-          <el-table-column prop="department" label="部门" width="200"></el-table-column>
-          <el-table-column prop="start_time" label="开始时间" width="300">
-            <template #default="{ row }">
-              {{ formatDate(row.start_time) }}
-            </template>
-          </el-table-column>
-          <el-table-column prop="end_time" label="结束时间" width="300">
-            <template #default="{ row }">
-              {{ formatDate(row.end_time) }}
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" width="150">
-            <template #default="{ row }">
-              <el-button type="primary" size="small" @click="openDialog(row)">编辑</el-button>
-              <el-button type="danger" size="small" @click="deleteEvent(row.id)">删除</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-      </el-col>
+  <v-card class="mx-4 my-4">
+    <v-container fluid>
+      <v-row class="mb-4" justify="end">
+        <v-col cols="auto">
+          <v-btn color="primary" @click="openDialog" prepend-icon="mdi-plus">添加事件</v-btn>
+        </v-col>
+      </v-row>
+      
+      <v-data-table
+        :items="events"
+        :headers="tableHeaders"
+        class="elevation-1"
+        density="compact"
+        hover
+      >
+        <template #item.start_time="{ item }">
+          {{ formatDate(item.start_time) }}
+        </template>
+        
+        <template #item.end_time="{ item }">
+          {{ formatDate(item.end_time) }}
+        </template>
+        
+        <template #item.actions="{ item }">
+          <v-btn
+            size="small"
+            color="primary"
+            variant="text"
+            icon="mdi-pencil"
+            @click="openDialog(item)"
+          />
+          <v-btn
+            size="small"
+            color="error"
+            variant="text"
+            icon="mdi-delete"
+            @click="deleteEvent(item.id)"
+          />
+        </template>
+      </v-data-table>
 
-      <el-dialog :title="dialogTitle" v-model="showDialog" width="50%">
-        <el-form :model="eventForm" label-position="top" :rules="rules" ref="eventFormRef">
-          <el-form-item label="事件名称" prop="name">
-            <el-input v-model="eventForm.name"></el-input>
-          </el-form-item>
-          <el-form-item label="部门" prop="department">
-            <el-input v-model="eventForm.department"></el-input>
-          </el-form-item>
-          <el-form-item label="开始时间" prop="start_time">
-            <el-date-picker v-model="eventForm.start_time" type="date" placeholder="选择开始时间" value-format="YYYY-MM-DD"></el-date-picker>
-          </el-form-item>
-          <el-form-item label="结束时间" prop="end_time">
-            <el-date-picker v-model="eventForm.end_time" type="date" placeholder="选择结束时间" value-format="YYYY-MM-DD"></el-date-picker>
-          </el-form-item>
-        </el-form>
-        <span slot="footer" class="dialog-footer">
-          <el-button @click="showDialog = false">取消</el-button>
-          <el-button type="primary" @click="submitEvent">确认</el-button>
-        </span>
-      </el-dialog>
-    </el-row>
+      <v-dialog v-model="showDialog" max-width="600">
+        <v-card>
+          <v-card-title class="d-flex justify-space-between align-center px-6 pt-4">
+            <span class="text-h5">{{ dialogTitle }}</span>
+          </v-card-title>
+          
+          <v-card-text>
+            <v-form ref="eventFormRef" @submit.prevent="submitEvent">
+              <v-container>
+                <v-row>
+                  <v-col cols="12">
+                    <v-text-field
+                        v-model="eventForm.name"
+                        label="事件名称"
+                        :rules="[v => !!v || '必填字段']"
+                        required
+                        variant="outlined"/>
+                  </v-col>
+                  <v-col cols="12">
+                    <v-text-field
+                      v-model="eventForm.department"
+                      label="部门"  
+                      :rules="[v => !!v || '必填字段']"
+                      required
+                      variant="outlined"
+                    />
+                  </v-col>
+                  
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model="eventForm.start_time"
+                      label="开始时间"
+                      type="date"
+                      variant="outlined"
+                      :max="eventForm.end_time"/>
+                  </v-col>
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model="eventForm.end_time"
+                      label="结束时间"
+                      type="date"
+                      variant="outlined"
+                      :min="eventForm.start_time"/>
+                  </v-col>
+                </v-row>
+              </v-container>
+            </v-form>
+          </v-card-text>
+
+          <v-card-actions class="px-6 pb-4">
+            <v-spacer />
+            <v-btn variant="tonal" @click="showDialog = false">取消</v-btn>
+            <v-btn color="primary" variant="flat" @click="submitEvent">确认</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+    </v-container>
   </v-card>
 </template>
 
@@ -70,29 +119,13 @@ const eventForm = ref({
 })
 const events = ref([])
 
-const rules = {
-  name: [
-    { required: true, message: '请输入事件名称', trigger: 'blur' }
-  ],
-  department: [
-    { required: true, message: '请输入部门', trigger: 'blur' }
-  ],
-  start_time: [
-    { required: true, message: '请选择开始时间', trigger: 'change' }
-  ],
-  end_time: [
-    {
-      validator: (rule, value, callback) => {
-        if (eventForm.value.start_time && value && parseISO(value) < parseISO(eventForm.value.start_time)) {
-          callback(new Error('结束时间不能早于开始时间'))
-        } else {
-          callback()
-        }
-      },
-      trigger: 'change'
-    }
-  ]
-}
+const tableHeaders = [
+  { title: '事件名称', key: 'name', width: 600 },
+  { title: '部门', key: 'department', width: 200 },
+  { title: '开始时间', key: 'start_time', width: 300 },
+  { title: '结束时间', key: 'end_time', width: 300 },
+  { title: '操作', key: 'actions', width: 150, align: 'center' }
+];
 
 const fetchEvents = async () => {
   try {
@@ -124,39 +157,38 @@ const openDialog = (event = null) => {
 }
 
 const submitEvent = async () => {
-  eventFormRef.value.validate(async (valid) => {
-    if (valid) {
-      try {
-        const method = eventForm.value.id ? 'PUT' : 'POST'
-        const url = eventForm.value.id ? `${API_BASE_URL}/events/${eventForm.value.id}` : `${API_BASE_URL}/events`
-        const payload = {
-          name: eventForm.value.name,
-          department: eventForm.value.department,
-          start_time: eventForm.value.start_time,
-          end_time: eventForm.value.end_time || null
-        }
-        const response = await fetch(url, {
-          method,
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
-        })
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-        ElMessage.success(eventForm.value.id ? '事件更新成功' : '事件添加成功')
-        showDialog.value = false
-        eventForm.value = { id: null, name: '', department: '', start_time: '', end_time: '' } // 清空表单
-        await fetchEvents()
-      } catch (error) {
-        console.error('Error submitting event:', error)
-        ElMessage.error(eventForm.value.id ? '事件更新失败' : '事件添加失败')
+  const { valid } = await eventFormRef.value.validate()
+  if (valid) {
+    try {
+      const method = eventForm.value.id ? 'PUT' : 'POST'
+      const url = eventForm.value.id ? `${API_BASE_URL}/events/${eventForm.value.id}` : `${API_BASE_URL}/events`
+      const payload = {
+        name: eventForm.value.name,
+        department: eventForm.value.department,
+        start_time: eventForm.value.start_time,
+        end_time: eventForm.value.end_time || null
       }
-    } else {
-      ElMessage.error('请完整填写表单')
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      })
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      ElMessage.success(eventForm.value.id ? '事件更新成功' : '事件添加成功')
+      showDialog.value = false
+      eventForm.value = { id: null, name: '', department: '', start_time: '', end_time: '' } // 清空表单
+      await fetchEvents()
+    } catch (error) {
+      console.error('Error submitting event:', error)
+      ElMessage.error(eventForm.value.id ? '事件更新失败' : '事件添加失败')
     }
-  })
+  } else {
+    ElMessage.error('请完整填写表单')
+  }
 }
 
 const deleteEvent = async (id) => {
@@ -190,27 +222,23 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
+.v-card {
+  border-radius: 8px;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
 }
 
-.el-button {
-  margin-bottom: 20px;
+.v-btn {
+  letter-spacing: normal;
+  text-transform: none;
 }
 
-.el-dialog {
-  max-width: 600px;
-  width: 100%;
+.v-data-table :deep(th) {
+  background-color: #f5f5f5;
+  font-weight: 600;
+  color: #424242;
 }
 
-.dialog-footer {
-  text-align: right;
-}
-
-.el-form-item {
-  margin-bottom: 20px;
+.v-data-table :deep(td) {
+  transition: background-color 0.2s;
 }
 </style>
