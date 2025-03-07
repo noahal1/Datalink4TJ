@@ -1,44 +1,70 @@
 <template>
   <v-container class="page-container">
     <v-row>
-      <v-col cols="12" class="text-center mb-6">
+      <v-col cols="12" class="text-center mb-2">
         <h2 class="title">LWD数据</h2>
-      </v-col>
-    </v-row>
-    <v-row class="table-container" dense>
-      <v-col
-        v-for="(table, index) in tables"
-        :key="index"
-        cols="12"
-        md="4"
-        sm="6"
-      >
-        <v-card flat class="table-card mb-4">
-          <v-data-table
-            :headers="headers"
-            :items="table.data"
-            hide-default-footer
-            disable-pagination
-            class="elevation-1"
+        <div class="week-filter d-flex align-center justify-center">
+          <v-text-field
+            v-model.number="startWeek"
+            label="起始周"
+            type="number"
+            min="1"
+            max="52"
+            outlined
+            dense
+            class="mr-2"
+            style="max-width: 500px"
+          />
+          <v-text-field
+            v-model.number="endWeek"
+            label="结束周"
+            type="number"
+            min="1"
+            max="52"
+            outlined
+            dense
+            class="mr-2"
+            style="max-width: 500px"
+          />
+          <v-btn 
+            color="primary" 
+            @click="applyWeekFilter"
+            class="ml-2"
+            style="height: 40px ;top: -10px;"
           >
-            <template #[`item.dateRange`]="{ item }">
-              {{ item.dateRange }}
-            </template>
-            <template #[`item.lwd`]="{ item }">
-              <v-text-field
-                v-model.number="item.lwd"
-                type="number"
-                min="0"
-                single-line
-                dense
-                hide-details
-                @input="handleInput"
-              />
-            </template>
-          </v-data-table>
-        </v-card>
+            跳转
+          </v-btn>
+        </div>
       </v-col>
     </v-row>
+
+
+    <!-- 数据表格 -->
+    <v-card flat class="table-card">
+      <v-data-table
+        :items="filteredData"
+        disable-pagination
+        hide-default-footer
+        fixed-header
+        height="70vh"
+        class="elevation-1 full-width-table"
+      >
+        <template #[`item.dateRange`]="{ item }">
+          {{ item.dateRange }}
+        </template>
+        <template #[`item.lwd`]="{ item }">
+          <v-text-field
+            v-model.number="item.lwd"
+            type="number"
+            min="0"
+            single-line
+            dense
+            hide-details
+            @input="handleInput"
+          />
+        </template>
+      </v-data-table>
+    </v-card>
 
     <v-btn
       v-if="isDataChanged"
@@ -65,13 +91,14 @@
 import { ref, computed, onMounted } from 'vue'
 import { format, startOfWeek, endOfWeek, getISOWeek } from 'date-fns'
 import { debounce } from 'lodash-es'
+import { ElMessage } from 'element-plus'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 const headers = [
-  { text: '周', value: 'week', align: 'center', width: 100 },
-  { text: '日期范围', value: 'dateRange', align: 'center' },
-  { text: 'LWD数量', value: 'lwd', align: 'center', width: 120 }
+  { text: '周', value: 'week', align: 'center', width: 100, fixed: true },
+  { text: '日期范围', value: 'dateRange', align: 'center', width: 200 },
+  { text: 'LWD数量', value: 'lwd', align: 'center', width: 150 }
 ]
 
 // 响应式数据
@@ -79,39 +106,32 @@ const allTableData = ref([])
 const originalData = ref([])
 const isDataChanged = ref(false)
 const submitting = ref(false)
-const loading = ref(false) // 添加加载状态
+const loading = ref(false) 
+const startWeek = ref(1)
+const endWeek = ref(52)
+const filteredData = ref([])
 
-// 生成周数据
 const generateWeeks = () => {
   const weeks = []
   const currentYear = new Date().getFullYear()
-  const startDate = new Date(currentYear, 0, 1)
   
-  while (startDate.getFullYear() === currentYear) {
-    const weekNumber = getISOWeek(startDate)
-    const start = startOfWeek(startDate, { weekStartsOn: 1 })
-    const end = endOfWeek(startDate, { weekStartsOn: 1 })
+  let startDate = new Date(currentYear, 0, 4) // 确保从第一周开始
+  startDate = startOfWeek(startDate, { weekStartsOn: 1 })
+
+  for (let week = 0; week < 52; week++) {
+    const weekStart = new Date(startDate)
+    const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 })
     
     weeks.push({
-      week: weekNumber,
-      dateRange: `${format(start, 'MM月dd日')} - ${format(end, 'MM月dd日')}`,
+      week: getISOWeek(weekStart),
+      dateRange: `${format(weekStart, 'MM/dd')} - ${format(weekEnd, 'MM/dd')}`,
       lwd: 0,
     })
-    
+
     startDate.setDate(startDate.getDate() + 7)
   }
   return weeks
 }
-
-// 表格分页
-const tables = computed(() => {
-  const chunkSize = Math.ceil(allTableData.value.length / 3)
-  return [
-    { data: allTableData.value.slice(0, chunkSize) },
-    { data: allTableData.value.slice(chunkSize, chunkSize * 2) },
-    { data: allTableData.value.slice(chunkSize * 2) }
-  ]
-})
 
 const handleInput = debounce(() => {
   isDataChanged.value = allTableData.value.some((row, index) => 
@@ -137,7 +157,7 @@ const confirmChanges = async () => {
     })
 
     if (!response.ok) throw new Error('更新失败')
-    
+    ElMessage.success('更新成功')
     await fetchLWDData()
     isDataChanged.value = false
   } catch (error) {
@@ -147,9 +167,14 @@ const confirmChanges = async () => {
   }
 }
 
-// 获取数据
+const applyWeekFilter = () => {
+  filteredData.value = allTableData.value.filter(item => 
+    item.week >= startWeek.value && item.week <= endWeek.value
+  )
+}
+
 const fetchLWDData = async () => {
-  loading.value = true // 开始加载时显示加载条
+  loading.value = true
   try {
     const response = await fetch(`${API_BASE_URL}/ehs/`)
     if (!response.ok) throw new Error('数据加载失败')
@@ -157,17 +182,18 @@ const fetchLWDData = async () => {
     const fetchedData = await response.json()
     const initialData = generateWeeks()
     
-    fetchedData.forEach ((item) => {
+    fetchedData.forEach((item) => {
       const week = initialData.find(w => w.week === item.week)
       if (week) week.lwd = item.lwd
     })
     
     allTableData.value = initialData
     originalData.value = initialData.map(item => ({ ...item }))
+    applyWeekFilter() // 初始化时应用筛选
   } catch (error) {
     console.error(error)
   } finally {
-    loading.value = false // 加载完成时隐藏加载条
+    loading.value = false
   }
 }
 
@@ -178,27 +204,50 @@ onMounted(() => {
 
 <style scoped>
 .page-container {
-  padding: 20px;
-  min-height: calc(100vh - 64px); 
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .title {
   font-size: 2rem;
-  font-weight: bold;
-  color: #535353;
-  margin-bottom: 0.5px;
+  font-weight: 500;
+  color: #2c3e50;
+  letter-spacing: 0.5px;
 }
 
-.table-container {
-  margin-top: 10px;
+.week-filter {
+  gap: 10px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .table-card {
-  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 6px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
+:deep(.v-data-table-header) {
+  background-color: #f5f7fa;
+  th {
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: #1a237e !important;
+  }
+}
+
+:deep(.v-data-table__td) {
+  padding: 12px 16px !important;
+  font-size: 14px;
+}
+:deep(.v-text-field--outlined.v-input--is-focused fieldset) {
+  border-color: #3f51b5 !important;
+  box-shadow: 0 2px 4px rgba(63, 81, 181, 0.2);
+}
 .floating-button {
   position: fixed;
   bottom: 28px;
@@ -206,31 +255,49 @@ onMounted(() => {
   z-index: 1000;
   transition: transform 0.4s;
 }
-
-.floating-button:hover {
-  transform: scale(1.5);
+.v-progress-linear {
+  box-shadow: 0 2px 4px rgba(63, 81, 181, 0.2);
+  z-index: 1001;
 }
-
-.v-data-table :deep(th) {
-  background-color: #ffffff59;
-  color: #1976D2;
-  font-weight: bold;
-}
-
-.v-data-table :deep(td) {
-  padding: 10px 12px !important;
-  border-bottom: 0px solid #e0e0e0;
-}
-
-.v-data-table :deep(tr:hover) {
-  background-color: #f5f5f5;
-}
-
 @media (max-width: 768px) {
-  .floating-button {
-    bottom: 16px;
-    right: 16px;
-    transform: scale(0.9);
+  .page-container {
+    padding: 1rem;
   }
+  
+  .title {
+    font-size: 1.5rem;
+  }
+  
+  .week-filter {
+    flex-wrap: wrap;
+    padding: 12px;
+    
+    .v-text-field {
+      flex: 1 1 45%;
+      max-width: 45%;
+    }
+    
+    .v-btn {
+      flex: 1 1 100%;
+      margin-top: 8px;
+    }
+  }
+  
+  :deep(.v-data-table__wrapper) {
+    overflow-x: auto;
+    
+    table {
+      min-width: 600px;
+    }
+  }
+  
+  .floating-button {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 1000;
+  transition: transform 0.4s;
 }
+}
+
 </style>
