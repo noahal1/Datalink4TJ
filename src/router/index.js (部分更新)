@@ -1,0 +1,37 @@
+router.beforeEach(async (to, from, next) => {
+  const userStore = useUserStore()
+  
+  // 设置页面标题
+  document.title = to.meta.title ? `${to.meta.title} - 数据上报系统` : '数据上报系统'
+
+  // 公开页面直接放行
+  if (to.meta.public) {
+    return next()
+  }
+  
+  // 检查登录状态
+  if (!userStore.isLogin) {
+    console.log('用户未登录，尝试恢复状态')
+    
+    // 尝试恢复登录状态
+    const initialized = await userStore.initialize()
+    
+    if (!initialized) {
+      // 保存尝试访问的路径，登录后重定向
+      sessionStorage.setItem('redirectPath', to.path)
+      
+      ElMessage({
+        message: '请先登录',
+        type: 'info',
+        duration: 2000
+      })
+      
+      return next('/login')
+    }
+    
+    // 成功恢复登录状态，继续处理
+    console.log('用户状态已恢复，继续导航')
+  }
+  
+  // 其他权限判断逻辑...
+}) 
