@@ -183,7 +183,7 @@ const logout = () => {
 }
 
 const buttons = [
-  { to: '/dashboard', icon: 'mdi-view-dashboard', label: '仪表盘', departments: ['*'] },
+  { to: '/dashboard', icon: 'mdi-view-dashboard', label: '首页', departments: ['*'] },
   { to: '/assy', icon: 'mdi-hammer-wrench', label: '生产', departments: ['ASSY', 'ADMIN'] },
   { to: '/quality', icon: 'mdi-checkbox-multiple-marked-circle-outline', label: 'GP12', departments: ['QA', 'ADMIN'] },
   { to: '/qa_others', icon: 'mdi-account-group-outline', label: '质量杂项', departments: ['QA', 'ADMIN'] },
@@ -226,11 +226,11 @@ const visibleButtons = computed(() => {
 .nav-buttons {
   display: flex;
   flex-wrap: nowrap;
-  margin-right: 16px;
+  margin-right: 4px;
 }
 
 .nav-btn {
-  padding: 0 12px;
+  padding: 0 10px;
   font-size: 0.875rem;
   height: 36px;
   margin: 0 2px;
