@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import { ElMessage } from 'element-plus'
 
+
 // 使用懒加载优化性能
 const Login = () => import('../pages/Login.vue')
 const Dashboard = () => import('../pages/Dashboard.vue')
@@ -14,6 +15,7 @@ const Admin = () => import('../pages/Admin.vue')
 const Pcl = () => import('../pages/Pcl.vue')
 const Maintenance = () => import('../pages/Maintenance.vue')
 const Qa_others = () => import('../pages/Qa_others.vue')
+const BossDashboard = () => import('../pages/BossDashboard.vue')
 
 const routes = [
   {
@@ -106,6 +108,16 @@ const routes = [
     meta: { 
       title: '质量管理',
       permission: 'QA' // 只有QA部门可访问
+    }
+  },
+  {
+    path: '/boss-dashboard',
+    name: 'BossDashboard',
+    component: BossDashboard,
+    meta: {
+      title: '团队工作看板',
+      keepAlive: true,
+      requireAuth: true
     }
   },
   // 404页面

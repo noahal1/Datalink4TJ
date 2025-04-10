@@ -50,7 +50,7 @@
                     <v-list>
                       <v-list-item>
                         <v-list-item-title class="text-subtitle-2 text-grey">
-                          {{ user?.department }} 部门
+                          {{ userStore.department }} 部门
                         </v-list-item-title>
                       </v-list-item>
                       <v-divider></v-divider>
@@ -124,16 +124,18 @@
             <v-icon>mdi-login</v-icon>
           </template>
           <v-list-item-title>登录</v-list-item-title>
-        </v-list-item>
+        </v-list-item> 
       </v-list>
     </v-navigation-drawer>
     
     <v-main>
       <transition name="fade" mode="out-in">
-        <router-view v-if="!isLoading"></router-view>
-        <v-container v-else fluid class="fill-height align-center justify-center">
+        <div v-if="isLoading" class="fill-height d-flex align-center justify-center">
           <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
-        </v-container>
+        </div>
+        <router-view v-else v-slot="{ Component }">
+          <component :is="Component" />
+        </router-view>
       </transition>
     </v-main>
   </v-app>
@@ -146,6 +148,7 @@ import { useRouter, useRoute } from 'vue-router'
 
 const userStore = useUserStore()
 const user = computed(() => userStore.user)
+const userDepartment = computed(() => userStore.department)
 const router = useRouter()
 const route = useRoute()
 
@@ -168,7 +171,10 @@ watch(() => route.path, (newPath) => {
 // 加载用户信息
 onMounted(async () => {
   try {
-    await userStore.initialize()
+    const initialized = await userStore.initialize()
+    if (initialized) {
+      console.log('用户状态已恢复，当前部门:', userDepartment.value)
+    }
     activeTab.value = route.path
   } catch (error) {
     console.error('初始化用户信息失败:', error)
@@ -196,13 +202,14 @@ const buttons = [
 ]
 
 const visibleButtons = computed(() => {
-  if (!user.value) return []
+  if (!userStore.isLogin) return []
+  
+  console.log('计算可见按钮, 当前用户部门:', userDepartment.value)
   
   return buttons.filter(btn => {
-    // 管理员可以访问所有页面
-    if (user.value.department === 'ADMIN') return true
-    // 普通用户只能访问有权限的页面
-    return btn.departments.includes('*') || btn.departments.includes(user.value.department)
+    if (userDepartment.value === 'ADMIN') return true
+    if (btn.departments.includes('*')) return true
+    return btn.departments.includes(userDepartment.value)
   })
 })
 </script>

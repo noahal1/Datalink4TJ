@@ -95,54 +95,36 @@ const login = async () => {
     loading.value = true 
     if (!formValid.value) return 
 
-    const formData = new URLSearchParams({
-      username: username.value, 
-      password: password.value
-    });
-
-    const response = await fetch(`${API_BASE_URL}/users/token`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: formData
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail || '登录失败')
-    }
-
-    const data = await response.json()
-
-    // 保存记住的密码
-    if (rememberPassword.value) {
-      localStorage.setItem('userInfo', JSON.stringify({ 
-        username: username.value, 
-        password: password.value 
-      }))
-    } else {
-      localStorage.removeItem('userInfo') 
-    }
-
+    // 创建用户对象
     const user = {
-      name: username.value, 
-      department: data.department || '未知',
-      permissions: data.permissions || [],
-      token: data.access_token
+      name: username.value,
+      password: password.value
     }
     
-    await userStore.login(user) 
-
-    // 重定向到首页或之前尝试访问的页面
-    const redirectPath = sessionStorage.getItem('redirectPath') || '/'
-    sessionStorage.removeItem('redirectPath')
-    router.replace(redirectPath)
+    // 调用store的登录方法
+    const success = await userStore.login(user)
     
-    ElMessage({
-      type: 'success',
-      message: '登录成功'
-    })
+    if (success) {
+      // 保存记住的密码
+      if (rememberPassword.value) {
+        localStorage.setItem('userInfo', JSON.stringify({ 
+          username: username.value, 
+          password: password.value 
+        }))
+      } else {
+        localStorage.removeItem('userInfo') 
+      }
+      
+      // 重定向到首页或之前尝试访问的页面
+      const redirectPath = sessionStorage.getItem('redirectPath') || '/'
+      sessionStorage.removeItem('redirectPath')
+      router.replace(redirectPath)
+      
+      ElMessage({
+        type: 'success',
+        message: '登录成功'
+      })
+    }
   } catch (error) {
     ElMessage({
       type: 'error',
