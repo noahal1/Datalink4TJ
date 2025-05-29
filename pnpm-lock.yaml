@@ -103,8 +103,8 @@ importers:
         specifier: ^9.30.0
         version: 9.33.0(eslint@9.27.0(jiti@2.4.2))
       pinia:
-        specifier: ^2.3.1
-        version: 2.3.1(vue@3.5.15)
+        specifier: ^3.0.2
+        version: 3.0.2(vue@3.5.15)
       sass:
         specifier: 1.77.8
         version: 1.77.8
