@@ -5,6 +5,8 @@ import * as directives from 'vuetify/directives'
 import { zhHans } from 'vuetify/locale'
 import { aliases, mdi } from 'vuetify/iconsets/mdi'
 import { VCalendar } from 'vuetify/labs/VCalendar'
+// 显式导入MDI图标字体
+import '@mdi/font/css/materialdesignicons.css'
 
 // 自定义主题配置
 const customTheme = {

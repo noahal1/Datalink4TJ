@@ -49,7 +49,7 @@ export default defineConfig({
   define: { 'process.env': {} },
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
     extensions: [
       '.js',
@@ -90,7 +90,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           'vue-vendor': ['vue', 'vue-router', 'pinia', 'pinia-plugin-persistedstate'],
-          'ui-vendor': ['element-plus', 'vuetify', '@mdi/font'],
+          'ui-vendor': ['element-plus', 'vuetify'],
           'echarts-vendor': ['echarts', 'vue-echarts'],
         },
       },
