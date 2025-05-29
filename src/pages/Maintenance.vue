@@ -148,7 +148,6 @@ const loadTasks = async () => {
     loadWeeklyTasks()
     
   } catch (error) {
-    console.error('加载任务出错:', error)
     ElMessage.error('加载任务失败')
   } finally {
     loadingTasks.value = false
@@ -293,7 +292,6 @@ const updateTaskStatus = async (task) => {
     await loadAllData()
     
   } catch (error) {
-    console.error('更新任务状态出错:', error)
     ElMessage.error('更新状态失败')
     // 恢复原状态
     task.solved = !task.solved
@@ -322,7 +320,6 @@ const deleteTask = async (task) => {
     ElMessage.success('任务删除成功')
     
   } catch (error) {
-    console.error('删除任务出错:', error)
     ElMessage.error('删除任务失败')
   }
 }

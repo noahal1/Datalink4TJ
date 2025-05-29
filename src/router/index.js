@@ -1,21 +1,21 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import { ElMessage } from 'element-plus'
-
+import { createLazyComponent } from '../utils/lazyLoader'
 
 // 使用懒加载优化性能
-const Login = () => import('../pages/Login.vue')
-const Dashboard = () => import('../pages/Dashboard.vue')
-const Quality = () => import('../pages/Quality.vue')
-const EHS = () => import('../pages/EHS.vue')
-const Assy = () => import('../pages/Assy.vue')
-const Gmo = () => import('../pages/Gmo.vue')
-const Events = () => import('../pages/Events.vue')
-const Admin = () => import('../pages/Admin.vue')
-const Pcl = () => import('../pages/Pcl.vue')
-const Maintenance = () => import('../pages/Maintenance.vue')
-const Qa_others = () => import('../pages/Qa_others.vue')
-const BossDashboard = () => import('../pages/BossDashboard.vue')
+const Login = createLazyComponent(() => import('../pages/Login.vue'))
+const Dashboard = createLazyComponent(() => import('../pages/Dashboard.vue'))
+const Quality = createLazyComponent(() => import('../pages/Quality.vue'))
+const EHS = createLazyComponent(() => import('../pages/EHS.vue'))
+const Assy = createLazyComponent(() => import('../pages/Assy.vue'))
+const Gmo = createLazyComponent(() => import('../pages/Gmo.vue'))
+const Events = createLazyComponent(() => import('../pages/Events.vue'))
+const Admin = createLazyComponent(() => import('../pages/Admin.vue'))
+const Pcl = createLazyComponent(() => import('../pages/Pcl.vue'))
+const Maintenance = createLazyComponent(() => import('../pages/Maintenance.vue'))
+const Qa_others = createLazyComponent(() => import('../pages/Qa_others.vue'))
+const BossDashboard = createLazyComponent(() => import('../pages/BossDashboard.vue'))
 
 const routes = [
   {

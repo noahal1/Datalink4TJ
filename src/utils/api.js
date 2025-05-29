@@ -1,64 +1,80 @@
 /**
  * API 请求工具类
  */
+import axios from 'axios'
 import { useUserStore } from '../stores/user'
 import { ElMessage } from 'element-plus'
+import router from '../router'
 
 // API 基础URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
 
-/**
- * 发送请求
- * @param {string} endpoint - API端点
- * @param {Object} options - 请求选项
- * @returns {Promise} - 响应数据
- */
-export async function fetchApi(endpoint, options = {}) {
-  const userStore = useUserStore()
-  
-  // 默认请求头
-  const headers = {
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 15000,
+  headers: {
     'Content-Type': 'application/json',
-    ...options.headers
   }
-  
-  // 如果有token，添加到请求头
-  if (userStore.token) {
-    headers['Authorization'] = `Bearer ${userStore.token}`
-  }
-  
-  // 构建完整URL
-  const url = `${API_BASE_URL}${endpoint}`
-  
-  try {
-    const response = await fetch(url, {
-      ...options,
-      headers
-    })
+})
+
+// 请求拦截器
+api.interceptors.request.use(
+  config => {
+    const userStore = useUserStore()
     
-    // 如果返回401，可能是token过期，尝试登出
-    if (response.status === 401) {
-      userStore.logout()
-      ElMessage.error('登录已过期，请重新登录')
-      return Promise.reject(new Error('未授权'))
+    // 如果有token，则添加到请求头
+    if (userStore.token) {
+      config.headers.Authorization = `Bearer ${userStore.token}`
     }
     
-    // 处理非200响应
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      const errorMessage = errorData.detail || `请求失败: ${response.status}`
-      ElMessage.error(errorMessage)
-      return Promise.reject(new Error(errorMessage))
-    }
-    
-    // 返回解析后的数据
-    return await response.json()
-  } catch (error) {
-    console.error('API请求错误:', error)
-    ElMessage.error('网络错误，请检查您的连接')
+    return config
+  },
+  error => {
+    console.error('请求错误:', error)
     return Promise.reject(error)
   }
-}
+)
+
+// 响应拦截器
+api.interceptors.response.use(
+  response => {
+    return response.data
+  },
+  error => {
+    if (!error.response) {
+      ElMessage.error('网络错误，请检查您的网络连接')
+      return Promise.reject(new Error('网络错误'))
+    }
+    
+    const { status } = error.response
+    
+    switch (status) {
+      case 401:
+        ElMessage.error('登录已过期，请重新登录')
+        // 清除用户信息
+        const userStore = useUserStore()
+        userStore.logout()
+        // 重定向到登录页面
+        router.push('/login')
+        break
+      case 403:
+        ElMessage.error('没有权限访问该资源')
+        break
+      case 404:
+        ElMessage.error('请求的资源不存在')
+        break
+      case 500:
+        ElMessage.error('服务器错误，请联系管理员')
+        break
+      default:
+        ElMessage.error(error.response.data?.detail || '请求失败')
+    }
+    
+    return Promise.reject(error)
+  }
+)
+
+export default api
 
 /**
  * GET请求
@@ -72,32 +88,26 @@ export function get(endpoint, params = {}) {
     
   const url = queryString ? `${endpoint}?${queryString}` : endpoint
   
-  return fetchApi(url, { method: 'GET' })
+  return api.get(url)
 }
 
 /**
  * POST请求
  */
 export function post(endpoint, data = {}) {
-  return fetchApi(endpoint, {
-    method: 'POST',
-    body: JSON.stringify(data)
-  })
+  return api.post(endpoint, data)
 }
 
 /**
  * PUT请求
  */
 export function put(endpoint, data = {}) {
-  return fetchApi(endpoint, {
-    method: 'PUT',
-    body: JSON.stringify(data)
-  })
+  return api.put(endpoint, data)
 }
 
 /**
  * DELETE请求
  */
 export function del(endpoint) {
-  return fetchApi(endpoint, { method: 'DELETE' })
+  return api.delete(endpoint)
 } 

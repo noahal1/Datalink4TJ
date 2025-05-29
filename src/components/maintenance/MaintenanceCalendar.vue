@@ -43,7 +43,7 @@
         <div>
           <span class="text-subtitle-1">MTTR: </span>
           <span class="text-h6 font-weight-bold">3.2</span>
-          <span class="text-caption ml-1">小时/次</span>
+          <span class="text-caption ml-1">小时</span>
         </div>
         <div>
           <span class="text-subtitle-1">MTBF: </span>

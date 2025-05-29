@@ -133,11 +133,16 @@
         <div v-if="isLoading" class="fill-height d-flex align-center justify-center">
           <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
         </div>
-        <router-view v-else v-slot="{ Component }">
-          <component :is="Component" />
+        <router-view v-else v-slot="{ Component, route }">
+          <transition :name="pageTransition" mode="out-in">
+            <component :is="Component" :key="route.path" />
+          </transition>
         </router-view>
       </transition>
     </v-main>
+    
+    <!-- 全局通知组件 -->
+    <GlobalNotification ref="globalNotification" />
   </v-app>
 </template>
 
@@ -162,6 +167,31 @@ const userInitials = computed(() => {
 const activeTab = ref(null)
 const drawer = ref(false)
 const isLoading = ref(true)
+
+// 页面过渡效果
+const pageTransition = computed(() => {
+  // 根据路由深度决定过渡动画方向
+  const fromPath = route.from?.path || ''
+  const toPath = route.path
+
+  // 默认使用淡入淡出
+  if (!fromPath) return 'fade'
+  
+  // 计算路由层级深度
+  const fromDepth = fromPath.split('/').length
+  const toDepth = toPath.split('/').length
+  
+  // 向前导航 (更深层级) 使用左滑
+  if (toDepth > fromDepth) {
+    return 'slide-left'
+  }
+  // 后退导航 (更浅层级) 使用右滑
+  else if (fromDepth > toDepth) {
+    return 'slide-right'
+  }
+  // 同级导航使用淡入淡出
+  return 'fade'
+})
 
 // 监听路由变化，更新活动标签
 watch(() => route.path, (newPath) => {
@@ -188,36 +218,41 @@ const logout = () => {
   router.replace('/login')
 }
 
-const buttons = [
-  { to: '/dashboard', icon: 'mdi-view-dashboard', label: '首页', departments: ['*'] },
-  { to: '/assy', icon: 'mdi-hammer-wrench', label: '生产', departments: ['ASSY', 'ADMIN'] },
-  { to: '/quality', icon: 'mdi-checkbox-multiple-marked-circle-outline', label: 'GP12', departments: ['QA', 'ADMIN'] },
-  { to: '/qa_others', icon: 'mdi-account-group-outline', label: '质量杂项', departments: ['QA', 'ADMIN'] },
-  { to: '/maintenance', icon: 'mdi-wrench', label: '维修', departments: ['MAT', 'ADMIN'] },
-  { to: '/pcl', icon: 'mdi-truck', label: '物流', departments: ['PCL', 'ADMIN'] },
-  { to: '/ehs', icon: 'mdi-security', label: 'EHS', departments: ['EHS', 'ADMIN'] },
-  { to: '/gmo', icon: 'mdi-earth', label: 'GMO', departments: ['GMO', 'ADMIN'] },
-  { to: '/events', icon: 'mdi-calendar-text', label: '重要事件', departments: ['*'] },
-  { to: '/admin', icon: 'mdi-shield-account', label: '管理', departments: ['ADMIN'] },
-]
-
 const visibleButtons = computed(() => {
-  if (!userStore.isLogin) return []
-  
-  console.log('计算可见按钮, 当前用户部门:', userDepartment.value)
-  
   return buttons.filter(btn => {
-    if (userDepartment.value === 'ADMIN') return true
+    // 如果按钮对所有部门可见
     if (btn.departments.includes('*')) return true
-    return btn.departments.includes(userDepartment.value)
+    
+    // 如果用户未登录且按钮不需要登录
+    if (!user.value && !btn.requiresAuth) return true
+    
+    // 如果用户已登录且该按钮对用户部门可见
+    if (user.value && (btn.departments.includes(userDepartment.value) || userDepartment.value === 'ADMIN')) {
+      return true
+    }
+    
+    return false
   })
 })
+
+const buttons = [
+  { to: '/dashboard', icon: 'mdi-view-dashboard', label: '首页', departments: ['*'], requiresAuth: false },
+  { to: '/assy', icon: 'mdi-hammer-wrench', label: '生产', departments: ['ASSY', 'ADMIN'], requiresAuth: true },
+  { to: '/quality', icon: 'mdi-checkbox-multiple-marked-circle-outline', label: 'GP12', departments: ['QA', 'ADMIN'], requiresAuth: true },
+  { to: '/qa_others', icon: 'mdi-account-group-outline', label: '质量杂项', departments: ['QA', 'ADMIN'], requiresAuth: true },
+  { to: '/maintenance', icon: 'mdi-wrench', label: '维修', departments: ['MAT', 'ADMIN'], requiresAuth: true },
+  { to: '/pcl', icon: 'mdi-truck', label: '物流', departments: ['PCL', 'ADMIN'], requiresAuth: true },
+  { to: '/ehs', icon: 'mdi-security', label: 'EHS', departments: ['EHS', 'ADMIN'], requiresAuth: true },
+  { to: '/gmo', icon: 'mdi-earth', label: 'GMO', departments: ['GMO', 'ADMIN'], requiresAuth: true },
+  { to: '/events', icon: 'mdi-calendar-text', label: '重要事件', departments: ['*'], requiresAuth: true },
+  { to: '/admin', icon: 'mdi-security', label: '管理', departments: ['*'], requiresAuth: true },
+]
 </script>
 
 <style>
 .app-logo {
-  height: 36px;
-  margin-right: 8px;
+  height: 32px;
+  width: auto;
 }
 
 .app-title {
@@ -264,6 +299,23 @@ const visibleButtons = computed(() => {
 @media (max-width: 960px) {
   .app-header .v-container {
     padding: 0 8px;
+  }
+}
+
+/* 页面容器样式 */
+.v-main {
+  background-color: #f5f7fa;
+  min-height: calc(100vh - 64px);
+}
+
+/* 改进的响应式样式 */
+@media (max-width: 600px) {
+  .app-logo {
+    height: 28px;
+  }
+  
+  .v-main {
+    padding-top: 8px !important;
   }
 }
 </style>
