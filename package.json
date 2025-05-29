@@ -23,6 +23,7 @@
     "echarts": "^5.6.0",
     "element-plus": "^2.9.4",
     "magic-string": "^0.30.17",
+    "pinia": "^3.0.0"
     "pinia-plugin-persistedstate": "^4.2.0",
     "plus": "^0.1.0",
     "remixicon": "^4.6.0",
