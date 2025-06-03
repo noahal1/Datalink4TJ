@@ -1,9 +1,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useUserStore } from '../stores/user'
-import UpcomingEvents from '../components/UpcomingEvents.vue'
+import { useActivityStore } from '../stores/activity'
+import DashboardUpcomingEvents from '../components/DashboardUpcomingEvents.vue'
+import RecentActivities from '../components/RecentActivities.vue'
 
 const userStore = useUserStore()
+const activityStore = useActivityStore()
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 const currentMonth = new Date().getMonth() + 1
 const isLoadingQualityData = ref(false)
@@ -113,28 +116,6 @@ const quickLinks = computed(() => {
   return links
 })
 
-// 最近活动
-const recentActivities = ref([
-  { 
-    title: '质量部更新了 GP12 数据', 
-    time: '10 分钟前',
-    icon: 'mdi-clipboard-check',
-    color: 'primary' 
-  },
-  { 
-    title: 'EHS 上报了新的 LWD 数据', 
-    time: '1 小时前',
-    icon: 'mdi-shield-alert',
-    color: 'warning' 
-  },
-  { 
-    title: '管理员更新了系统配置', 
-    time: '昨天',
-    icon: 'mdi-cog',
-    color: 'grey' 
-  },
-])
-
 // 是否正在加载
 const isLoading = ref(false)
 const selectedPeriod = ref('month')
@@ -185,18 +166,65 @@ const fetchQualityData = async () => {
   }
 }
 
+// 刷新所有数据
+const refreshAllData = async () => {
+  isLoading.value = true;
+  try {
+    await Promise.all([
+      fetchQualityData(),
+      activityStore.fetchActivities()
+    ]);
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+// 统计卡片数据
+const statsCards = [
+  {
+    title: '生产计划完成率',
+    value: '94.5%',
+    icon: 'mdi-chart-line',
+    color: 'success',
+    change: '+2.5%'
+  },
+  {
+    title: '质量合格率',
+    value: '99.2%',
+    icon: 'mdi-check-circle',
+    color: 'primary',
+    change: '+0.3%'
+  },
+  {
+    title: '设备稼动率',
+    value: '87.8%',
+    icon: 'mdi-cog',
+    color: 'warning',
+    change: '-1.2%'
+  },
+  {
+    title: '安全无事故天数',
+    value: '128',
+    icon: 'mdi-shield-check',
+    color: 'info',
+    change: '+1'
+  }
+]
+
 onMounted(async () => {
   console.log('Dashboard loaded')
   // 异步加载质量数据
   fetchQualityData()
+  // 获取最近活动数据
+  activityStore.fetchActivities()
 })
 </script>
 
 <template>
-  <v-container fluid>
+  <v-container fluid class="dashboard-container">
     <!-- 页面头部 -->
     <page-header
-      style="margin-bottom: 0px;"
+      class="mb-2"
       :title="`欢迎回来，${userStore.user?.name || '用户'}`"
       :show-breadcrumbs="false"
     >
@@ -204,7 +232,9 @@ onMounted(async () => {
         <v-btn 
           prepend-icon="mdi-refresh"
           variant="text"
-          @click="isLoading = !isLoading"
+          @click="refreshAllData"
+          :disabled="isLoading"
+          class="mr-2"
         >
           刷新数据
         </v-btn>
@@ -220,125 +250,149 @@ onMounted(async () => {
     
     <!-- 加载指示器 -->
     <loading-overlay :loading="isLoading" message="加载数据中..." />
-    <v-row class="match-height">
-  <v-col cols="12">
-    <upcoming-events @update:event-count="handleEventCount" />
-  </v-col>
-  </v-row>
-    <v-row class="match-height">
-      <!-- 统计卡片 -->
-      <v-col cols="12" md="3" sm="6" v-for="card in statsCards" :key="card.title">
-        <stats-card
-          :title="card.title"
-          :value="card.value"
-          :icon="card.icon"
-          :color="card.color"
-          :change="card.change"
-          show-change
-          elevation="1"
-          class="h-100"
-        />
-      </v-col>
-    </v-row>
     
-    <!-- 质量数据总览 -->
-    <v-row class="mt-6">
-      <v-col cols="12">
-        <v-card>
-          <v-card-title class="d-flex align-center">
-            <v-icon class="mr-2">mdi-chart-areaspline</v-icon>
-            质量数据总览
-            <v-chip class="ml-2" color="primary" size="small">本月</v-chip>
-            <v-spacer></v-spacer>
-            <v-btn
-              variant="text"
-              size="small"
-              to="/quality"
-              color="primary"
-            >
-              查看详情
-              <v-icon end>mdi-chevron-right</v-icon>
-            </v-btn>
-          </v-card-title>
-          <v-divider></v-divider>
-          
-          <v-card-text>
-            <loading-overlay :loading="isLoadingQualityData" />
-            <v-row>
-              <v-col cols="12" md="3" sm="6">
-                <stats-card
-                  title="本月焊接GP12总数"
-                  :value="totalWelding"
-                  icon="mdi-chart-line"
+    <v-row class="fill-height">
+      <!-- 左侧面板 -->
+      <v-col cols="12" md="8" order="2" order-md="1" class="d-flex flex-column">
+        <!-- 统计卡片 -->
+        <v-row class="match-height">
+          <v-col cols="12" sm="6" lg="3" v-for="card in statsCards" :key="card.title">
+            <stats-card
+              :title="card.title"
+              :value="card.value"
+              :icon="card.icon"
+              :color="card.color"
+              :change="card.change"
+              show-change
+              elevation="1"
+              class="h-100 stat-card"
+            />
+          </v-col>
+        </v-row>
+        
+        <!-- 图表区域 -->
+        <v-row class="mt-4">
+          <v-col cols="12">
+            <v-card class="chart-card">
+              <v-card-title class="d-flex align-center">
+                <v-icon class="mr-2">mdi-chart-line</v-icon>
+                数据趋势
+                <v-spacer></v-spacer>
+                <v-btn-toggle 
+                  v-model="selectedPeriod" 
+                  density="comfortable"
+                  variant="outlined"
+                  rounded="lg"
                   color="primary"
-                  subtitle="SWI, RWH, W01"
-                />
-              </v-col>
-              <v-col cols="12" md="3" sm="6">
-                <stats-card
-                  title="本月冲压GP12总数"
-                  :value="totalStamping"
-                  icon="mdi-stamper"
-                  color="secondary"
-                  subtitle="HF, LC"
-                />
-              </v-col>
-              <v-col cols="12" md="3" sm="6">
-                <stats-card
-                  title="报废率"
-                  :value="scrapRate + '%'"
-                  icon="mdi-recycle"
-                  color="error"
-                  subtitle="本月累计"
-                />
-              </v-col>
-              <v-col cols="12" md="3" sm="6">
-                <stats-card
-                  title="本月GP12总数"
-                  :value="totalGP12"
-                  icon="mdi-package-variant"
-                  color="success"
-                  subtitle="所有生产线"
-                />
-              </v-col>
-            </v-row>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
-    
-    <v-row class="mt-6">
-      <!-- 图表区域 -->
-      <v-col cols="12" md="8">
-        <v-card class="chart-card h-100">
-          <v-card-title class="d-flex align-center">
-            <v-icon class="mr-2">mdi-chart-line</v-icon>
-            数据趋势
-            <v-spacer></v-spacer>
-            <v-btn-toggle 
-              v-model="selectedPeriod" 
-              density="comfortable"
-              variant="outlined"
-              rounded="lg"
-              color="primary"
-              class="pt-1"
-            >
-              <v-btn value="day">日</v-btn>
-              <v-btn value="week">周</v-btn>
-              <v-btn value="month" selected>月</v-btn>
-              <v-btn value="year">年</v-btn>
-            </v-btn-toggle>
-          </v-card-title>
-          <v-divider></v-divider>
-          <v-card-text class="pt-4">
-            <v-chart class="chart" :option="chartOption" />
-          </v-card-text>
-        </v-card>
+                  class="pt-1"
+                >
+                  <v-btn value="day">日</v-btn>
+                  <v-btn value="week">周</v-btn>
+                  <v-btn value="month" selected>月</v-btn>
+                  <v-btn value="year">年</v-btn>
+                </v-btn-toggle>
+              </v-card-title>
+              <v-divider></v-divider>
+              <v-card-text class="pt-4">
+                <v-chart class="chart" :option="chartOption" autoresize />
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+        
+        <!-- 质量数据总览 -->
+        <v-row class="mt-4">
+          <v-col cols="12">
+            <v-card>
+              <v-card-title class="d-flex align-center">
+                <v-icon class="mr-2">mdi-chart-areaspline</v-icon>
+                质量数据总览
+                <v-chip class="ml-2" color="primary" size="small">本月</v-chip>
+                <v-spacer></v-spacer>
+                <v-btn
+                  variant="text"
+                  size="small"
+                  to="/quality"
+                  color="primary"
+                >
+                  查看详情
+                  <v-icon end>mdi-chevron-right</v-icon>
+                </v-btn>
+              </v-card-title>
+              <v-divider></v-divider>
+              
+              <v-card-text>
+                <loading-overlay :loading="isLoadingQualityData" />
+                <v-row>
+                  <v-col cols="12" sm="6" md="3">
+                    <stats-card
+                      title="本月焊接GP12总数"
+                      :value="totalWelding"
+                      icon="mdi-chart-line"
+                      color="primary"
+                      subtitle="SWI, RWH, W01"
+                      class="quality-stat-card"
+                    />
+                  </v-col>
+                  <v-col cols="12" sm="6" md="3">
+                    <stats-card
+                      title="本月冲压GP12总数"
+                      :value="totalStamping"
+                      icon="mdi-stamper"
+                      color="secondary"
+                      subtitle="HF, LC"
+                      class="quality-stat-card"
+                    />
+                  </v-col>
+                  <v-col cols="12" sm="6" md="3">
+                    <stats-card
+                      title="报废率"
+                      :value="scrapRate + '%'"
+                      icon="mdi-recycle"
+                      color="error"
+                      subtitle="本月累计"
+                      class="quality-stat-card"
+                    />
+                  </v-col>
+                  <v-col cols="12" sm="6" md="3">
+                    <stats-card
+                      title="本月GP12总数"
+                      :value="totalGP12"
+                      icon="mdi-package-variant"
+                      color="success"
+                      subtitle="所有生产线"
+                      class="quality-stat-card"
+                    />
+                  </v-col>
+                </v-row>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+        
+        <!-- 最近活动 -->
+        <v-row class="mt-4 flex-grow-1">
+          <v-col cols="12" class="d-flex">
+            <recent-activities 
+              title="最近活动"
+              :limit="5"
+              auto-refresh
+              :refresh-interval="120000"
+              class="flex-grow-1"
+            />
+          </v-col>
+        </v-row>
       </v-col>
       
-      <!-- 快速链接区域 -->
-      <v-col cols="12" md="4">
-        <v-card height="100%">
+      <!-- 右侧面板 -->
+      <v-col cols="12" md="4" order="1" order-md="2" class="d-flex flex-column">
+        <!-- 即将开始的重要事件 -->
+        <div class="flex-grow-1 mb-4">
+          <dashboard-upcoming-events :limit="5" />
+        </div>
+        
+        <!-- 快速链接区域 -->
+        <v-card class="mb-4">
           <v-card-title class="d-flex align-center">
             <v-icon class="mr-2">mdi-link</v-icon>
             快速访问
@@ -346,7 +400,7 @@ onMounted(async () => {
           <v-divider></v-divider>
           <v-card-text class="px-2 py-0">
             <v-list>
-              <v-list-item v-for="link in quickLinks" :key="link.to" :to="link.to" link>
+              <v-list-item v-for="link in quickLinks" :key="link.to" :to="link.to" link class="quick-link-item">
                 <template v-slot:prepend>
                   <v-avatar color="grey-lighten-3" size="38">
                     <v-icon :icon="link.icon" color="primary"></v-icon>
@@ -357,34 +411,8 @@ onMounted(async () => {
             </v-list>
           </v-card-text>
         </v-card>
-      </v-col>
-    </v-row>
-    
-    <v-row class="mt-6">
-      <!-- 最近活动 -->
-      <v-col cols="12" md="6">
-        <v-card height="100%">
-          <v-card-title class="d-flex align-center">
-            <v-icon class="mr-2">mdi-history</v-icon>
-            最近活动
-          </v-card-title>
-          <v-divider></v-divider>
-          <v-list class="py-0">
-            <v-list-item v-for="(activity, index) in recentActivities" :key="index">
-              <template v-slot:prepend>
-                <v-avatar :color="`${activity.color}-lighten-4`" size="38">
-                  <v-icon :icon="activity.icon" :color="activity.color"></v-icon>
-                </v-avatar>
-              </template>
-              <v-list-item-title class="font-weight-medium">{{ activity.title }}</v-list-item-title>
-              <v-list-item-subtitle>{{ activity.time }}</v-list-item-subtitle>
-            </v-list-item>
-          </v-list>
-        </v-card>
-      </v-col>
-      
-      <!-- 系统公告 -->
-      <v-col cols="12" md="6">
+        
+        <!-- 系统公告 -->
         <v-card>
           <v-card-title class="d-flex align-center">
             <v-icon class="mr-2">mdi-bullhorn</v-icon>
@@ -399,6 +427,8 @@ onMounted(async () => {
               text="数据上报系统将不定时进行例行维护，维护时间为上午10点至中午12点。"
               variant="tonal"
               class="mb-4"
+              border="start"
+              density="comfortable"
             ></v-alert>
             
             <v-alert
@@ -407,6 +437,8 @@ onMounted(async () => {
               title="质量模块更新"
               text="如果在使用过程中遇到任何bug或疑问，请联系管理员noah.yin@magna.com。"
               variant="tonal"
+              border="start"
+              density="comfortable"
             ></v-alert>
           </div>
         </v-card>
@@ -416,16 +448,41 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.dashboard-container {
+  padding-bottom: 24px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.fill-height {
+  flex: 1;
+  min-height: 0;
+}
+
 .chart {
   height: 350px;
 }
 
-.stats-card {
+.chart-card {
+  height: 100%;
+}
+
+.stat-card {
   transition: transform 0.2s;
 }
 
-.stats-card:hover {
+.stat-card:hover {
   transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.quality-stat-card {
+  transition: all 0.2s;
+}
+
+.quality-stat-card:hover {
+  transform: scale(1.02);
 }
 
 .match-height {
@@ -446,7 +503,23 @@ onMounted(async () => {
 }
 
 :deep(.v-list-item) {
-  min-height: 60px;
+  min-height: 56px;
+  border-radius: 8px;
+  margin: 4px 0;
+}
+
+.quick-link-item {
+  transition: background-color 0.2s;
+}
+
+.quick-link-item:hover {
+  background-color: rgba(var(--v-theme-primary), 0.05);
+}
+
+@media (max-width: 960px) {
+  .chart {
+    height: 300px;
+  }
 }
 
 @media (max-width: 600px) {
@@ -457,6 +530,18 @@ onMounted(async () => {
   :deep(.v-btn-toggle) {
     margin-top: 8px;
   }
+  
+  .dashboard-container {
+    padding: 8px;
+  }
+}
+
+pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 200px;
+  overflow-y: auto;
+  margin: 0;
 }
 </style>
 

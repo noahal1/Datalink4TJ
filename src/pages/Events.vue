@@ -195,9 +195,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, getCurrentInstance } from 'vue'
 import { format, isValid, parseISO, isAfter, isBefore, isToday } from 'date-fns'
+import { useUserStore } from '../stores/user'
 
+const userStore = useUserStore()
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 const showDialog = ref(false)
@@ -253,7 +255,22 @@ const isEventActive = (event) => {
 const fetchEvents = async () => {
   isLoading.value = true;
   try {
-    const response = await fetch(`${API_BASE_URL}/events`)
+    // 检查用户是否已登录
+    if (!userStore.token) {
+      console.error('用户未登录或令牌无效');
+      const app = getCurrentInstance();
+      if (app && app.proxy.$notify) {
+        app.proxy.$notify.error('请先登录再进行操作！');
+      }
+      isLoading.value = false;
+      return;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/events`, {
+      headers: {
+        'Authorization': `Bearer ${userStore.token}`
+      }
+    })
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -288,8 +305,7 @@ const openDialog = (event = null) => {
       name: '', 
       department: '', 
       start_time: today, 
-      end_time: '', 
-      importance: 'medium'
+      end_time: ''
     }
   }
   showDialog.value = true
@@ -299,20 +315,30 @@ const submitEvent = async () => {
   const { valid } = await eventFormRef.value.validate()
   if (valid) {
     try {
+      // 检查用户是否已登录
+      if (!userStore.token) {
+        console.error('用户未登录或令牌无效');
+        const app = getCurrentInstance();
+        if (app && app.proxy.$notify) {
+          app.proxy.$notify.error('请先登录再进行操作！');
+        }
+        return;
+      }
+
       const method = eventForm.value.id ? 'PUT' : 'POST'
       const url = eventForm.value.id ? `${API_BASE_URL}/events/${eventForm.value.id}` : `${API_BASE_URL}/events`
       const payload = {
         name: eventForm.value.name,
         department: eventForm.value.department,
         start_time: eventForm.value.start_time,
-        end_time: eventForm.value.end_time || null,
-        importance: eventForm.value.importance || 'medium'
+        end_time: eventForm.value.end_time || null
       }
       
       const response = await fetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${userStore.token}`
         },
         body: JSON.stringify(payload)
       })
@@ -357,8 +383,21 @@ const executeDelete = async () => {
   if (!eventToDelete.value) return;
   
   try {
+    // 检查用户是否已登录
+    if (!userStore.token) {
+      console.error('用户未登录或令牌无效');
+      const app = getCurrentInstance();
+      if (app && app.proxy.$notify) {
+        app.proxy.$notify.error('请先登录再进行操作！');
+      }
+      return;
+    }
+
     const response = await fetch(`${API_BASE_URL}/events/${eventToDelete.value.id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${userStore.token}`
+      }
     });
     
     if (!response.ok) {

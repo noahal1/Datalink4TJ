@@ -1,7 +1,7 @@
 <template>
   <v-container fluid>
     <v-row>
-      <v-col cols="12" md="6">
+      <v-col cols="12" md="6" auto>
         <v-card>
           <v-card-title>
             <v-icon left>mdi-account-group</v-icon>
@@ -24,7 +24,7 @@
           </v-card-actions>
         </v-card>
       </v-col>
-      <v-col cols="12" md="6">
+      <v-col cols="12" md="6" auto>
         <v-card>
           <v-card-title>
             <v-icon left>mdi-office-building</v-icon>
@@ -46,6 +46,14 @@
           </v-card-actions>
         </v-card>
       </v-col>
+      <v-col cols="6" md="6">
+      <v-card>
+        <v-card-title>
+          <v-icon left>mdi-bulletin-board</v-icon>
+          发布公告
+        </v-card-title>
+      </v-card>
+    </v-col>
     </v-row>
  
     <!-- 用户对话框 -->

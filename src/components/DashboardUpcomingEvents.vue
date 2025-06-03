@@ -1,91 +1,41 @@
 <template>
-  <v-card>
-    <v-card-title class="d-flex align-center">
+  <v-card class="upcoming-events-card d-flex flex-column">
+    <v-card-title class="d-flex align-center flex-shrink-0">
       <v-icon color="warning" class="mr-2">mdi-calendar-alert</v-icon>
       即将开始的重要事件
-      
-      <v-menu v-if="events.length > 0">
-        <template v-slot:activator="{ props }">
-          <v-btn
-            variant="text"
-            icon="mdi-filter-variant"
-            v-bind="props"
-            size="small"
-            class="ml-2"
-          ></v-btn>
-        </template>
-        <v-card min-width="200">
-          <v-list density="compact">
-            <v-list-subheader>按部门筛选</v-list-subheader>
-            <v-list-item
-              v-for="dept in departments"
-              :key="dept"
-              :value="dept"
-              @click="filterByDepartment(dept)"
-            >
-              <template v-slot:prepend>
-                <v-icon :color="selectedDepartment === dept ? 'primary' : 'grey'" size="small">
-                  {{ selectedDepartment === dept ? 'mdi-checkbox-marked' : 'mdi-checkbox-blank-outline' }}
-                </v-icon>
-              </template>
-              <v-list-item-title>{{ dept }}</v-list-item-title>
-            </v-list-item>
-            <v-divider></v-divider>
-            <v-list-item @click="selectedDepartment = null">
-              <template v-slot:prepend>
-                <v-icon color="primary" size="small">mdi-filter-remove</v-icon>
-              </template>
-              <v-list-item-title>显示全部</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-card>
-      </v-menu>
-      
       <v-spacer></v-spacer>
-      
-      <v-chip
-        v-if="selectedDepartment"
-        color="primary"
-        size="small"
-        closable
-        @click:close="selectedDepartment = null"
-        class="mr-2"
-      >
-        {{ selectedDepartment }}
-      </v-chip>
-      
       <v-btn
         variant="text"
         size="small"
         to="/events"
         color="primary"
       >
-        管理事件
+        查看全部
         <v-icon end>mdi-chevron-right</v-icon>
       </v-btn>
     </v-card-title>
-    <v-divider></v-divider>
+    <v-divider class="flex-shrink-0"></v-divider>
     
-    <v-card-text>
+    <v-card-text class="events-container flex-grow-1 pa-0">
       <loading-overlay :loading="isLoading" />
       
-      <v-list v-if="filteredEvents.length > 0" density="comfortable" class="py-0">
+      <v-list v-if="importantEvents.length > 0" density="comfortable" class="py-0 h-100 overflow-auto">
         <v-list-item
-          v-for="event in filteredEvents"
+          v-for="event in importantEvents"
           :key="event.id"
           :ripple="true"
-          class="upcoming-event py-2"
+          class="upcoming-event py-2 mb-2"
           @click="showEventDetails(event)"
         >
           <v-list-item-title class="d-flex align-center">
-            <v-avatar :color="`${event.statusColor}-lighten-4`" size="36" class="me-3">
+            <v-avatar :color="`${event.statusColor}-lighten-4`" size="40" class="me-3">
               <v-icon :color="event.statusColor" size="medium">
                 {{ isToday(parseISO(event.start_time)) ? 'mdi-calendar-today' : 'mdi-calendar-clock' }}
               </v-icon>
             </v-avatar>
             
             <div class="flex-grow-1">
-              <div class="font-weight-medium text-subtitle-1">
+              <div class="font-weight-medium text-subtitle-1 event-title">
                 {{ event.name }}
                 <v-chip
                   :color="event.statusColor"
@@ -95,48 +45,36 @@
                   {{ event.status }}
                 </v-chip>
               </div>
-              <div class="text-caption d-flex align-center">
-                <v-icon size="x-small" color="grey" class="mr-1">mdi-office-building</v-icon>
-                {{ event.department }}
-                <v-divider vertical class="mx-2" style="height: 12px"></v-divider>
-                <v-icon size="x-small" color="grey" class="mr-1">mdi-calendar-range</v-icon>
-                {{ formatDateRange(event.start_time, event.end_time) }}
-                <v-tooltip v-if="event.daysRemaining" location="bottom">
+              <div class="text-caption d-flex align-center flex-wrap">
+                <span class="d-flex align-center mr-2">
+                  <v-icon size="x-small" color="grey" class="mr-1">mdi-office-building</v-icon>
+                  {{ event.department }}
+                </span>
+                <v-divider vertical class="mx-2 d-none d-sm-block" style="height: 12px"></v-divider>
+                <span class="d-flex align-center">
+                  <v-icon size="x-small" color="grey" class="mr-1">mdi-calendar-range</v-icon>
+                  {{ formatDateRange(event.start_time, event.end_time) }}
+                </span>
+                <v-tooltip v-if="event.daysRemaining !== undefined" location="bottom">
                   <template v-slot:activator="{ props }">
-                    <span class="ml-2 text-caption" v-bind="props">
+                    <span class="ml-2 text-caption countdown-badge" v-bind="props">
                       <v-icon size="x-small" :color="event.statusColor" class="mr-1">mdi-clock-outline</v-icon>
-                      还剩{{ event.daysRemaining }}天
+                      {{ event.daysRemaining === 0 ? '今天' : `还剩${event.daysRemaining}天` }}
                     </span>
                   </template>
                   <span>{{ formatDate(event.start_time, 'yyyy年MM月dd日') }}开始</span>
                 </v-tooltip>
               </div>
             </div>
-            
-            <v-icon size="small" color="grey">mdi-chevron-right</v-icon>
           </v-list-item-title>
         </v-list-item>
       </v-list>
-      
-      <div v-else-if="events.length > 0 && filteredEvents.length === 0" class="text-center pa-4">
-        <v-icon size="large" color="grey" class="mb-2">mdi-filter-remove</v-icon>
-        <div class="text-subtitle-1 text-medium-emphasis">没有匹配当前筛选条件的事件</div>
-        <v-btn
-          color="primary"
-          variant="text"
-          class="mt-2"
-          @click="selectedDepartment = null"
-          prepend-icon="mdi-filter-remove"
-        >
-          清除筛选
-        </v-btn>
-      </div>
       
       <v-alert
         v-else-if="!isLoading"
         type="info"
         variant="tonal"
-        class="my-2"
+        class="ma-4"
       >
         <div class="text-center">
           <v-icon size="large" color="info" class="mb-2">mdi-calendar-blank</v-icon>
@@ -156,14 +94,14 @@
     
     <!-- 事件详情对话框 -->
     <v-dialog v-model="showDialog" max-width="500">
-      <v-card v-if="selectedEvent">
+      <v-card v-if="selectedEvent" class="event-details-card">
         <v-toolbar :color="selectedEvent.statusColor" dark flat>
           <v-toolbar-title>事件详情</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn icon="mdi-close" variant="text" @click="showDialog = false"></v-btn>
         </v-toolbar>
         <v-card-text class="pt-4">
-          <h2 class="text-h5 mb-2">{{ selectedEvent.name }}</h2>
+          <h2 class="text-h5 mb-3 event-detail-title">{{ selectedEvent.name }}</h2>
           
           <v-list density="compact">
             <v-list-item>
@@ -199,6 +137,14 @@
                 <v-chip :color="selectedEvent.statusColor" size="small">{{ selectedEvent.status }}</v-chip>
               </v-list-item-subtitle>
             </v-list-item>
+            
+            <v-list-item v-if="selectedEvent.description">
+              <template v-slot:prepend>
+                <v-icon color="primary">mdi-text-box</v-icon>
+              </template>
+              <v-list-item-title>事件描述</v-list-item-title>
+              <v-list-item-subtitle>{{ selectedEvent.description }}</v-list-item-subtitle>
+            </v-list-item>
           </v-list>
         </v-card-text>
         <v-card-actions>
@@ -217,8 +163,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, getCurrentInstance } from 'vue'
 import { format, addDays, isAfter, parseISO, isToday, isBefore, differenceInDays, isValid } from 'date-fns'
+import { useUserStore } from '../stores/user'
+
+const userStore = useUserStore()
 
 const props = defineProps({
   limit: {
@@ -227,104 +176,115 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:eventCount'])
-
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 const events = ref([])
 const isLoading = ref(false)
-const selectedDepartment = ref(null)
 const showDialog = ref(false)
 const selectedEvent = ref(null)
 
 // 获取即将开始的重要事件
-const fetchUpcomingEvents = async () => {
+const fetchImportantEvents = async () => {
   isLoading.value = true;
   try {
-    const response = await fetch(`${API_BASE_URL}/events`);
+    // 检查用户是否已登录
+    if (!userStore.token) {
+      console.error('用户未登录或令牌无效');
+      const app = getCurrentInstance();
+      if (app && app.proxy.$notify) {
+        app.proxy.$notify.error('请先登录再进行操作！');
+      }
+      isLoading.value = false;
+      return;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/events/?upcoming=true&limit=${props.limit}`, {
+      headers: {
+        'Authorization': `Bearer ${userStore.token}`
+      }
+    });
+    
     if (response.ok) {
       const allEvents = await response.json();
       const today = new Date();
-      const futureDate = addDays(today, 30); // 未来30天内的事件
+      today.setHours(0, 0, 0, 0); // 重置时间部分，只比较日期
       
-      // 过滤出未来事件和当前进行的事件
-      const filteredEvents = allEvents.filter(event => {
-        const startDate = parseISO(event.start_time.split('T')[0]);
+      // 处理事件数据，添加状态和颜色
+      events.value = allEvents.map(event => {
+        const startDate = parseISO(event.start_time);
+        let status, statusColor, daysRemaining;
         
-        // 未来的事件或今天开始的事件
-        const isUpcoming = isAfter(startDate, today) || isToday(startDate);
-        
-        // 如果有结束日期，确保事件还没有结束
-        if (event.end_time) {
-          const endDate = parseISO(event.end_time.split('T')[0]);
-          return isUpcoming && isAfter(endDate, today);
+        // 检查日期是否有效
+        if (!isValid(startDate)) {
+          status = '日期无效';
+          statusColor = 'grey';
+          daysRemaining = 0;
+          return {
+            ...event,
+            status,
+            statusColor,
+            daysRemaining
+          };
         }
         
-        return isUpcoming && isBefore(startDate, futureDate);
-      });
-      
-      // 按开始日期排序，最近的优先
-      const sortedEvents = filteredEvents.sort((a, b) => {
-        const dateA = parseISO(a.start_time.split('T')[0]);
-        const dateB = parseISO(b.start_time.split('T')[0]);
-        return dateA - dateB;
-      });
-      
-      // 只显示最多limit个事件
-      events.value = sortedEvents.slice(0, props.limit).map(event => {
-        const startDate = parseISO(event.start_time.split('T')[0]);
-        const daysUntil = differenceInDays(startDate, today);
-        let status = '';
-        let statusColor = '';
-        
         if (isToday(startDate)) {
+          // 如果是今天
           status = '今日开始';
           statusColor = 'error';
-        } else if (daysUntil <= 7) {
-          status = `${daysUntil}天后`;
-          statusColor = 'warning';
+          daysRemaining = 0;
+        } else if (isBefore(startDate, today)) {
+          // 如果日期已经过去
+          status = '已开始';
+          statusColor = 'grey';
+          daysRemaining = 0;
         } else {
-          status = `${daysUntil}天后`;
-          statusColor = 'info';
+          // 未来日期 - 使用自定义计算，避免differenceInDays的问题
+          const startTime = startDate.getTime();
+          const todayTime = today.getTime();
+          const diffTime = startTime - todayTime;
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          
+          daysRemaining = diffDays;
+          
+          if (diffDays <= 3) {
+            status = `${diffDays}天后`;
+            statusColor = 'error';
+          } else if (diffDays <= 7) {
+            status = `${diffDays}天后`;
+            statusColor = 'warning';
+          } else {
+            status = `${diffDays}天后`;
+            statusColor = 'info';
+          }
         }
         
         return {
           ...event,
           status,
           statusColor,
-          daysRemaining: isToday(startDate) ? 0 : daysUntil,
-          start_time: event.start_time.split('T')[0],
-          end_time: event.end_time ? event.end_time.split('T')[0] : null
+          daysRemaining
         };
       });
-      
-      // 向父组件通知事件总数
-      emit('update:eventCount', filteredEvents.length);
-      
     } else {
       console.error('获取事件失败');
+      const app = getCurrentInstance();
+      if (app && app.proxy.$notify) {
+        app.proxy.$notify.error('获取事件列表失败');
+      }
     }
   } catch (error) {
     console.error('获取事件错误:', error);
+    const app = getCurrentInstance();
+    if (app && app.proxy.$notify) {
+      app.proxy.$notify.error('获取事件失败: ' + error.message);
+    }
   } finally {
     isLoading.value = false;
   }
 }
 
-// 根据部门筛选事件
-const filterByDepartment = (department) => {
-  selectedDepartment.value = department;
-}
-
-// 计算属性：筛选后的事件列表
-const filteredEvents = computed(() => {
-  if (!selectedDepartment.value) return events.value;
-  return events.value.filter(event => event.department === selectedDepartment.value);
-});
-
-// 计算属性：所有可用的部门列表
-const departments = computed(() => {
-  const deptSet = new Set(events.value.map(event => event.department));
-  return Array.from(deptSet);
+// 计算属性：重要事件列表
+const importantEvents = computed(() => {
+  return events.value;
 });
 
 // 显示事件详情
@@ -352,21 +312,66 @@ const formatDateRange = (startDate, endDate) => {
 }
 
 onMounted(async () => {
-  await fetchUpcomingEvents();
+  await fetchImportantEvents();
 })
 </script>
 
 <style scoped>
+.upcoming-events-card {
+  height: 100%;
+  border-radius: 8px;
+  transition: box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.upcoming-events-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.events-container {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  min-height: 0;
+}
+
 .upcoming-event {
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
   border-left: 3px solid transparent;
   cursor: pointer;
+  border-radius: 6px;
+  margin-bottom: 8px;
 }
 
 .upcoming-event:hover {
   background-color: rgba(0, 0, 0, 0.04);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
+}
+
+.event-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.countdown-badge {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 2px 6px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.event-details-card {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.event-detail-title {
+  border-left: 4px solid var(--v-primary-base, #1976d2);
+  padding-left: 12px;
 }
 
 .upcoming-event:nth-child(1) {
@@ -388,4 +393,10 @@ onMounted(async () => {
 .upcoming-event:nth-child(5) {
   border-left-color: var(--v-secondary-base, #9c27b0);
 }
-</style>
+
+@media (max-width: 600px) {
+  .event-title {
+    font-size: 0.9rem;
+  }
+}
+</style> 

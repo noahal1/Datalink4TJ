@@ -267,6 +267,7 @@ const confirmChanges = async () => {
       if (item.lwd !== original.lwd) {
         changedData.push({
           week: item.week,
+          year: new Date().getFullYear(),
           lwd: item.lwd
         })
       }

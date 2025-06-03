@@ -121,7 +121,10 @@
 
 <script setup>
 import { ref, computed, onMounted, getCurrentInstance } from 'vue'
+import { useUserStore } from '../stores/user'
+import api from '../utils/api'
 
+const userStore = useUserStore()
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 const currentYear = new Date().getFullYear()
 const currentMonth = ref((new Date().getMonth() + 1).toString())
@@ -222,43 +225,53 @@ const refreshData = async () => {
 const fetchData = async (month) => {
   isLoading.value = true;
   try {
-    const response = await fetch(`${API_BASE_URL}/qa/?month=${month}`);
-    if (response.ok) {
-      const fetchedData = await response.json();
-      const daysInMonth = new Date(currentYear, month, 0).getDate();
-      const generatedData = Array.from({ length: daysInMonth }, (_, i) => ({
-        date: (i + 1).toString(),
-        swi: 0,
-        rwh: 0,
-        w01: 0,
-        hf: 0,
-        lc: 0,
-        scrapswi: 0,
-        scraprwh: 0,
-        scrapw01: 0,
-        scraphf: 0,
-        scraplc: 0,
-        welding: 0,
-        stamping: 0
-      }));
-
-      fetchedData.forEach(item => {
-        const day = generatedData.find(d => d.date === item.day);
-        if (day) {
-          const line = item.line.toLowerCase();
-          day[item.scrapflag ? `scrap${line}` : line] = parseInt(item.value, 10);
-          updateQAFields(day);
-        }
-      });
-
-      tableData.value = generatedData;
-      originalData.value = JSON.parse(JSON.stringify(generatedData));
-      isDataChanged.value = false;
-    } else {
-      console.error('获取数据失败');
+    // 检查用户是否已登录
+    if (!userStore.token) {
+      console.error('用户未登录或令牌无效');
+      const app = getCurrentInstance();
+      if (app && app.proxy.$notify) {
+        app.proxy.$notify.error('请先登录再进行操作！');
+      }
+      isLoading.value = false;
+      return;
     }
+
+    const fetchedData = await api.get(`/qa/?month=${month}`);
+    const daysInMonth = new Date(currentYear, month, 0).getDate();
+    const generatedData = Array.from({ length: daysInMonth }, (_, i) => ({
+      date: (i + 1).toString(),
+      swi: 0,
+      rwh: 0,
+      w01: 0,
+      hf: 0,
+      lc: 0,
+      scrapswi: 0,
+      scraprwh: 0,
+      scrapw01: 0,
+      scraphf: 0,
+      scraplc: 0,
+      welding: 0,
+      stamping: 0
+    }));
+
+    fetchedData.forEach(item => {
+      const day = generatedData.find(d => d.date === item.day);
+      if (day) {
+        const line = item.line.toLowerCase();
+        day[item.scrapflag ? `scrap${line}` : line] = parseInt(item.value, 10);
+        updateQAFields(day);
+      }
+    });
+
+    tableData.value = generatedData;
+    originalData.value = JSON.parse(JSON.stringify(generatedData));
+    isDataChanged.value = false;
   } catch (error) {
     console.error('错误:', error);
+    const app = getCurrentInstance();
+    if (app && app.proxy.$notify) {
+      app.proxy.$notify.error('获取数据失败: ' + error.message);
+    }
   } finally {
     isLoading.value = false;
   }
@@ -276,29 +289,27 @@ const confirmChanges = async () => {
   });
 
   try {
-    const response = await fetch(`${API_BASE_URL}/qa/`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(changedData)
-    });
-    if (response.ok) {
-      // 显示成功通知
+    // 确保用户已登录并有有效的令牌
+    if (!userStore.token) {
+      console.error('用户未登录或令牌无效');
       const app = getCurrentInstance();
       if (app && app.proxy.$notify) {
-        app.proxy.$notify.success('数据保存成功！');
+        app.proxy.$notify.error('请先登录再进行操作！');
       }
-      
-      isDataChanged.value = false;
-      await fetchData(selectedMonth.value);
-    } else {
-      console.error('确认修改失败');
-      const app = getCurrentInstance();
-      if (app && app.proxy.$notify) {
-        app.proxy.$notify.error('数据保存失败，请重试！');
-      }
+      isLoading.value = false;
+      return;
     }
+
+    await api.put('/qa/', changedData);
+    
+    // 显示成功通知
+    const app = getCurrentInstance();
+    if (app && app.proxy.$notify) {
+      app.proxy.$notify.success('数据保存成功！');
+    }
+    
+    isDataChanged.value = false;
+    await fetchData(selectedMonth.value);
   } catch (error) {
     console.error('错误:', error);
     const app = getCurrentInstance();

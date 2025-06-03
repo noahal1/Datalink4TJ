@@ -245,7 +245,7 @@ const buttons = [
   { to: '/ehs', icon: 'mdi-security', label: 'EHS', departments: ['EHS', 'ADMIN'], requiresAuth: true },
   { to: '/gmo', icon: 'mdi-earth', label: 'GMO', departments: ['GMO', 'ADMIN'], requiresAuth: true },
   { to: '/events', icon: 'mdi-calendar-text', label: '重要事件', departments: ['*'], requiresAuth: true },
-  { to: '/admin', icon: 'mdi-security', label: '管理', departments: ['*'], requiresAuth: true },
+  { to: '/admin', icon: 'mdi-security', label: '管理', departments: ['ADMIN'], requiresAuth: true },
 ]
 </script>
 
