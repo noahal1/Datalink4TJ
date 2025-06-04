@@ -24,6 +24,7 @@
     "element-plus": "^2.9.4",
     "lodash-es": "^4.17.21",
     "magic-string": "^0.30.17",
+    "mitt": "^3.0.1",
     "pinia": "^3.0.0",
     "pinia-plugin-persistedstate": "^4.2.0",
     "plus": "^0.1.0",

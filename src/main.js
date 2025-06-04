@@ -9,6 +9,7 @@ import ECharts from 'vue-echarts'
 import 'remixicon/fonts/remixicon.css'
 import errorHandler from './utils/errorHandler'
 import performanceMonitor from './utils/performance'
+import { setAppInstance } from './utils/notification'
 
 // 导入自定义样式
 import './styles/transitions.css'
@@ -20,6 +21,7 @@ import LoadingOverlay from './components/LoadingOverlay.vue'
 import EnhancedDataTable from './components/EnhancedDataTable.vue'
 import PageHeader from './components/PageHeader.vue'
 import StatsCard from './components/StatsCard.vue'
+import GlobalSnackbar from './components/GlobalSnackbar.vue'
 
 // Echarts核心配置
 import { use } from "echarts/core"
@@ -51,6 +53,7 @@ app.component('LoadingOverlay', LoadingOverlay);
 app.component('EnhancedDataTable', EnhancedDataTable);
 app.component('PageHeader', PageHeader);
 app.component('StatsCard', StatsCard);
+app.component('GlobalSnackbar', GlobalSnackbar);
 
 // 注册 RiIcon 组件
 app.component('ri-icon', {
@@ -75,30 +78,23 @@ app.use(errorHandler)
 // 注册性能监控工具
 app.use(performanceMonitor)
 
-// 添加全局通知到应用根实例
-app.config.globalProperties.$notify = {
-  show: null,
-  success: null,
-  error: null,
-  warning: null,
-  info: null,
-  // 实际方法会在应用挂载后设置
-}
-
 // 插件注册
-app.use(router)
+app.use(pinia)
 app.use(vuetify)
 app.use(ElementPlus)
-app.use(pinia)
+app.use(router)
 
 // 挂载应用
 const appInstance = app.mount('#app')
 
-// 设置通知方法引用
+// 设置通知服务的app实例
+setAppInstance(appInstance)
+
+// 全局挂载 $notify
 app.config.globalProperties.$notify = {
-  show: appInstance.$refs.globalNotification?.showNotification,
-  success: appInstance.$refs.globalNotification?.success,
-  error: appInstance.$refs.globalNotification?.error,
-  warning: appInstance.$refs.globalNotification?.warning,
-  info: appInstance.$refs.globalNotification?.info
+  show: (msg, type = 'info', timeout = 3000) => appInstance.$refs.globalSnackbar?.show(msg, type, timeout),
+  success: (msg, timeout = 3000) => appInstance.$refs.globalSnackbar?.show(msg, 'success', timeout),
+  error: (msg, timeout = 3000) => appInstance.$refs.globalSnackbar?.show(msg, 'error', timeout),
+  warning: (msg, timeout = 3000) => appInstance.$refs.globalSnackbar?.show(msg, 'warning', timeout),
+  info: (msg, timeout = 3000) => appInstance.$refs.globalSnackbar?.show(msg, 'info', timeout)
 }    
