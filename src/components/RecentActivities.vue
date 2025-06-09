@@ -43,6 +43,12 @@
           <v-list-item-subtitle class="text-caption text-grey d-flex align-center">
             <v-icon size="x-small" color="grey" class="mr-1">mdi-clock-outline</v-icon>
             {{ activity.time }}
+            <v-tooltip location="bottom">
+              <template v-slot:activator="{ props }">
+                <v-icon size="x-small" color="grey" class="ml-2" v-bind="props">mdi-calendar</v-icon>
+              </template>
+              <span>{{ formatFullDateTime(activity.timestamp) }}</span>
+            </v-tooltip>
             <v-tooltip v-if="activity.details" location="bottom">
               <template v-slot:activator="{ props }">
                 <v-icon size="x-small" color="grey" class="ml-2" v-bind="props">mdi-information-outline</v-icon>
@@ -103,7 +109,7 @@
                 <v-icon color="primary">mdi-clock-outline</v-icon>
               </template>
               <v-list-item-title>操作时间</v-list-item-title>
-              <v-list-item-subtitle>{{ selectedActivity.time }}</v-list-item-subtitle>
+              <v-list-item-subtitle>{{ formatFullDateTime(selectedActivity.timestamp) }}</v-list-item-subtitle>
             </v-list-item>
             
             <v-list-item>
@@ -188,6 +194,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useActivityStore } from '../stores/activity'
+import { format } from 'date-fns'
 
 const props = defineProps({
   title: {
@@ -261,6 +268,17 @@ const activities = computed(() => {
 const isLoading = computed(() => {
   return activityStore.isLoading;
 });
+
+// 格式化完整的日期时间
+const formatFullDateTime = (timestamp) => {
+  if (!timestamp) return '未知时间';
+  try {
+    const date = new Date(timestamp);
+    return format(date, 'yyyy-MM-dd HH:mm:ss');
+  } catch (e) {
+    return timestamp;
+  }
+};
 
 // 刷新活动数据
 const refreshActivities = async () => {

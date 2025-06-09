@@ -71,6 +71,9 @@
           </v-card-title>
         </v-card>
       </v-col>
+      <v-col cols="12">
+        <activity-history></activity-history>
+      </v-col>
     </v-row>
  
     <!-- 用户对话框 -->
@@ -139,6 +142,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import Message from '../utils/notification';
+import ActivityHistory from '../components/admin/ActivityHistory.vue';
  
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const users = ref([]);
