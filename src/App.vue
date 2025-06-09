@@ -1,5 +1,6 @@
 <template>
   <v-app>
+    <!-- 顶部应用栏 -->
     <v-app-bar app elevation="2" class="app-header">
       <v-container fluid>
         <v-row align="center" justify="space-between" no-gutters>
@@ -13,25 +14,11 @@
             </div>
           </v-col>
           
-          <!-- 右侧导航和用户区域 -->
-          <v-col cols="auto" class="d-none d-md-flex">
+          <!-- 右侧用户区域 -->
+          <v-col cols="auto">
             <div class="d-flex align-center">
-              <!-- 导航按钮 -->
-              <div class="nav-buttons d-flex">
-                <v-btn
-                  v-for="btn in visibleButtons" 
-                  :key="btn.to" 
-                  :to="btn.to"
-                  variant="text"
-                  class="nav-btn"
-                >
-                  <v-icon size="small" class="mr-1">{{ btn.icon }}</v-icon>
-                  {{ btn.label }}
-                </v-btn>
-              </div>
-              
               <!-- 用户信息/登录按钮 -->
-              <div class="ml-4">
+              <div>
                 <div v-if="user">
                   <v-menu offset-y>
                     <template v-slot:activator="{ props }">
@@ -80,6 +67,169 @@
       </v-container>
     </v-app-bar>
     
+    <!-- 左侧导航栏 (桌面端) -->
+    <v-navigation-drawer
+      v-model="sideNav"
+      app
+      permanent
+      class="d-none d-md-flex left-nav"
+      width="240"
+    >
+      <v-list>
+        <!-- 主要导航组 -->
+        <v-list-subheader class="nav-group-title">ALL</v-list-subheader>
+        <v-list-item
+          v-for="btn in mainNavButtons"
+          :key="btn.to"
+          :to="btn.to"
+          :value="btn.to"
+          :active="activeTab === btn.to"
+          class="nav-list-item"
+        >
+          <template v-slot:prepend>
+            <v-icon>{{ btn.icon }}</v-icon>
+          </template>
+          <v-list-item-title>{{ btn.label }}</v-list-item-title>
+        </v-list-item>
+        
+        <v-divider class="my-2"></v-divider>
+        <v-list-subheader class="nav-group-title">质量</v-list-subheader>
+        <v-list-item
+          v-for="btn in qaNavButtons"
+          :key="btn.to"
+          :to="btn.to"
+          :value="btn.to"
+          :active="activeTab === btn.to"
+          class="nav-list-item"
+        >
+          <template v-slot:prepend>
+            <v-icon>{{ btn.icon }}</v-icon>
+          </template>
+          <v-list-item-title>{{ btn.label }}</v-list-item-title>
+        </v-list-item>
+        
+        <v-divider class="my-2"></v-divider>
+        <v-list-subheader class="nav-group-title">生产</v-list-subheader>
+        <v-list-item
+          v-for="btn in assyNavButtons"
+          :key="btn.to"
+          :to="btn.to"
+          :value="btn.to"
+          :active="activeTab === btn.to"
+          class="nav-list-item"
+        >
+        <template v-slot:prepend>
+            <v-icon>{{ btn.icon }}</v-icon>
+          </template>
+          <v-list-item-title>{{ btn.label }}</v-list-item-title>
+        </v-list-item>
+
+        <v-divider class="my-2"></v-divider>
+        <v-list-subheader class="nav-group-title">维修</v-list-subheader>
+        <v-list-item
+          v-for="btn in matNavButtons"
+          :key="btn.to"
+          :to="btn.to"
+          :value="btn.to"
+          :active="activeTab === btn.to"
+          class="nav-list-item"
+        >
+          <template v-slot:prepend>
+            <v-icon>{{ btn.icon }}</v-icon>
+          </template>
+          <v-list-item-title>{{ btn.label }}</v-list-item-title>
+        </v-list-item>
+
+        <v-divider class="my-2"></v-divider>
+        <v-list-subheader class="nav-group-title">PC&L</v-list-subheader>
+        <v-list-item
+          v-for="btn in pclNavButtons"
+          :key="btn.to"
+          :to="btn.to"
+          :value="btn.to"
+          :active="activeTab === btn.to"
+          class="nav-list-item"
+        >
+          <template v-slot:prepend>
+            <v-icon>{{ btn.icon }}</v-icon>
+          </template>
+          <v-list-item-title>{{ btn.label }}</v-list-item-title>
+        </v-list-item>
+
+        <v-divider class="my-2"></v-divider>
+        <v-list-subheader class="nav-group-title">EHS</v-list-subheader>
+        <v-list-item
+          v-for="btn in ehsNavButtons"
+          :key="btn.to"
+          :to="btn.to"
+          :value="btn.to"
+          :active="activeTab === btn.to"
+          class="nav-list-item"
+        >
+          <template v-slot:prepend>
+            <v-icon>{{ btn.icon }}</v-icon>
+          </template>
+          <v-list-item-title>{{ btn.label }}</v-list-item-title>
+        </v-list-item>
+
+        <!-- 系统管理组 -->
+        <template v-if="showAdminMenu">
+          <v-divider class="my-2"></v-divider>
+          <v-list-subheader class="nav-group-title">系统管理</v-list-subheader>
+          
+          <!-- 管理菜单项 -->
+          <v-list-group value="admin">
+            <template v-slot:activator="{ props }">
+              <v-list-item
+                v-bind="props"
+                :active="activeTab.startsWith('/admin')"
+                class="nav-list-item"
+              >
+                <template v-slot:prepend>
+                  <v-icon>mdi-cog</v-icon>
+                </template>
+                <v-list-item-title>管理</v-list-item-title>
+              </v-list-item>
+            </template>
+            
+            <!-- 管理子菜单 -->
+            <v-list-item
+              to="/admin"
+              :active="activeTab === '/admin'"
+              class="nav-list-subitem"
+            >
+              <template v-slot:prepend>
+                <v-icon size="small">mdi-account-group</v-icon>
+              </template>
+              <v-list-item-title>用户管理</v-list-item-title>
+            </v-list-item> 
+            
+            <v-list-item
+              to="/admin/departments"
+              :active="activeTab === '/admin/departments'"
+              class="nav-list-subitem"
+            >
+              <template v-slot:prepend>
+                <v-icon size="small">mdi-office-building</v-icon>
+              </template>
+              <v-list-item-title>部门管理</v-list-item-title>
+            </v-list-item>
+            
+            <v-list-item
+              to="/admin/activities"
+              :active="activeTab === '/admin/activities'"
+              class="nav-list-subitem"
+            >
+              <template v-slot:prepend>
+                <v-icon size="small">mdi-history</v-icon>
+              </template>
+              <v-list-item-title>操作记录</v-list-item-title>
+            </v-list-item>
+          </v-list-group>
+        </template>
+      </v-list>
+    </v-navigation-drawer>
+    
     <!-- 移动端侧边导航 -->
     <v-navigation-drawer v-model="drawer" temporary>
       <v-list>
@@ -97,8 +247,10 @@
         
         <v-divider class="mb-2"></v-divider>
         
+        <!-- 主要导航组 -->
+        <v-list-subheader>ALL</v-list-subheader>
         <v-list-item
-          v-for="btn in visibleButtons"
+          v-for="btn in mainNavButtons"
           :key="btn.to"
           :to="btn.to"
           :value="btn.to"
@@ -109,6 +261,86 @@
           </template>
           <v-list-item-title>{{ btn.label }}</v-list-item-title>
         </v-list-item>
+        
+        <v-divider class="my-2"></v-divider>
+        <v-list-subheader>质量</v-list-subheader>
+        <v-list-item
+          v-for="btn in qaNavButtons"
+          :key="btn.to"
+          :to="btn.to"
+          :value="btn.to"
+          @click="drawer = false"
+        >
+          <template v-slot:prepend>
+            <v-icon>{{ btn.icon }}</v-icon>
+          </template>
+          <v-list-item-title>{{ btn.label }}</v-list-item-title>
+        </v-list-item>
+        
+        <v-divider class="my-2"></v-divider>
+        <v-list-subheader>生产</v-list-subheader>
+        <v-list-item
+          v-for="btn in assyNavButtons"
+          :key="btn.to"
+          :to="btn.to"
+          :value="btn.to"
+          @click="drawer = false"
+        >
+          <template v-slot:prepend>
+            <v-icon>{{ btn.icon }}</v-icon>
+          </template>
+          <v-list-item-title>{{ btn.label }}</v-list-item-title>
+        </v-list-item>
+        <!-- 系统管理组 -->
+        <template v-if="showAdminMenu">
+          <v-divider class="my-2"></v-divider>
+          <v-list-subheader>系统管理</v-list-subheader>
+          
+          <!-- 管理菜单项 -->
+          <v-list-group value="admin">
+            <template v-slot:activator="{ props }">
+              <v-list-item
+                v-bind="props"
+              >
+                <template v-slot:prepend>
+                  <v-icon>mdi-cog</v-icon>
+                </template>
+                <v-list-item-title>管理</v-list-item-title>
+              </v-list-item>
+            </template>
+            
+            <!-- 管理子菜单 -->
+            <v-list-item
+              to="/admin"
+              @click="drawer = false"
+            >
+              <template v-slot:prepend>
+                <v-icon size="small">mdi-account-group</v-icon>
+              </template>
+              <v-list-item-title>用户管理</v-list-item-title>
+            </v-list-item>
+            
+            <v-list-item
+              to="/admin/departments"
+              @click="drawer = false"
+            >
+              <template v-slot:prepend>
+                <v-icon size="small">mdi-office-building</v-icon>
+              </template>
+              <v-list-item-title>部门管理</v-list-item-title>
+            </v-list-item>
+            
+            <v-list-item
+              to="/admin/activities"
+              @click="drawer = false"
+            >
+              <template v-slot:prepend>
+                <v-icon size="small">mdi-history</v-icon>
+              </template>
+              <v-list-item-title>操作记录</v-list-item-title>
+            </v-list-item>
+          </v-list-group>
+        </template>
         
         <v-divider class="my-2"></v-divider>
         
@@ -128,7 +360,7 @@
       </v-list>
     </v-navigation-drawer>
     
-    <v-main>
+    <v-main class="main-content">
       <transition name="fade" mode="out-in">
         <div v-if="isLoading" class="fill-height d-flex align-center justify-center">
           <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
@@ -141,10 +373,13 @@
       </transition>
     </v-main>
     
-    <!-- 全局通知组件 -->
-    <GlobalNotification ref="globalNotification" />
-    <!-- 全局轻提示组件 -->
-    <GlobalSnackbar ref="globalSnackbar" />
+    <!-- 右下角通知组件 -->
+    <div class="notification-container">
+      <!-- 全局通知组件 -->
+      <GlobalNotification ref="globalNotification" />
+      <!-- 全局轻提示组件 -->
+      <GlobalSnackbar ref="globalSnackbar" />
+    </div>
   </v-app>
 </template>
 
@@ -152,7 +387,9 @@
 import { useUserStore } from './stores/user.js'
 import { computed, ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { getCurrentInstance } from 'vue'
 
+const app = getCurrentInstance()?.appContext.app
 const userStore = useUserStore()
 const user = computed(() => userStore.user)
 const userDepartment = computed(() => userStore.department)
@@ -168,7 +405,13 @@ const userInitials = computed(() => {
 // 活动标签和抽屉状态
 const activeTab = ref(null)
 const drawer = ref(false)
+const sideNav = ref(true) // 桌面端侧边导航状态
 const isLoading = ref(true)
+
+// 是否显示管理菜单
+const showAdminMenu = computed(() => {
+  return userDepartment.value === 'ADMIN'
+})
 
 // 页面过渡效果
 const pageTransition = computed(() => {
@@ -208,6 +451,11 @@ onMounted(async () => {
       console.log('用户状态已恢复，当前部门:', userDepartment.value)
     }
     activeTab.value = route.path
+    
+    // 初始化全局组件引用
+    if (app.config && app.config.globalProperties) {
+      app.config.globalProperties.$updateGlobalComponents?.()
+    }
   } catch (error) {
     console.error('初始化用户信息失败:', error)
   } finally {
@@ -220,23 +468,59 @@ const logout = () => {
   router.replace('/login')
 }
 
-const visibleButtons = computed(() => {
-  return buttons.filter(btn => {
-    // 如果按钮对所有部门可见
-    if (btn.departments.includes('*')) return true
-    
-    // 如果用户未登录且按钮不需要登录
-    if (!user.value && !btn.requiresAuth) return true
-    
-    // 如果用户已登录且该按钮对用户部门可见
-    if (user.value && (btn.departments.includes(userDepartment.value) || userDepartment.value === 'ADMIN')) {
-      return true
-    }
-    
-    return false
-  })
+const mainNavButtons = computed(() => {
+  return [
+    { to: '/dashboard', icon: 'mdi-view-dashboard', label: '首页', departments: ['*'], requiresAuth: false },
+    { to: '/events', icon: 'mdi-calendar-text', label: '重要事件', departments: ['*'], requiresAuth: true },
+  ].filter(filterVisibleButtons)
 })
 
+const qaNavButtons = computed(() => {
+  return [
+    { to: '/quality', icon: 'mdi-checkbox-multiple-marked-circle-outline', label: 'GP12', departments: ['QA', 'ADMIN'], requiresAuth: true },
+    { to: '/qa_others', icon: 'mdi-account-group-outline', label: '质量杂项', departments: ['QA', 'ADMIN'], requiresAuth: true },
+  ].filter(filterVisibleButtons)
+})
+const matNavButtons = computed(() => {
+  return [
+    { to: '/maintenance', icon: 'mdi-wrench', label: '维修', departments: ['MAT', 'ADMIN'], requiresAuth: true },
+    ].filter(filterVisibleButtons)
+  })
+
+const assyNavButtons = computed(() => {
+  return [
+  { to: '/assy', icon: 'mdi-hammer-wrench', label: '生产', departments: ['ASSY', 'ADMIN'], requiresAuth: true }
+  ].filter(filterVisibleButtons)
+})
+
+const pclNavButtons = computed(() => {
+  return [
+  { to: '/pcl', icon: 'mdi-truck', label: '物流', departments: ['PCL', 'ADMIN'], requiresAuth: true }
+  ].filter(filterVisibleButtons)
+  })
+  
+const ehsNavButtons = computed(() => {
+  return [
+  { to: '/ehs', icon: 'mdi-security', label: 'EHS', departments: ['EHS', 'ADMIN'], requiresAuth: true }
+  ].filter(filterVisibleButtons)
+})
+// 按钮可见性过滤函数
+const filterVisibleButtons = (btn) => {
+  // 如果按钮对所有部门可见
+  if (btn.departments.includes('*')) return true
+  
+  // 如果用户未登录且按钮不需要登录
+  if (!user.value && !btn.requiresAuth) return true
+  
+  // 如果用户已登录且该按钮对用户部门可见
+  if (user.value && (btn.departments.includes(userDepartment.value) || userDepartment.value === 'ADMIN')) {
+    return true
+  }
+  
+  return false
+}
+
+// 原始按钮数据
 const buttons = [
   { to: '/dashboard', icon: 'mdi-view-dashboard', label: '首页', departments: ['*'], requiresAuth: false },
   { to: '/assy', icon: 'mdi-hammer-wrench', label: '生产', departments: ['ASSY', 'ADMIN'], requiresAuth: true },
@@ -247,8 +531,13 @@ const buttons = [
   { to: '/ehs', icon: 'mdi-security', label: 'EHS', departments: ['EHS', 'ADMIN'], requiresAuth: true },
   { to: '/gmo', icon: 'mdi-earth', label: 'GMO', departments: ['GMO', 'ADMIN'], requiresAuth: true },
   { to: '/events', icon: 'mdi-calendar-text', label: '重要事件', departments: ['*'], requiresAuth: true },
-  { to: '/admin', icon: 'mdi-security', label: '管理', departments: ['ADMIN'], requiresAuth: true },
+  { to: '/admin', icon: 'mdi-cog', label: '管理', departments: ['ADMIN'], requiresAuth: true },
 ]
+
+// 为了向后兼容，保留原有的 visibleButtons 计算属性
+const visibleButtons = computed(() => {
+  return buttons.filter(filterVisibleButtons)
+})
 </script>
 
 <style>
@@ -267,21 +556,38 @@ const buttons = [
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.nav-buttons {
-  display: flex;
-  flex-wrap: nowrap;
-  margin-right: 4px;
+/* 左侧导航样式 */
+.left-nav {
+  top: 64px !important; 
+  height: calc(100% - 64px) !important;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.nav-btn {
-  padding: 0 10px;
-  font-size: 0.875rem;
-  height: 36px;
-  margin: 0 2px;
-  border-radius: 4px;
+.nav-list-item {
+  margin: 6px 0;
+  border-radius: 0 28px 28px 0;
 }
 
-.nav-btn:hover {
+.nav-list-subitem {
+  margin: 2px 0;
+  padding-left: 12px !important;
+  border-radius: 0 28px 28px 0;
+}
+
+.nav-group-title {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+  padding: 0 16px;
+  margin-top: 8px;
+}
+
+.nav-list-item.v-list-item--active {
+  background-color: rgba(25, 118, 210, 0.1);
+  color: #1976d2;
+}
+
+.nav-list-item:hover, .nav-list-subitem:hover {
   background-color: rgba(0, 0, 0, 0.04);
 }
 
@@ -297,6 +603,21 @@ const buttons = [
   opacity: 0;
 }
 
+/* 主内容区域样式 */
+.main-content {
+  margin-left: 0px; 
+  background-color: #f5f7fa;
+  min-height: calc(100vh - 64px);
+}
+
+/* 通知容器样式 */
+.notification-container {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 1000;
+}
+
 /* 响应式调整 */
 @media (max-width: 960px) {
   .app-header .v-container {
@@ -304,10 +625,10 @@ const buttons = [
   }
 }
 
-/* 页面容器样式 */
-.v-main {
-  background-color: #f5f7fa;
-  min-height: calc(100vh - 64px);
+@media (max-width: 960px) {
+  .main-content {
+    margin-left: 0;
+  }
 }
 
 /* 改进的响应式样式 */

@@ -39,43 +39,56 @@
         <!-- 内容区域 -->
         <v-expand-transition>
           <div v-if="dataLoaded">
-            <!-- 数据摘要卡片 -->
-            <v-row class="mb-6">
-              <v-col cols="12" md="3" sm="6">
-                <v-card color="primary" dark class="metric-card">
-                  <v-card-text class="d-flex flex-column align-center">
-                    <div class="text-h6 mb-2">FTT - TJC</div>
-                    <div class="text-h3 font-weight-bold">{{ formData.fttValuesTjc[selectedMonth - 1] }}%</div>
-                  </v-card-text>
-                </v-card>
-              </v-col>
-              <v-col cols="12" md="3" sm="6">
-                <v-card color="info" dark class="metric-card">
-                  <v-card-text class="d-flex flex-column align-center">
-                    <div class="text-h6 mb-2">FTT - TJM</div>
-                    <div class="text-h3 font-weight-bold">{{ formData.fttValuesTjm[selectedMonth - 1] }}%</div>
-                  </v-card-text>
-                </v-card>
-              </v-col>
-              <v-col cols="12" md="3" sm="6">
-                <v-card color="warning" dark class="metric-card">
-                  <v-card-text class="d-flex flex-column align-center">
-                    <div class="text-h6 mb-2">客户投诉</div>
-                    <div class="text-h3 font-weight-bold">{{ formData.formalComplaints[selectedMonth - 1] }}</div>
-                  </v-card-text>
-                </v-card>
-              </v-col>
-              <v-col cols="12" md="3" sm="6">
-                <v-card color="error" dark class="metric-card">
-                  <v-card-text class="d-flex flex-column align-center">
-                    <div class="text-h6 mb-2">报废率-TJC</div>
-                    <div class="text-h3 font-weight-bold">{{ formData.scrapRatesTjc[selectedMonth - 1] }}%</div>
-                  </v-card-text>
-                </v-card>
-              </v-col>
-            </v-row>
-
             <v-form ref="form" @submit.prevent="submit">
+              <!-- KPI 数据表格 -->
+              <v-card class="mb-6">
+                <v-data-table
+                  :headers="headers"
+                  :items="kpiData"
+                  class="elevation-1"
+                  density="comfortable"
+                >
+                  <template v-slot:item.newFactory="{ item }">
+                    <v-text-field
+                      v-model.number="item.newFactory"
+                      type="number"
+                      min="0"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      class="text-field-small"
+                      @input="handleInput"
+                    ></v-text-field>
+                  </template>
+                  
+                  <template v-slot:item.oldFactory="{ item }">
+                    <v-text-field
+                      v-model.number="item.oldFactory"
+                      type="number"
+                      min="0"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      class="text-field-small"
+                      @input="handleInput"
+                    ></v-text-field>
+                  </template>
+                  
+                  <template v-slot:item.total="{ item }">
+                    <v-text-field
+                      v-model.number="item.total"
+                      type="number"
+                      min="0"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      class="text-field-small"
+                      @input="handleInput"
+                    ></v-text-field>
+                  </template>
+                </v-data-table>
+              </v-card>
+
               <!-- 报废率模块 -->
               <v-card class="mb-6 pa-4">
                 <v-card-title class="subtitle-1">
@@ -148,78 +161,6 @@
                 </v-card-text>
               </v-card>
 
-              <!-- 供应商缺陷和QC漏检 -->
-              <v-card class="mb-6 pa-4">
-                <v-card-title class="subtitle-1">
-                  <v-icon class="mr-2">mdi-alert-circle-outline</v-icon>
-                  供应商和质检数据
-                </v-card-title>
-                <v-card-text>
-                  <v-row>
-                    <v-col cols="12" md="6">
-                      <v-text-field
-                        v-model.number="formData.supplierDefects[selectedMonth - 1]"
-                        label="供应商缺陷数量"
-                        type="number"
-                        min="0"
-                        variant="outlined"
-                        density="comfortable"
-                        hint="输入当月供应商缺陷总数"
-                        :rules="[rules.required, rules.nonNegative]"
-                      ></v-text-field>
-                    </v-col>
-                    <v-col cols="12" md="6">
-                      <v-text-field
-                        v-model.number="formData.qcIgnoreAmounts[selectedMonth - 1]"
-                        label="QC漏检数量"
-                        type="number"
-                        min="0"
-                        variant="outlined"
-                        density="comfortable"
-                        hint="输入当月QC漏检总数"
-                        :rules="[rules.required, rules.nonNegative]"
-                      ></v-text-field>
-                    </v-col>
-                  </v-row>
-                </v-card-text>
-              </v-card>
-
-              <!-- 客户投诉 -->
-              <v-card class="mb-6 pa-4">
-                <v-card-title class="subtitle-1">
-                  <v-icon class="mr-2">mdi-account-voice</v-icon>
-                  客户投诉
-                </v-card-title>
-                <v-card-text>
-                  <v-row>
-                    <v-col cols="12" md="6">
-                      <v-text-field
-                        v-model.number="formData.formalComplaints[selectedMonth - 1]"
-                        label="正式投诉数量"
-                        type="number"
-                        min="0"
-                        variant="outlined"
-                        density="comfortable"
-                        hint="输入当月正式客户投诉数量"
-                        :rules="[rules.required, rules.nonNegative]"
-                      ></v-text-field>
-                    </v-col>
-                    <v-col cols="12" md="6">
-                      <v-text-field
-                        v-model.number="formData.informalComplaints[selectedMonth - 1]"
-                        label="非正式投诉数量"
-                        type="number"
-                        min="0"
-                        variant="outlined"
-                        density="comfortable"
-                        hint="输入当月非正式客户投诉数量"
-                        :rules="[rules.required, rules.nonNegative]"
-                      ></v-text-field>
-                    </v-col>
-                  </v-row>
-                </v-card-text>
-              </v-card>
-
               <div class="d-flex justify-end">
                 <v-btn
                   type="submit"
@@ -242,9 +183,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import Message from '../utils/notification'
 import { get, post, put } from '../utils/api'
+import { debounce } from 'lodash'
 
 // 表单引用
 const form = ref(null);
@@ -253,6 +195,7 @@ const form = ref(null);
 const selectedMonth = ref(new Date().getMonth() + 1); // 默认当前月
 const submitting = ref(false);
 const dataLoaded = ref(false);
+const isDataChanged = ref(false);
 
 // 月份选项
 const months = Array.from({ length: 12 }, (_, i) => ({
@@ -265,6 +208,58 @@ const rules = {
   required: v => (v !== undefined && v !== null && v !== '') || '此字段为必填项',
   nonNegative: v => v >= 0 || '请输入大于等于0的数值'
 };
+
+// 表格头部
+const headers = [
+  { title: '区域', key: 'area', align: 'start', width: '100px' },
+  { title: 'KPI 描述', key: 'description', align: 'start', width: '250px' },
+  { title: '新厂', key: 'newFactory', align: 'center', width: '150px' },
+  { title: '老厂', key: 'oldFactory', align: 'center', width: '150px' },
+  { title: '汇总', key: 'total', align: 'center', width: '150px' },
+];
+
+// KPI 数据
+const kpiData = ref([
+  { id: 1, area: '新厂', description: 'Customer Defects', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 2, area: '老厂', description: 'Customer Defects', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 3, area: '汇总', description: 'Customer Defects', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 4, area: '新厂', description: 'PPM', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 5, area: '老厂', description: 'PPM', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 6, area: '汇总', description: 'PPM', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 7, area: '新厂', description: 'Supplier Defects', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 8, area: '老厂', description: 'Supplier Defects', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 9, area: '汇总', description: 'Supplier Defects', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 10, area: '新厂', description: 'Cost of Quality(failure cost only)', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 11, area: '老厂', description: 'Cost of Quality(failure cost only)', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 12, area: '汇总', description: 'Cost of Quality(failure cost only)', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 13, area: '新厂', description: 'Customer Chargebacks', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 14, area: '老厂', description: 'Customer Chargebacks', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 15, area: '汇总', description: 'Customer Chargebacks', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 16, area: '新厂', description: 'Customer Chargebacks%', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 17, area: '老厂', description: 'Customer Chargebacks%', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 18, area: '汇总', description: 'Customer Chargebacks%', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 19, area: '新厂', description: 'Customer Warranty', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 20, area: '老厂', description: 'Customer Warranty', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 21, area: '汇总', description: 'Customer Warranty', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 22, area: '新厂', description: 'Customer Warranty%', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 23, area: '老厂', description: 'Customer Warranty%', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 24, area: '汇总', description: 'Customer Warranty%', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 25, area: '新厂', description: 'Supplier RDR', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 26, area: '老厂', description: 'Supplier RDR', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 27, area: '汇总', description: 'Supplier RDR', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 28, area: '新厂', description: 'Supplier RDR%', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 29, area: '老厂', description: 'Supplier RDR%', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 30, area: '汇总', description: 'Supplier RDR%', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 31, area: '新厂', description: 'Cost of Scrap', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 32, area: '老厂', description: 'Cost of Scrap', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 33, area: '汇总', description: 'Cost of Scrap', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 34, area: '新厂', description: 'Magna FTT - Quality Performance (New)', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 35, area: '老厂', description: 'Magna FTT - Quality Performance (New)', newFactory: 0, oldFactory: 0, total: 0 },
+  { id: 36, area: '汇总', description: 'Magna FTT - Quality Performance (New)', newFactory: 0, oldFactory: 0, total: 0 },
+]);
+
+// 原始数据，用于比较变更
+const originalKpiData = ref([]);
 
 // 表单数据
 const formData = reactive({
@@ -279,11 +274,17 @@ const formData = reactive({
   informalComplaints: Array(12).fill(0)
 });
 
+// 输入处理
+const handleInput = debounce(() => {
+  isDataChanged.value = true;
+}, 500);
+
 // 获取月份数据
 const fetchMonthData = async () => {
   dataLoaded.value = false;
   
   try {
+    // 获取基本数据
     const data = await get('/qa/qad/', { month: selectedMonth.value });
     
     if (data.length > 0) {
@@ -311,6 +312,32 @@ const fetchMonthData = async () => {
       formData.informalComplaints[selectedMonth.value - 1] = 0;
       formData.id = null; // 重置ID，表示这是新数据
     }
+    
+    // 获取KPI数据
+    try {
+      const kpiData = await get('/qa/kpi/', { month: selectedMonth.value });
+      if (kpiData && kpiData.length > 0) {
+        // 将API返回的数据映射到表格数据
+        kpiData.forEach(item => {
+          const existingItem = kpiData.value.find(
+            k => k.area === item.area && k.description === item.description
+          );
+          
+          if (existingItem) {
+            existingItem.newFactory = item.new_factory;
+            existingItem.oldFactory = item.old_factory;
+            existingItem.total = item.total;
+          }
+        });
+      }
+    } catch (error) {
+      console.error('获取KPI数据失败:', error);
+      // 不阻止整个页面加载，使用默认值
+    }
+    
+    // 保存原始数据用于比较
+    originalKpiData.value = JSON.parse(JSON.stringify(kpiData.value));
+    
   } catch (error) {
     Message.error(`获取数据失败: ${error.message || '未知错误'}`);
   } finally {
@@ -350,6 +377,28 @@ const submit = async () => {
       formData.id = result.id;
       Message.success('数据保存成功');
     }
+    
+    // 保存KPI数据
+    const kpiPayload = {
+      month: selectedMonth.value,
+      year: new Date().getFullYear(),
+      items: kpiData.value.map(item => ({
+        area: item.area,
+        description: item.description,
+        new_factory: item.newFactory,
+        old_factory: item.oldFactory,
+        total: item.total
+      }))
+    };
+    
+    await put('/qa/kpi/', kpiPayload);
+    
+    // 重置数据变更标志
+    isDataChanged.value = false;
+    
+    // 更新原始数据
+    originalKpiData.value = JSON.parse(JSON.stringify(kpiData.value));
+    
   } catch (error) {
     Message.error(`操作失败: ${error.message || '未知错误'}`);
   } finally {
@@ -389,6 +438,10 @@ onMounted(() => {
   font-size: 1.1rem;
   font-weight: 500;
   color: #1976d2;
+}
+
+.text-field-small {
+  max-width: 120px;
 }
 
 @media (max-width: 768px) {

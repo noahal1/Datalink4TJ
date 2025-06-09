@@ -90,4 +90,26 @@ app.config.globalProperties.$notify = {
   error: (msg, timeout = 3000) => appInstance.$refs.globalSnackbar?.show(msg, 'error', timeout),
   warning: (msg, timeout = 3000) => appInstance.$refs.globalSnackbar?.show(msg, 'warning', timeout),
   info: (msg, timeout = 3000) => appInstance.$refs.globalSnackbar?.show(msg, 'info', timeout)
+}
+
+// 注册全局通知组件
+app.component('GlobalNotification', GlobalNotification)
+app.component('GlobalSnackbar', GlobalSnackbar)
+
+// 提供全局通知组件
+app.provide('globalNotification', null) // 将在组件挂载后更新
+app.provide('globalSnackbar', null) // 将在组件挂载后更新
+
+// 在应用挂载后更新提供的组件引用
+app.config.globalProperties.$updateGlobalComponents = () => {
+  const notification = document.querySelector('.global-notification')?.__vueParentComponent?.ctx
+  const snackbar = document.querySelector('.global-snackbar')?.__vueParentComponent?.ctx
+  
+  if (notification) {
+    app._context.provides.globalNotification = notification
+  }
+  
+  if (snackbar) {
+    app._context.provides.globalSnackbar = snackbar
+  }
 }    

@@ -1,66 +1,73 @@
 <template>
   <v-snackbar
     v-model="visible"
-    :color="color"
-    :timeout="timeout"
-    location="top right"
-    multi-line
-    elevation="6"
+    :color="snackbar.color"
+    :timeout="snackbar.timeout"
+    :location="location"
     class="global-snackbar"
   >
-    <v-icon v-if="icon" class="mr-2">{{ icon }}</v-icon>
-    <span>{{ message }}</span>
+    {{ snackbar.text }}
+    
+    <template v-slot:actions>
+      <v-btn
+        variant="text"
+        icon="mdi-close"
+        @click="visible = false"
+      ></v-btn>
+    </template>
   </v-snackbar>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { eventBus } from '../utils/eventBus'
+import { ref, onMounted, defineExpose } from 'vue'
 
-const visible = ref(false)
-const message = ref('')
-const color = ref('primary')
-const icon = ref('')
-const timeout = ref(3000)
+// 默认位置为右下角
+const location = 'bottom right'
 
-const iconMap = {
-  success: 'mdi-check-circle',
-  error: 'mdi-alert-circle',
-  warning: 'mdi-alert',
-  info: 'mdi-information'
-}
-const colorMap = {
-  success: 'success',
-  error: 'error',
-  warning: 'warning',
-  info: 'info'
-}
-
-function show(msg, type = 'info', time = 3000) {
-  message.value = msg
-  color.value = colorMap[type] || 'info'
-  icon.value = iconMap[type] || ''
-  timeout.value = time
-  visible.value = false
-  setTimeout(() => { visible.value = true }, 10)
-}
-
-// 监听事件总线上的消息事件
-onMounted(() => {
-  eventBus.on('snackbar', ({ message: msg, type, time }) => {
-    show(msg, type, time)
-  })
+// 消息内容
+const snackbar = ref({
+  text: '',
+  color: 'success',
+  timeout: 3000
 })
 
-// 暴露方法给外部
-defineExpose({ show })
+// 显示状态
+const visible = ref(false)
+
+/**
+ * 显示消息
+ * @param {Object} options 配置选项
+ * @param {string} options.text 消息文本
+ * @param {string} options.color 颜色，可选值：success, error, warning, info
+ * @param {number} options.timeout 显示时间，单位ms
+ */
+const show = (options) => {
+  snackbar.value = {
+    text: options.text || '',
+    color: options.color || 'success',
+    timeout: options.timeout || 3000
+  }
+  visible.value = true
+}
+
+// 向父组件暴露方法
+defineExpose({
+  show
+})
+
+// 注册为全局组件
+onMounted(() => {
+  // 提供给 inject 使用
+  if (window) {
+    window.$snackbar = {
+      show
+    }
+  }
+})
 </script>
 
 <style scoped>
 .global-snackbar {
-  font-size: 1.1rem;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  z-index: 3000 !important;
+  z-index: 9999;
 }
 </style> 

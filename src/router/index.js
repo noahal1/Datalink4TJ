@@ -17,6 +17,10 @@ const Maintenance = createLazyComponent(() => import('../pages/Maintenance.vue')
 const Qa_others = createLazyComponent(() => import('../pages/Qa_others.vue'))
 const BossDashboard = createLazyComponent(() => import('../pages/BossDashboard.vue'))
 
+// 管理页面子组件
+const AdminDepartments = createLazyComponent(() => import('../pages/admin/Departments.vue'))
+const AdminActivities = createLazyComponent(() => import('../pages/admin/Activities.vue'))
+
 const routes = [
   {
     path: '/',
@@ -98,9 +102,25 @@ const routes = [
     path: '/admin', 
     component: Admin,
     meta: { 
-      title: '管理',
+      title: '用户管理',
       permission: 'ADMIN' // 只有ADMIN可访问
-    } 
+    }
+  },
+  { 
+    path: '/admin/departments', 
+    component: AdminDepartments,
+    meta: { 
+      title: '部门管理',
+      permission: 'ADMIN' // 只有ADMIN可访问
+    }
+  },
+  { 
+    path: '/admin/activities', 
+    component: AdminActivities,
+    meta: { 
+      title: '操作记录',
+      permission: 'ADMIN' // 只有ADMIN可访问
+    }
   },
   {
     path: '/qa_others',
