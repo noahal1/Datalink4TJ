@@ -62,7 +62,7 @@
 import { ref, onMounted } from 'vue'
 import { useUserStore } from '../stores/user'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import Message from '../utils/notification'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -120,16 +120,10 @@ const login = async () => {
       sessionStorage.removeItem('redirectPath')
       router.replace(redirectPath)
       
-      ElMessage({
-        type: 'success',
-        message: '登录成功'
-      })
+      Message.success('登录成功')
     }
   } catch (error) {
-    ElMessage({
-      type: 'error',
-      message: error.message || '登录失败，请重试'
-    })
+    Message.error(error.message || '登录失败，请重试')
   } finally {
     loading.value = false
   }

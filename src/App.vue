@@ -143,6 +143,8 @@
     
     <!-- 全局通知组件 -->
     <GlobalNotification ref="globalNotification" />
+    <!-- 全局轻提示组件 -->
+    <GlobalSnackbar ref="globalSnackbar" />
   </v-app>
 </template>
 

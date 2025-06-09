@@ -3,7 +3,7 @@
  */
 import axios from 'axios'
 import { useUserStore } from '../stores/user'
-import { ElMessage } from 'element-plus'
+import Message from './notification'
 import router from '../router'
 
 // API 基础URL
@@ -42,7 +42,7 @@ api.interceptors.response.use(
   },
   error => {
     if (!error.response) {
-      ElMessage.error('网络错误，请检查您的网络连接')
+      Message.error('网络错误，请检查您的网络连接')
       return Promise.reject(new Error('网络错误'))
     }
     
@@ -50,7 +50,7 @@ api.interceptors.response.use(
     
     switch (status) {
       case 401:
-        ElMessage.error('登录已过期，请重新登录')
+        Message.error('登录已过期，请重新登录')
         // 清除用户信息
         const userStore = useUserStore()
         userStore.logout()
@@ -58,16 +58,16 @@ api.interceptors.response.use(
         router.push('/login')
         break
       case 403:
-        ElMessage.error('没有权限访问该资源')
+        Message.error('没有权限访问该资源')
         break
       case 404:
-        ElMessage.error('请求的资源不存在')
+        Message.error('请求的资源不存在')
         break
       case 500:
-        ElMessage.error('服务器错误，请联系管理员')
+        Message.error('服务器错误，请联系管理员')
         break
       default:
-        ElMessage.error(error.response.data?.detail || '请求失败')
+        Message.error(error.response.data?.detail || '请求失败')
     }
     
     return Promise.reject(error)

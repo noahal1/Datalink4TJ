@@ -1,4 +1,4 @@
-import { ElMessage } from 'element-plus'
+import Message from './notification'
 
 /**
  * 全局错误处理器
@@ -28,7 +28,7 @@ class ErrorHandler {
 
     // 仅对非HTTP错误(已经在API拦截器中处理过的)显示通知
     if (!error.isAxiosError) {
-      ElMessage.error('应用发生错误，请刷新重试')
+      Message.error('应用发生错误，请刷新重试')
     }
   }
 
@@ -39,7 +39,7 @@ class ErrorHandler {
   promiseErrorHandler(event) {
     if (event.reason && !event.reason.isAxiosError) {
       console.error('未处理的Promise错误:', event.reason)
-      ElMessage.error('操作失败，请刷新重试')
+      Message.error('操作失败，请刷新重试')
       
       if (import.meta.env.PROD) {
         this.reportErrorToServer({
@@ -70,7 +70,7 @@ class ErrorHandler {
       })
     }
 
-    ElMessage.error('应用发生错误，请刷新页面')
+    Message.error('应用发生错误，请刷新页面')
   }
 
   /**

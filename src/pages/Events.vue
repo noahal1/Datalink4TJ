@@ -198,6 +198,7 @@
 import { ref, computed, onMounted, getCurrentInstance } from 'vue'
 import { format, isValid, parseISO, isAfter, isBefore, isToday } from 'date-fns'
 import { useUserStore } from '../stores/user'
+import Message from '../utils/notification'
 
 const userStore = useUserStore()
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
@@ -258,10 +259,7 @@ const fetchEvents = async () => {
     // 检查用户是否已登录
     if (!userStore.token) {
       console.error('用户未登录或令牌无效');
-      const app = getCurrentInstance();
-      if (app && app.proxy.$notify) {
-        app.proxy.$notify.error('请先登录再进行操作！');
-      }
+      Message.error('请先登录再进行操作！');
       isLoading.value = false;
       return;
     }
@@ -283,11 +281,7 @@ const fetchEvents = async () => {
     }))
   } catch (error) {
     console.error('Error fetching events:', error)
-    // 使用全局通知
-    const app = getCurrentInstance();
-    if (app && app.proxy.$notify) {
-      app.proxy.$notify.error('获取事件列表失败');
-    }
+    Message.error('获取事件列表失败');
   } finally {
     isLoading.value = false;
   }
@@ -318,10 +312,7 @@ const submitEvent = async () => {
       // 检查用户是否已登录
       if (!userStore.token) {
         console.error('用户未登录或令牌无效');
-        const app = getCurrentInstance();
-        if (app && app.proxy.$notify) {
-          app.proxy.$notify.error('请先登录再进行操作！');
-        }
+        Message.error('请先登录再进行操作！');
         return;
       }
 
@@ -347,30 +338,17 @@ const submitEvent = async () => {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       
-      // 使用全局通知
-      const app = getCurrentInstance();
-      if (app && app.proxy.$notify) {
-        app.proxy.$notify.success(eventForm.value.id ? '事件更新成功' : '事件添加成功');
-      }
+      Message.success(eventForm.value.id ? '事件更新成功' : '事件添加成功');
       
       showDialog.value = false
       eventForm.value = { id: null, name: '', department: '', start_time: '', end_time: '' }
       await fetchEvents()
     } catch (error) {
       console.error('Error submitting event:', error)
-      
-      // 使用全局通知
-      const app = getCurrentInstance();
-      if (app && app.proxy.$notify) {
-        app.proxy.$notify.error(eventForm.value.id ? '事件更新失败' : '事件添加失败');
-      }
+      Message.error(eventForm.value.id ? '事件更新失败' : '事件添加失败');
     }
   } else {
-    // 使用全局通知
-    const app = getCurrentInstance();
-    if (app && app.proxy.$notify) {
-      app.proxy.$notify.warning('请完整填写表单');
-    }
+    Message.warning('请完整填写表单');
   }
 }
 
@@ -386,10 +364,7 @@ const executeDelete = async () => {
     // 检查用户是否已登录
     if (!userStore.token) {
       console.error('用户未登录或令牌无效');
-      const app = getCurrentInstance();
-      if (app && app.proxy.$notify) {
-        app.proxy.$notify.error('请先登录再进行操作！');
-      }
+      Message.error('请先登录再进行操作！');
       return;
     }
 
@@ -404,23 +379,14 @@ const executeDelete = async () => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    // 使用全局通知
-    const app = getCurrentInstance();
-    if (app && app.proxy.$notify) {
-      app.proxy.$notify.success('事件删除成功');
-    }
+    Message.success('事件删除成功');
     
     showDeleteDialog.value = false;
     eventToDelete.value = null;
     await fetchEvents();
   } catch (error) {
     console.error('Error deleting event:', error);
-    
-    // 使用全局通知
-    const app = getCurrentInstance();
-    if (app && app.proxy.$notify) {
-      app.proxy.$notify.error('事件删除失败');
-    }
+    Message.error('事件删除失败');
   }
 };
 

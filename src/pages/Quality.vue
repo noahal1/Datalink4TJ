@@ -123,6 +123,7 @@
 import { ref, computed, onMounted, getCurrentInstance } from 'vue'
 import { useUserStore } from '../stores/user'
 import api from '../utils/api'
+import Message from '../utils/notification'
 
 const userStore = useUserStore()
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
@@ -203,142 +204,164 @@ const updateQAFields = (row) => {
 }
 
 // 月份变更处理
-const handleMonthChange = async (newMonth) => {
+const handleMonthChange = async () => {
   if (isDataChanged.value) {
-    if (confirm('有未保存的更改，是否继续切换月份？')) {
-      await fetchData(newMonth);
-    } else {
-      selectedMonth.value = selectedMonth.value; // 恢复之前的月份选择
+    const confirm = window.confirm('您有未保存的更改。继续切换月份将丢失这些更改。确定继续吗？');
+    if (!confirm) {
+      selectedMonth.value = currentMonth.value;
       return;
     }
-  } else {
-    await fetchData(newMonth);
   }
+  
+  currentMonth.value = selectedMonth.value;
+  await fetchData();
 }
 
 // 刷新数据
 const refreshData = async () => {
   await fetchData(selectedMonth.value);
+  Message.info('数据已刷新');
 }
 
 // 获取数据
-const fetchData = async (month) => {
+const fetchData = async (month = selectedMonth.value) => {
   isLoading.value = true;
   try {
-    // 检查用户是否已登录
-    if (!userStore.token) {
-      console.error('用户未登录或令牌无效');
-      const app = getCurrentInstance();
-      if (app && app.proxy.$notify) {
-        app.proxy.$notify.error('请先登录再进行操作！');
-      }
-      isLoading.value = false;
-      return;
+    const response = await fetch(`${API_BASE_URL}/qa/?month=${month}`);
+    if (response.ok) {
+      const fetchedData = await response.json();
+      const daysInMonth = new Date(currentYear, parseInt(month) - 1, 0).getDate();
+      const generatedData = Array.from({ length: daysInMonth }, (_, i) => ({
+        date: (i + 1).toString().padStart(2, '0'),
+        swi: 0,
+        rwh: 0,
+        w01: 0,
+        hf: 0,
+        lc: 0,
+        scrapswi: 0,
+        scraprwh: 0,
+        scrapw01: 0,
+        scraphf: 0,
+        scraplc: 0,
+        welding: 0,
+        stamping: 0
+      }));
+
+      fetchedData.forEach(item => {
+        const day = generatedData.find(d => parseInt(d.date) === parseInt(item.day));
+        if (day) {
+          const line = item.line.toLowerCase();
+          day[item.scrapflag ? `scrap${line}` : line] = parseInt(item.value, 10);
+          // 更新welding和stamping字段
+          day.welding = day.swi + day.rwh + day.w01;
+          day.stamping = day.hf + day.lc;
+        }
+      });
+      
+      tableData.value = generatedData;
+      // 创建数据的深拷贝以便比较
+      originalData.value = JSON.parse(JSON.stringify(generatedData));
+      isDataChanged.value = false;
+    } else {
+      console.error('获取数据失败');
+      Message.error('获取质量数据失败');
     }
-
-    const fetchedData = await api.get(`/qa/?month=${month}`);
-    const daysInMonth = new Date(currentYear, month, 0).getDate();
-    const generatedData = Array.from({ length: daysInMonth }, (_, i) => ({
-      date: (i + 1).toString(),
-      swi: 0,
-      rwh: 0,
-      w01: 0,
-      hf: 0,
-      lc: 0,
-      scrapswi: 0,
-      scraprwh: 0,
-      scrapw01: 0,
-      scraphf: 0,
-      scraplc: 0,
-      welding: 0,
-      stamping: 0
-    }));
-
-    fetchedData.forEach(item => {
-      const day = generatedData.find(d => d.date === item.day);
-      if (day) {
-        const line = item.line.toLowerCase();
-        day[item.scrapflag ? `scrap${line}` : line] = parseInt(item.value, 10);
-        updateQAFields(day);
-      }
-    });
-
-    tableData.value = generatedData;
-    originalData.value = JSON.parse(JSON.stringify(generatedData));
-    isDataChanged.value = false;
   } catch (error) {
-    console.error('错误:', error);
-    const app = getCurrentInstance();
-    if (app && app.proxy.$notify) {
-      app.proxy.$notify.error('获取数据失败: ' + error.message);
-    }
+    console.error('获取数据错误:', error);
+    Message.error('获取质量数据失败: ' + (error.message || '未知错误'));
   } finally {
     isLoading.value = false;
   }
-}
+};
 
 // 确认修改
 const confirmChanges = async () => {
-  isLoading.value = true;
-  const changedData = tableData.value.flatMap((row, index) => {
-    const originalRow = originalData.value[index];
-    const entries = [];
-    checkFieldChanges(row, originalRow, entries, editableFields, false);
-    checkFieldChanges(row, originalRow, entries, scrapFields, true);
-    return entries;
-  });
-
   try {
-    // 确保用户已登录并有有效的令牌
-    if (!userStore.token) {
-      console.error('用户未登录或令牌无效');
-      const app = getCurrentInstance();
-      if (app && app.proxy.$notify) {
-        app.proxy.$notify.error('请先登录再进行操作！');
+    isLoading.value = true;
+    const changedData = [];
+    const apiData = [];  // 用于存储转换后的数据格式
+    
+    // 找出所有更改过的数据
+    tableData.value.forEach((row, index) => {
+      const originalRow = originalData.value[index];
+      
+      // 检查数据是否有更改
+      const changedFields = [];
+      
+      standardFields.forEach(field => {
+        if (row[field] !== originalRow[field]) {
+          changedFields.push({
+            field,
+            oldValue: originalRow[field],
+            newValue: row[field],
+            isScrap: false
+          });
+          
+          // 转换为后端期望的格式
+          apiData.push({
+            line: field,
+            day: row.date,
+            month: selectedMonth.value,
+            year: new Date().getFullYear().toString(),
+            value: row[field].toString(),
+            scrapflag: false
+          });
+        }
+      });
+      
+      scrapFields.forEach(field => {
+        if (row[field] !== originalRow[field]) {
+          const lineField = field.replace('scrap', '');
+          changedFields.push({
+            field: lineField,
+            oldValue: originalRow[field],
+            newValue: row[field],
+            isScrap: true
+          });
+          
+          // 转换为后端期望的格式
+          apiData.push({
+            line: lineField,
+            day: row.date,
+            month: selectedMonth.value,
+            year: new Date().getFullYear().toString(),
+            value: row[field].toString(),
+            scrapflag: true
+          });
+        }
+      });
+      
+      if (changedFields.length > 0) {
+        changedData.push({
+          day: row.date,
+          month: selectedMonth.value,
+          changes: changedFields
+        });
       }
-      isLoading.value = false;
+    });
+    
+    if (changedData.length === 0) {
+      Message.info('没有数据变更');
       return;
     }
-
-    await api.put('/qa/', changedData);
     
-    // 显示成功通知
-    const app = getCurrentInstance();
-    if (app && app.proxy.$notify) {
-      app.proxy.$notify.success('数据保存成功！');
+    // 发送转换后的数据格式到服务器
+    const response = await api.put('/qa', apiData);
+    
+    if (response.message === "QA entries updated successfully") {
+      Message.success('数据保存成功');
+      // 更新原始数据
+      originalData.value = JSON.parse(JSON.stringify(tableData.value));
+      isDataChanged.value = false;
+    } else {
+      Message.error('保存失败: ' + (response.message || '未知错误'));
     }
-    
-    isDataChanged.value = false;
-    await fetchData(selectedMonth.value);
   } catch (error) {
-    console.error('错误:', error);
-    const app = getCurrentInstance();
-    if (app && app.proxy.$notify) {
-      app.proxy.$notify.error('发生错误: ' + error.message);
-    }
+    console.error('保存数据错误:', error);
+    Message.error('保存失败: ' + (error.message || '未知错误'));
   } finally {
     isLoading.value = false;
   }
-}
-
-const checkFieldChanges = (row, originalRow, entries, fields, scrapflag) => {
-  fields.forEach(field => {
-    if (row[field] !== originalRow[field]) {
-      if (row[field] !== 0 || originalRow[field] !== 0) {
-        // 对于报废品字段，提取正确的line值（去掉scrap前缀）
-        const lineValue = scrapflag ? field.replace('scrap', '') : field;
-        
-        entries.push({
-          line: lineValue.toUpperCase(),
-          day: row.date,
-          month: selectedMonth.value.toString(),
-          year: currentYear.toString(),
-          value: row[field].toString(),
-          scrapflag: scrapflag
-        });
-      }
-    }
-  });
 }
 
 onMounted(async () => {

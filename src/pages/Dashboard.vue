@@ -4,6 +4,7 @@ import { useUserStore } from '../stores/user'
 import { useActivityStore } from '../stores/activity'
 import DashboardUpcomingEvents from '../components/DashboardUpcomingEvents.vue'
 import RecentActivities from '../components/RecentActivities.vue'
+import Message from '../utils/notification'
 
 const userStore = useUserStore()
 const activityStore = useActivityStore()
@@ -158,9 +159,11 @@ const fetchQualityData = async () => {
       qualityData.value = generatedData;
     } else {
       console.error('获取质量数据失败');
+      Message.error('获取质量数据失败');
     }
   } catch (error) {
     console.error('获取质量数据错误:', error);
+    Message.error('获取质量数据失败: ' + (error.message || '未知错误'));
   } finally {
     isLoadingQualityData.value = false;
   }
@@ -174,6 +177,9 @@ const refreshAllData = async () => {
       fetchQualityData(),
       activityStore.fetchActivities()
     ]);
+    Message.success('数据刷新成功');
+  } catch (error) {
+    Message.error('数据刷新失败: ' + (error.message || '未知错误'));
   } finally {
     isLoading.value = false;
   }

@@ -130,7 +130,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { format, startOfWeek, endOfWeek, getISOWeek } from 'date-fns'
 import { debounce } from 'lodash-es'
-import { ElMessage } from 'element-plus'
+import Message from '../utils/notification'
 import { get, put } from '../utils/api'
 import AppLoader from '../components/AppLoader.vue'
 
@@ -210,129 +210,114 @@ const chartOption = computed(() => {
   }
 })
 
-// 生成周数据
-const generateWeeks = () => {
-  const weeks = []
-  const currentYear = new Date().getFullYear()
-  
-  let startDate = new Date(currentYear, 0, 4) // 确保从第一周开始
-  startDate = startOfWeek(startDate, { weekStartsOn: 1 })
-
-  for (let week = 0; week < 52; week++) {
-    const weekStart = new Date(startDate)
-    weekStart.setDate(startDate.getDate() + (week * 7))
-    
-    const start = startOfWeek(weekStart, { weekStartsOn: 1 })
-    const end = endOfWeek(weekStart, { weekStartsOn: 1 })
-    
-    const weekNumber = getISOWeek(weekStart)
-    
-    weeks.push({
-      week: weekNumber,
-      dateRange: `${format(start, 'MM/dd')} - ${format(end, 'MM/dd')}`,
-      lwd: 0
-    })
-  }
-  
-  return weeks
-}
+// 输入处理
+const handleInput = debounce(() => {
+  isDataChanged.value = true
+}, 500)
 
 // 应用周筛选
 const applyWeekFilter = () => {
   if (startWeek.value > endWeek.value) {
-    ElMessage.warning('起始周不能大于结束周')
+    Message.warning('起始周不能大于结束周')
     return
   }
   
-  filteredData.value = allTableData.value.filter(
-    item => item.week >= startWeek.value && item.week <= endWeek.value
+  filteredData.value = allTableData.value.filter(item => 
+    item.week >= startWeek.value && item.week <= endWeek.value
   )
-}
-
-// 处理输入变化
-const handleInput = debounce(() => {
-  isDataChanged.value = true
-}, 300)
-
-// 确认更改
-const confirmChanges = async () => {
-  if (!isDataChanged.value) return
   
-  submitting.value = true
-  try {
-    const changedData = []
-    
-    allTableData.value.forEach((item, index) => {
-      const original = originalData.value[index]
-      if (item.lwd !== original.lwd) {
-        changedData.push({
-          week: item.week,
-          year: new Date().getFullYear(),
-          lwd: item.lwd
-        })
-      }
-    })
-    
-    if (changedData.length === 0) {
-      ElMessage.info('没有数据变更')
-      isDataChanged.value = false
-      return
-    }
-    
-    await put('/ehs', changedData)
-    
-    ElMessage.success('数据保存成功')
-    await fetchLWDData() // 重新加载数据
-    isDataChanged.value = false
-  } catch (error) {
-    console.error('保存失败:', error)
-  } finally {
-    submitting.value = false
-  }
+  Message.info(`显示第${startWeek.value}周至第${endWeek.value}周的数据`)
 }
 
 // 加载LWD数据
-const fetchLWDData = async () => {
+const loadLWDData = async () => {
   loading.value = true
   try {
-    const fetchedData = await get('/ehs')
+    const response = await get('/ehs/lwd')
+    const currentYear = new Date().getFullYear()
     
-    const initialData = generateWeeks()
+    // 根据实际周数生成数据模板
+    const weekData = Array.from({ length: 53 }, (_, i) => {
+      if (i === 0) return null // 忽略第0周
+      
+      const weekStart = startOfWeek(new Date(currentYear, 0, i * 7 - 3), { weekStartsOn: 1 })
+      const weekEnd = endOfWeek(new Date(currentYear, 0, i * 7 - 3), { weekStartsOn: 1 })
+      
+      return {
+        week: i,
+        dateRange: `${format(weekStart, 'MM/dd')} - ${format(weekEnd, 'MM/dd')}`,
+        lwd: 0
+      }
+    }).filter(Boolean) // 移除null值
     
-    fetchedData.forEach((item) => {
-      const week = initialData.find(w => w.week === item.week)
-      if (week) week.lwd = item.lwd
-    })
+    // 填充API返回的实际数据
+    if (response && Array.isArray(response)) {
+      response.forEach(item => {
+        const targetWeek = weekData.find(w => w.week === parseInt(item.week))
+        if (targetWeek) {
+          targetWeek.lwd = item.lwd
+        }
+      })
+    }
     
-    allTableData.value = initialData
-    originalData.value = JSON.parse(JSON.stringify(initialData))
-    applyWeekFilter() // 初始化时应用筛选
+    allTableData.value = weekData
+    originalData.value = JSON.parse(JSON.stringify(weekData))
+    
+    // 应用默认筛选
+    applyWeekFilter()
+    
   } catch (error) {
-    console.error(error)
-    ElMessage.error('获取数据失败')
+    console.error('加载LWD数据失败:', error)
+    Message.error('加载LWD数据失败: ' + (error.message || '未知错误'))
   } finally {
     loading.value = false
   }
 }
 
-// 初始化当前周
-const initializeCurrentWeek = () => {
-  const currentWeek = getISOWeek(new Date())
-  startWeek.value = Math.max(1, currentWeek - 2)
-  endWeek.value = Math.min(52, currentWeek + 2)
+// 确认更改
+const confirmChanges = async () => {
+  if (!isDataChanged.value) {
+    Message.info('没有数据需要保存')
+    return
+  }
+  
+  submitting.value = true
+  try {
+    const changedData = allTableData.value.filter((item, index) => {
+      const originalItem = originalData.value[index]
+      return item.lwd !== originalItem.lwd
+    })
+    
+    if (changedData.length === 0) {
+      Message.info('没有数据变更')
+      submitting.value = false
+      return
+    }
+    
+    // 格式化为API需要的格式
+    const apiData = changedData.map(item => ({
+      week: item.week,
+      lwd: item.lwd
+    }))
+    
+    await put('/ehs/lwd', apiData)
+    
+    // 更新原始数据
+    originalData.value = JSON.parse(JSON.stringify(allTableData.value))
+    isDataChanged.value = false
+    
+    Message.success('数据保存成功')
+  } catch (error) {
+    console.error('保存LWD数据失败:', error)
+    Message.error('保存失败: ' + (error.message || '未知错误'))
+  } finally {
+    submitting.value = false
+  }
 }
 
-// 监听
-watch([startWeek, endWeek], () => {
-  // 限制输入范围
-  startWeek.value = Math.max(1, Math.min(52, startWeek.value))
-  endWeek.value = Math.max(1, Math.min(52, endWeek.value))
-})
-
-// 生命周期钩子
+// 初始化
 onMounted(() => {
-  initializeCurrentWeek()
-  fetchLWDData()
+  loadLWDData()
 })
 </script>
 

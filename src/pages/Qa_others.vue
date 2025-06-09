@@ -243,7 +243,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import Message from '../utils/notification'
 import { get, post, put } from '../utils/api'
 
 // 表单引用
@@ -312,7 +312,7 @@ const fetchMonthData = async () => {
       formData.id = null; // 重置ID，表示这是新数据
     }
   } catch (error) {
-    ElMessage.error(`获取数据失败: ${error.message}`);
+    Message.error(`获取数据失败: ${error.message || '未知错误'}`);
   } finally {
     dataLoaded.value = true;
   }
@@ -343,15 +343,15 @@ const submit = async () => {
     if (formData.id) {
       // 更新
       result = await put(`/qa/qad/${formData.id}`, payload);
-      ElMessage.success('数据更新成功');
+      Message.success('数据更新成功');
     } else {
       // 新建
       result = await post('/qa/qad/', payload);
       formData.id = result.id;
-      ElMessage.success('数据保存成功');
+      Message.success('数据保存成功');
     }
   } catch (error) {
-    ElMessage.error(`操作失败: ${error.message}`);
+    Message.error(`操作失败: ${error.message || '未知错误'}`);
   } finally {
     submitting.value = false;
   }

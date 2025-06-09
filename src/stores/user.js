@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ElMessage } from 'element-plus'
+import Message from '../utils/notification'
 import api from '../utils/api'
 import router from '../router'
 
@@ -109,7 +109,7 @@ export const useUserStore = defineStore('user', {
         return true;
       } catch (error) {
         console.error('登录失败:', error);
-        ElMessage.error('登录失败: ' + (error.response?.data?.detail || error.message || '未知错误'));
+        Message.error('登录失败: ' + (error.response?.data?.detail || error.message || '未知错误'));
         return false;
       }
     },
@@ -125,7 +125,7 @@ export const useUserStore = defineStore('user', {
       this.userId = null;
       
       console.log('用户已登出');
-      ElMessage.success('已成功登出');
+      Message.success('已成功登出');
     },
     
     // 获取用户详细信息的方法

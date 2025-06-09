@@ -90,7 +90,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           'vue-vendor': ['vue', 'vue-router', 'pinia', 'pinia-plugin-persistedstate'],
-          'ui-vendor': ['element-plus', 'vuetify'],
+          'ui-vendor': ['vuetify'],
           'echarts-vendor': ['echarts', 'vue-echarts'],
         },
       },
@@ -104,7 +104,6 @@ export default defineConfig({
       'vue',
       'vue-router',
       'pinia',
-      'element-plus',
       'vuetify',
       'echarts',
       'vue-echarts',

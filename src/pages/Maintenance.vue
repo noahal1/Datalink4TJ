@@ -71,7 +71,7 @@
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useUserStore } from '../stores/user.js'
-import { ElMessage } from 'element-plus'
+import Message from '../utils/notification'
 import MaintenanceCalendar from '../components/maintenance/MaintenanceCalendar.vue'
 import DailyTasksList from '../components/maintenance/DailyTasksList.vue'
 import WeeklyPlan from '../components/maintenance/WeeklyPlan.vue'
@@ -148,7 +148,7 @@ const loadTasks = async () => {
     loadWeeklyTasks()
     
   } catch (error) {
-    ElMessage.error('加载任务失败')
+    Message.error('加载任务失败')
   } finally {
     loadingTasks.value = false
   }
@@ -206,7 +206,7 @@ const saveTask = async () => {
     
     // 验证表单
     if (!editedTask.value.title || !editedTask.value.wheres || !editedTask.value.content_daily) {
-      ElMessage.warning('请填写所有必填字段')
+      Message.warning('请填写所有必填字段')
       return
     }
     
@@ -256,11 +256,11 @@ const saveTask = async () => {
     await loadAllData()
     
     // 提示成功
-    ElMessage.success(editedIndex.value === -1 ? '任务创建成功' : '任务更新成功')
+    Message.success(editedIndex.value === -1 ? '任务创建成功' : '任务更新成功')
     
   } catch (error) {
     console.error('保存任务出错:', error)
-    ElMessage.error('保存任务失败')
+    Message.error('保存任务失败')
   } finally {
     savingTask.value = false
   }
@@ -292,7 +292,7 @@ const updateTaskStatus = async (task) => {
     await loadAllData()
     
   } catch (error) {
-    ElMessage.error('更新状态失败')
+    Message.error('更新状态失败')
     // 恢复原状态
     task.solved = !task.solved
   }
@@ -317,10 +317,10 @@ const deleteTask = async (task) => {
     await loadAllData()
     
     // 提示成功
-    ElMessage.success('任务删除成功')
+    Message.success('任务删除成功')
     
   } catch (error) {
-    ElMessage.error('删除任务失败')
+    Message.error('删除任务失败')
   }
 }
 
@@ -393,7 +393,7 @@ const loadIssues = async () => {
     })
   } catch (error) {
     console.error('加载问题记录出错:', error)
-    ElMessage.error('加载问题记录失败')
+    Message.error('加载问题记录失败')
   } finally {
     loadingIssues.value = false
   }
@@ -430,14 +430,14 @@ const toggleIssueStatus = async (issue) => {
     }
     
     // 提示成功
-    ElMessage.success(issue.resolved ? '问题已标记为已解决' : '问题已标记为未解决')
+    Message.success(issue.resolved ? '问题已标记为已解决' : '问题已标记为未解决')
     
     // 重新加载数据以确保前端显示与后端一致
     await loadIssues()
     
   } catch (error) {
     console.error('更新问题状态出错:', error)
-    ElMessage.error('更新问题状态失败')
+    Message.error('更新问题状态失败')
   }
 }
 
@@ -493,11 +493,11 @@ const saveIssue = async () => {
     await loadIssues()
     
     // 提示成功
-    ElMessage.success(editedIssue.value.id ? '问题更新成功' : '问题记录成功')
+    Message.success(editedIssue.value.id ? '问题更新成功' : '问题记录成功')
     
   } catch (error) {
     console.error('保存问题出错:', error)
-    ElMessage.error('保存问题失败')
+    Message.error('保存问题失败')
   } finally {
     savingIssue.value = false
   }
@@ -522,11 +522,11 @@ const deleteIssue = async (issue) => {
     await loadIssues()
     
     // 提示成功
-    ElMessage.success('问题删除成功')
+    Message.success('问题删除成功')
     
   } catch (error) {
     console.error('删除问题出错:', error)
-    ElMessage.error('删除问题失败')
+    Message.error('删除问题失败')
   }
 }
 

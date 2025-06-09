@@ -2,14 +2,11 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import vuetify from './plugins/vuetify'
-import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
 import pinia from './stores'
 import ECharts from 'vue-echarts'
 import 'remixicon/fonts/remixicon.css'
 import errorHandler from './utils/errorHandler'
 import performanceMonitor from './utils/performance'
-import { setAppInstance } from './utils/notification'
 
 // 导入自定义样式
 import './styles/transitions.css'
@@ -81,14 +78,10 @@ app.use(performanceMonitor)
 // 插件注册
 app.use(pinia)
 app.use(vuetify)
-app.use(ElementPlus)
 app.use(router)
 
 // 挂载应用
 const appInstance = app.mount('#app')
-
-// 设置通知服务的app实例
-setAppInstance(appInstance)
 
 // 全局挂载 $notify
 app.config.globalProperties.$notify = {

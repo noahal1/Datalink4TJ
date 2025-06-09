@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '../stores/user'
-import { ElMessage } from 'element-plus'
+import Message from '../utils/notification'
 import { createLazyComponent } from '../utils/lazyLoader'
 
 // 使用懒加载优化性能
@@ -156,11 +156,7 @@ router.beforeEach((to, from, next) => {
     if (to.path !== '/login') {
       sessionStorage.setItem('redirectPath', to.path)
     }
-    ElMessage({
-      message: '请先登录',
-      type: 'warning',
-      duration: 2000
-    })
+    Message.warning('请先登录')
     return next('/login')
   }
   
@@ -183,11 +179,7 @@ router.beforeEach((to, from, next) => {
   }
   
   // 无权限访问
-  ElMessage({
-    message: '无权访问此页面',
-    type: 'error',
-    duration: 2000
-  })
+  Message.error('无权访问此页面')
   return next(from.path || '/')
 })
 

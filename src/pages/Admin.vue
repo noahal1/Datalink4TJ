@@ -8,19 +8,28 @@
             用户管理 
           </v-card-title>
           <v-card-text>
-            <el-table :data="users" style="width: 100%">
-              <el-table-column prop="name" label="用户名" width="150"></el-table-column>
-              <el-table-column prop="department.name"  label="部门" width="120"></el-table-column>
-              <el-table-column label="操作" width="150">
-                <template #default="{ row }">
-                  <el-button size="small" @click="editUser(row)">编辑</el-button>
-                  <el-button size="small" type="danger" @click="deleteUser(row)">删除</el-button>
-                </template>
-              </el-table-column>
-            </el-table>
+            <v-table>
+              <thead>
+                <tr>
+                  <th>用户名</th>
+                  <th>部门</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="user in users" :key="user.id">
+                  <td>{{ user.name }}</td>
+                  <td>{{ user.department?.name }}</td>
+                  <td>
+                    <v-btn size="small" class="mr-2" @click="editUser(user)">编辑</v-btn>
+                    <v-btn size="small" color="error" @click="deleteUser(user)">删除</v-btn>
+                  </td>
+                </tr>
+              </tbody>
+            </v-table>
           </v-card-text>
           <v-card-actions>
-            <v-btn color="black" @click="showUserDialog('add')">添加用户</v-btn>
+            <v-btn color="primary" @click="showUserDialog('add')">添加用户</v-btn>
           </v-card-actions>
         </v-card>
       </v-col>
@@ -31,15 +40,23 @@
             部门管理 
           </v-card-title>
           <v-card-text>
-            <el-table :data="departments" style="width: 100%">
-              <el-table-column prop="name" label="部门名称" width="150"></el-table-column>
-              <el-table-column label="操作" width="150">
-                <template #default="{ row }">
-                  <el-button size="small" @click="editDepartment(row)">编辑</el-button>
-                  <el-button size="small" type="danger" @click="deleteDepartment(row)">删除</el-button>
-                </template>
-              </el-table-column>
-            </el-table>
+            <v-table>
+              <thead>
+                <tr>
+                  <th>部门名称</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="department in departments" :key="department.id">
+                  <td>{{ department.name }}</td>
+                  <td>
+                    <v-btn size="small" class="mr-2" @click="editDepartment(department)">编辑</v-btn>
+                    <v-btn size="small" color="error" @click="deleteDepartment(department)">删除</v-btn>
+                  </td>
+                </tr>
+              </tbody>
+            </v-table>
           </v-card-text>
           <v-card-actions>
             <v-btn color="primary" @click="showDepartmentDialog('add')">添加部门</v-btn>
@@ -47,62 +64,81 @@
         </v-card>
       </v-col>
       <v-col cols="6" md="6">
-      <v-card>
-        <v-card-title>
-          <v-icon left>mdi-bulletin-board</v-icon>
-          发布公告
-        </v-card-title>
-      </v-card>
-    </v-col>
+        <v-card>
+          <v-card-title>
+            <v-icon left>mdi-bulletin-board</v-icon>
+            发布公告
+          </v-card-title>
+        </v-card>
+      </v-col>
     </v-row>
  
     <!-- 用户对话框 -->
-    <el-dialog :title="userDialogTitle" v-model="isShowUserDialog">
-      <el-form :model="userForm" ref="userFormRef" label-width="80px">
-        <el-form-item label="用户名" prop="name">
-          <el-input v-model="userForm.name"  placeholder="请输入用户名"></el-input>
-        </el-form-item>
-        <el-form-item label="密码" prop="password" v-if="userDialogType === 'add'">
-          <el-input type="password" v-model="userForm.password"  placeholder="请输入密码"></el-input>
-        </el-form-item>
-        <el-form-item label="部门" prop="departmentId">
-          <el-select v-model="userForm.department_id"  placeholder="请选择部门">
-            <el-option 
-              v-for="department in departments"
-              :key="department.id" 
-              :label="department.name" 
-              :value="department.id" 
-            ></el-option>
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="isShowUserDialog = false">取 消</el-button>
-          <el-button type="primary" @click="saveUser">确 定</el-button>
-        </span>
-      </template>
-    </el-dialog>
+    <v-dialog v-model="isShowUserDialog" max-width="500px">
+      <v-card>
+        <v-card-title>{{ userDialogTitle }}</v-card-title>
+        <v-card-text>
+          <v-form ref="userFormRef">
+            <v-text-field
+              v-model="userForm.name"
+              label="用户名"
+              placeholder="请输入用户名"
+              required
+            ></v-text-field>
+            <v-text-field
+              v-if="userDialogType === 'add'"
+              v-model="userForm.password"
+              label="密码"
+              placeholder="请输入密码"
+              type="password"
+              required
+            ></v-text-field>
+            <v-select
+              v-model="userForm.department_id"
+              :items="departments"
+              item-title="name"
+              item-value="id"
+              label="部门"
+              placeholder="请选择部门"
+              required
+            ></v-select>
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="grey" @click="isShowUserDialog = false">取消</v-btn>
+          <v-btn color="primary" @click="saveUser">确定</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
  
-    <el-dialog :title="departmentDialogTitle" v-model="isShowDepartmentDialog">
-      <el-form :model="departmentForm" ref="departmentFormRef" label-width="80px">
-        <el-form-item label="部门名称" prop="name">
-          <el-input v-model="departmentForm.name"  placeholder="请输入部门名称"></el-input>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="isShowDepartmentDialog = false">取 消</el-button>
-          <el-button type="primary" @click="saveDepartment">确 定</el-button>
-        </span>
-      </template>
-    </el-dialog>
+    <!-- 部门对话框 -->
+    <v-dialog v-model="isShowDepartmentDialog" max-width="500px">
+      <v-card>
+        <v-card-title>{{ departmentDialogTitle }}</v-card-title>
+        <v-card-text>
+          <v-form ref="departmentFormRef">
+            <v-text-field
+              v-model="departmentForm.name"
+              label="部门名称"
+              placeholder="请输入部门名称"
+              required
+            ></v-text-field>
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="grey" @click="isShowDepartmentDialog = false">取消</v-btn>
+          <v-btn color="primary" @click="saveDepartment">确定</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
  
 <script setup>
 import { ref, onMounted } from 'vue';
-import { ElMessage } from 'element-plus';
+import Message from '../utils/notification';
  
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const users = ref([]);
@@ -138,6 +174,7 @@ const fetchUsers = async () => {
     users.value  = await response.json(); 
   } catch (error) {
     console.error(error); 
+    Message.error('获取用户列表失败');
   }
 };
  
@@ -151,6 +188,7 @@ const fetchDepartments = async () => {
     departments.value  = await response.json(); 
   } catch (error) {
     console.error(error); 
+    Message.error('获取部门列表失败');
   }
 };
  
@@ -179,8 +217,21 @@ const showUserDialog = (type, row = {}) => {
 // 保存用户 
 const saveUser = async () => {
   try {
-    const isValid = await validateUserForm();
-    if (!isValid) return;
+    // 简单验证
+    if (!userForm.value.name) {
+      Message.warning('请输入用户名');
+      return;
+    }
+    
+    if (userDialogType.value === 'add' && !userForm.value.password) {
+      Message.warning('请输入密码');
+      return;
+    }
+    
+    if (!userForm.value.department_id) {
+      Message.warning('请选择部门');
+      return;
+    }
  
     let response;
     if (userDialogType.value  === 'add') {
@@ -191,6 +242,10 @@ const saveUser = async () => {
         },
         body: JSON.stringify(userForm.value) 
       });
+      
+      if (response.ok) {
+        Message.success('用户添加成功');
+      }
     } else if (userDialogType.value  === 'edit') {
       response = await fetch(`${API_BASE_URL}/users/${userForm.value.id}`,  {
         method: 'PUT',
@@ -219,30 +274,10 @@ const saveUser = async () => {
     }
  
     isShowUserDialog.value  = false;
-    ElMessage({
-      type: 'success',
-      message: '保存成功'
-    });
   } catch (error) {
-    ElMessage({
-      type: 'error',
-      message: '保存失败'
-    });
+    Message.error('保存失败');
     console.error(error); 
   }
-};
- 
-// 验证用户表单 
-const validateUserForm = () => {
-  return new Promise((resolve) => {
-    if (userFormRef.value)  {
-      userFormRef.value.validate((valid)  => {
-        resolve(valid);
-      });
-    } else {
-      resolve(false);
-    }
-  });
 };
  
 // 展示部门对话框 
@@ -266,8 +301,11 @@ const showDepartmentDialog = (type, row = {}) => {
 // 保存部门 
 const saveDepartment = async () => {
   try {
-    const isValid = await validateDepartmentForm();
-    if (!isValid) return;
+    // 简单验证
+    if (!departmentForm.value.name) {
+      Message.warning('请输入部门名称');
+      return;
+    }
  
     let response;
     if (departmentForm.value.id)  {
@@ -303,30 +341,11 @@ const saveDepartment = async () => {
     }
  
     isShowDepartmentDialog.value  = false;
-    ElMessage({
-      type: 'success',
-      message: '保存成功'
-    });
+    Message.success('保存成功');
   } catch (error) {
-    ElMessage({
-      type: 'error',
-      message: '保存失败'
-    });
+    Message.error('保存失败');
     console.error(error); 
   }
-};
- 
-// 验证部门表单 
-const validateDepartmentForm = () => {
-  return new Promise((resolve) => {
-    if (departmentFormRef.value)  {
-      departmentFormRef.value.validate((valid)  => {
-        resolve(valid);
-      });
-    } else {
-      resolve(false);
-    }
-  });
 };
  
 // 编辑用户 
@@ -347,15 +366,9 @@ const deleteUser = async (row) => {
     if (index > -1) {
       users.value.splice(index,  1);
     }
-    ElMessage({
-      type: 'success',
-      message: '删除成功'
-    });
+    Message.success('删除成功');
   } catch (error) {
-    ElMessage({
-      type: 'error',
-      message: '删除失败'
-    });
+    Message.error('删除失败');
     console.error(error); 
   }
 };
@@ -378,20 +391,14 @@ const deleteDepartment = async (row) => {
     if (index > -1) {
       departments.value.splice(index,  1);
     }
-    ElMessage({
-      type: 'success',
-      message: '删除成功'
-    });
+    Message.success('删除成功');
   } catch (error) {
-    ElMessage({
-      type: 'error',
-      message: '删除失败'
-    });
+    Message.error('删除失败');
     console.error(error); 
   }
 };
  
-// 初始化数据 1
+// 初始化数据
 onMounted(() => {
   fetchUsers();
   fetchDepartments();
@@ -399,7 +406,7 @@ onMounted(() => {
 </script>
  
 <style scoped>
-.el-table {
+.v-table {
   border-radius: 4px;
   overflow: hidden;
 }
