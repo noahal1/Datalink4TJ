@@ -225,8 +225,6 @@ const applyWeekFilter = () => {
   filteredData.value = allTableData.value.filter(item => 
     item.week >= startWeek.value && item.week <= endWeek.value
   )
-  
-  Message.info(`显示第${startWeek.value}周至第${endWeek.value}周的数据`)
 }
 
 // 加载LWD数据
