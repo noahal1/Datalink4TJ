@@ -368,11 +368,13 @@
         <div v-if="isLoading" class="fill-height d-flex align-center justify-center">
           <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
         </div>
-        <router-view v-else v-slot="{ Component, route }">
-          <transition :name="pageTransition" mode="out-in">
-            <component :is="Component" :key="route.path" />
-          </transition>
-        </router-view>
+        <v-container v-else fluid class="px-md-4 py-md-3 px-2 py-2">
+          <router-view v-slot="{ Component, route }">
+            <transition :name="pageTransition" mode="out-in">
+              <component :is="Component" :key="route.path" />
+            </transition>
+          </router-view>
+        </v-container>
       </transition>
     </v-main>
     
@@ -553,70 +555,121 @@ app.component('GlobalSnackbar', GlobalSnackbar)
 .app-logo {
   height: 32px;
   width: auto;
+  transition: all 0.3s ease;
 }
 
 .app-title {
   letter-spacing: 0.5px;
   font-weight: 500;
   color: rgba(0, 0, 0, 0.87);
+  transition: all 0.3s ease;
 }
 
 .app-header {
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  transition: all 0.3s ease;
 }
 
 /* 左侧导航样式 */
 .left-nav {
   top: 64px !important; 
   height: calc(100% - 64px) !important;
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+  background-color: rgba(255, 255, 255, 0.98) !important;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s ease;
 }
 
 .nav-list-item {
-  margin: 6px 0;
-  border-radius: 0 28px 28px 0;
+  margin: 6px 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
 }
 
 .nav-list-subitem {
-  margin: 2px 0;
+  margin: 3px 0 3px 8px;
   padding-left: 12px !important;
-  border-radius: 0 28px 28px 0;
+  border-radius: 8px;
+  transition: all 0.2s ease;
 }
 
 .nav-group-title {
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: 600;
   color: rgba(0, 0, 0, 0.6);
   padding: 0 16px;
-  margin-top: 8px;
+  margin-top: 12px;
+  letter-spacing: 0.5px;
 }
 
 .nav-list-item.v-list-item--active {
-  background-color: rgba(25, 118, 210, 0.1);
+  background-color: rgba(25, 118, 210, 0.12);
   color: #1976d2;
+  font-weight: 500;
+  box-shadow: 0 3px 8px rgba(25, 118, 210, 0.1);
 }
 
 .nav-list-item:hover, .nav-list-subitem:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: rgba(0, 0, 0, 0.05);
+  transform: translateX(2px);
 }
 
 .user-menu-btn {
   min-width: auto;
   height: 48px;
+  border-radius: 24px;
+  transition: all 0.2s ease;
 }
 
+.user-menu-btn:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* 过渡动画 */
 .fade-enter-active, .fade-leave-active {
-  transition: opacity 0.3s ease;
+  transition: opacity 0.4s ease, transform 0.4s ease;
 }
 .fade-enter-from, .fade-leave-to {
+  opacity: 0;
+  transform: scale(0.98);
+}
+
+.slide-left-enter-active,
+.slide-left-leave-active,
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition: transform 0.35s ease, opacity 0.35s ease;
+}
+
+.slide-left-enter-from {
+  transform: translateX(20px);
+  opacity: 0;
+}
+
+.slide-left-leave-to {
+  transform: translateX(-20px);
+  opacity: 0;
+}
+
+.slide-right-enter-from {
+  transform: translateX(-20px);
+  opacity: 0;
+}
+
+.slide-right-leave-to {
+  transform: translateX(20px);
   opacity: 0;
 }
 
 /* 主内容区域样式 */
 .main-content {
   margin-left: 0px; 
-  background-color: #f5f7fa;
+  background-color: #f8f9fc;
   min-height: calc(100vh - 64px);
+  padding: 16px;
+  transition: all 0.3s ease;
 }
 
 /* 通知容器样式 */
@@ -630,13 +683,12 @@ app.component('GlobalSnackbar', GlobalSnackbar)
 /* 响应式调整 */
 @media (max-width: 960px) {
   .app-header .v-container {
-    padding: 0 8px;
+    padding: 0 12px;
   }
-}
-
-@media (max-width: 960px) {
+  
   .main-content {
     margin-left: 0;
+    padding: 12px;
   }
 }
 
@@ -649,5 +701,33 @@ app.component('GlobalSnackbar', GlobalSnackbar)
   .v-main {
     padding-top: 8px !important;
   }
+  
+  .main-content {
+    padding: 8px;
+  }
+  
+  .nav-list-item {
+    margin: 4px 6px;
+  }
+}
+
+/* 暗色主题适配 */
+.v-theme--dark .app-header {
+  background-color: rgba(30, 30, 30, 0.95) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+.v-theme--dark .left-nav {
+  background-color: rgba(30, 30, 30, 0.98) !important;
+  border-right-color: rgba(255, 255, 255, 0.08);
+}
+
+.v-theme--dark .main-content {
+  background-color: #121212;
+}
+
+.v-theme--dark .nav-list-item.v-list-item--active {
+  background-color: rgba(64, 150, 255, 0.15);
+  box-shadow: 0 3px 8px rgba(64, 150, 255, 0.1);
 }
 </style>
