@@ -43,22 +43,33 @@ export const useActivityStore = defineStore('activity', {
         // 调用API获取活动数据
         const response = await api.get('/activities/', params);
         
-        if (response && Array.isArray(response)) {
-          // 处理返回的活动数据
-          this.activities = response.map(activity => {
-            return {
-              ...activity,
-              // 格式化时间
-              time: this.formatTime(activity.created_at)
-            };
-          });
-          
-          this.lastUpdated = new Date();
-          return this.activities;
+        // 检查返回数据格式
+        console.log('活动数据响应:', response);
+        
+        // 正确处理API返回的数据格式 (支持 {items: [...]} 和 数组格式)
+        let activitiesData = [];
+        if (response && response.items && Array.isArray(response.items)) {
+          // 处理 {items: [...]} 格式
+          activitiesData = response.items;
+        } else if (response && Array.isArray(response)) {
+          // 处理直接返回数组的格式
+          activitiesData = response;
         } else {
           console.error('获取活动数据格式错误:', response);
           return [];
         }
+        
+        // 处理返回的活动数据
+        this.activities = activitiesData.map(activity => {
+          return {
+            ...activity,
+            // 确保时间字段存在
+            time: activity.time || this.formatTime(activity.timestamp || activity.created_at)
+          };
+        }).filter(activity => activity && activity.id); // 过滤掉无效的记录
+        
+        this.lastUpdated = new Date();
+        return this.activities;
       } catch (error) {
         console.error('获取活动数据失败:', error);
         return [];

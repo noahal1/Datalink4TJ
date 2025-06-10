@@ -1,76 +1,72 @@
 <template>
-  <v-container fluid>
+  <unified-page-template 
+    title="系统管理"
+    icon="mdi-shield-account"
+    color="secondary"
+  >
     <v-row>
-      <v-col cols="12" md="6" auto>
-        <v-card>
-          <v-card-title>
-            <v-icon left>mdi-account-group</v-icon>
-            用户管理 
-          </v-card-title>
-          <v-card-text>
-            <v-table>
-              <thead>
-                <tr>
-                  <th>用户名</th>
-                  <th>部门</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="user in users" :key="user.id">
-                  <td>{{ user.name }}</td>
-                  <td>{{ user.department?.name }}</td>
-                  <td>
-                    <v-btn size="small" class="mr-2" @click="editUser(user)">编辑</v-btn>
-                    <v-btn size="small" color="error" @click="deleteUser(user)">删除</v-btn>
-                  </td>
-                </tr>
-              </tbody>
-            </v-table>
-          </v-card-text>
-          <v-card-actions>
-            <v-btn color="primary" @click="showUserDialog('add')">添加用户</v-btn>
-          </v-card-actions>
-        </v-card>
+      <v-col cols="12" md="6">
+        <unified-data-table
+          title="用户管理"
+          icon="mdi-account-group"
+          :headers="[
+            { title: '用户名', key: 'name', align: 'start' },
+            { title: '部门', key: 'department', align: 'start' },
+            { title: '操作', key: 'actions', align: 'center', sortable: false }
+          ]"
+          :items="users"
+          :loading="loading"
+        >
+          <template v-slot:item.department="{ item }">
+            {{ item.department?.name }}
+          </template>
+          <template v-slot:item.actions="{ item }">
+            <v-btn size="small" variant="text" color="primary" class="mr-2" @click="editUser(item)">
+              <v-icon>mdi-pencil</v-icon>
+              编辑
+            </v-btn>
+            <v-btn size="small" variant="text" color="error" @click="deleteUser(item)">
+              <v-icon>mdi-delete</v-icon>
+              删除
+            </v-btn>
+          </template>
+          <template #actions>
+            <v-btn color="primary" prepend-icon="mdi-plus" @click="showUserDialog('add')">
+              添加用户
+            </v-btn>
+          </template>
+        </unified-data-table>
       </v-col>
-      <v-col cols="12" md="6" auto>
-        <v-card>
-          <v-card-title>
-            <v-icon left>mdi-office-building</v-icon>
-            部门管理 
-          </v-card-title>
-          <v-card-text>
-            <v-table>
-              <thead>
-                <tr>
-                  <th>部门名称</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="department in departments" :key="department.id">
-                  <td>{{ department.name }}</td>
-                  <td>
-                    <v-btn size="small" class="mr-2" @click="editDepartment(department)">编辑</v-btn>
-                    <v-btn size="small" color="error" @click="deleteDepartment(department)">删除</v-btn>
-                  </td>
-                </tr>
-              </tbody>
-            </v-table>
-          </v-card-text>
-          <v-card-actions>
-            <v-btn color="primary" @click="showDepartmentDialog('add')">添加部门</v-btn>
-          </v-card-actions>
-        </v-card>
+      
+      <v-col cols="12" md="6">
+        <unified-data-table
+          title="部门管理"
+          icon="mdi-office-building"
+          :headers="[
+            { title: '部门名称', key: 'name', align: 'start' },
+            { title: '操作', key: 'actions', align: 'center', sortable: false }
+          ]"
+          :items="departments"
+          :loading="loading"
+        >
+          <template v-slot:item.actions="{ item }">
+            <v-btn size="small" variant="text" color="primary" class="mr-2" @click="editDepartment(item)">
+              <v-icon>mdi-pencil</v-icon>
+              编辑
+            </v-btn>
+            <v-btn size="small" variant="text" color="error" @click="deleteDepartment(item)">
+              <v-icon>mdi-delete</v-icon>
+              删除
+            </v-btn>
+          </template>
+          <template #actions>
+            <v-btn color="primary" prepend-icon="mdi-plus" @click="showDepartmentDialog('add')">
+              添加部门
+            </v-btn>
+          </template>
+        </unified-data-table>
       </v-col>
-      <v-col cols="6" md="6">
-        <v-card>
-          <v-card-title>
-            <v-icon left>mdi-bulletin-board</v-icon>
-            发布公告
-          </v-card-title>
-        </v-card>
-      </v-col>
+      
       <v-col cols="12">
         <activity-history></activity-history>
       </v-col>
@@ -79,14 +75,18 @@
     <!-- 用户对话框 -->
     <v-dialog v-model="isShowUserDialog" max-width="500px">
       <v-card>
-        <v-card-title>{{ userDialogTitle }}</v-card-title>
-        <v-card-text>
-          <v-form ref="userFormRef">
+        <v-card-title class="text-h5 bg-primary text-white">
+          {{ userDialogTitle }}
+        </v-card-title>
+        <v-card-text class="pt-4">
+          <unified-form ref="userFormRef">
             <v-text-field
               v-model="userForm.name"
               label="用户名"
               placeholder="请输入用户名"
-              required
+              variant="outlined"
+              density="comfortable"
+              :rules="[rules.required]"
             ></v-text-field>
             <v-text-field
               v-if="userDialogType === 'add'"
@@ -94,7 +94,9 @@
               label="密码"
               placeholder="请输入密码"
               type="password"
-              required
+              variant="outlined"
+              density="comfortable"
+              :rules="[rules.required]"
             ></v-text-field>
             <v-select
               v-model="userForm.department_id"
@@ -103,13 +105,15 @@
               item-value="id"
               label="部门"
               placeholder="请选择部门"
-              required
+              variant="outlined"
+              density="comfortable"
+              :rules="[rules.required]"
             ></v-select>
-          </v-form>
+          </unified-form>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="grey" @click="isShowUserDialog = false">取消</v-btn>
+          <v-btn color="grey" variant="text" @click="isShowUserDialog = false">取消</v-btn>
           <v-btn color="primary" @click="saveUser">确定</v-btn>
         </v-card-actions>
       </v-card>
@@ -118,25 +122,29 @@
     <!-- 部门对话框 -->
     <v-dialog v-model="isShowDepartmentDialog" max-width="500px">
       <v-card>
-        <v-card-title>{{ departmentDialogTitle }}</v-card-title>
-        <v-card-text>
-          <v-form ref="departmentFormRef">
+        <v-card-title class="text-h5 bg-primary text-white">
+          {{ departmentDialogTitle }}
+        </v-card-title>
+        <v-card-text class="pt-4">
+          <unified-form ref="departmentFormRef">
             <v-text-field
               v-model="departmentForm.name"
               label="部门名称"
               placeholder="请输入部门名称"
-              required
+              variant="outlined"
+              density="comfortable"
+              :rules="[rules.required]"
             ></v-text-field>
-          </v-form>
+          </unified-form>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="grey" @click="isShowDepartmentDialog = false">取消</v-btn>
+          <v-btn color="grey" variant="text" @click="isShowDepartmentDialog = false">取消</v-btn>
           <v-btn color="primary" @click="saveDepartment">确定</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </v-container>
+  </unified-page-template>
 </template>
  
 <script setup>
@@ -147,6 +155,12 @@ import ActivityHistory from '../components/admin/ActivityHistory.vue';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const users = ref([]);
 const departments = ref([]);
+const loading = ref(false);
+
+// 表单验证规则
+const rules = {
+  required: v => (v !== undefined && v !== null && v !== '') || '此字段为必填项'
+};
  
 // 用户相关 
 const isShowUserDialog = ref(false);
@@ -170,6 +184,7 @@ const departmentFormRef = ref(null);
  
 // 获取用户列表 
 const fetchUsers = async () => {
+  loading.value = true;
   try {
     const response = await fetch(`${API_BASE_URL}/users`);
     if (!response.ok)  {
@@ -179,11 +194,14 @@ const fetchUsers = async () => {
   } catch (error) {
     console.error(error); 
     Message.error('获取用户列表失败');
+  } finally {
+    loading.value = false;
   }
 };
  
 // 获取部门列表 
 const fetchDepartments = async () => {
+  loading.value = true;
   try {
     const response = await fetch(`${API_BASE_URL}/departments`);
     if (!response.ok)  {
@@ -193,6 +211,8 @@ const fetchDepartments = async () => {
   } catch (error) {
     console.error(error); 
     Message.error('获取部门列表失败');
+  } finally {
+    loading.value = false;
   }
 };
  
@@ -410,13 +430,6 @@ onMounted(() => {
 </script>
  
 <style scoped>
-.v-table {
-  border-radius: 4px;
-  overflow: hidden;
-}
-.v-card {
-  padding: 16px;
-}
 .v-btn:not(.v-btn--text):not(.v-btn--icon):not(.v-btn--fab):not(.v-btn--extended):not(.v-btn--block) {
   margin-right: 8px;
 }

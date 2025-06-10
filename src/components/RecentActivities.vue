@@ -18,27 +18,27 @@
     <loading-overlay :loading="isLoading" />
     
     <v-card-text class="activities-container flex-grow-1 pa-0">
-      <v-list class="py-0 h-100 overflow-auto" v-if="activities.length > 0">
+      <v-list class="py-0" v-if="filteredActivities.slice(0, limit).length > 0">
         <v-list-item 
-          v-for="activity in activities" 
+          v-for="activity in filteredActivities.slice(0, limit)" 
           :key="activity.id" 
           @click="showActivityDetails(activity)"
           link
           class="activity-item mb-2"
         >
           <template v-slot:prepend>
-            <v-avatar :color="`${activity.color}-lighten-4`" size="40" class="me-3">
-              <v-icon :icon="activity.icon" :color="activity.color"></v-icon>
+            <v-avatar :color="`${activity.color || 'grey'}-lighten-4`" size="40" class="me-3">
+              <v-icon :icon="activity.icon || 'mdi-history'" :color="activity.color || 'grey'"></v-icon>
             </v-avatar>
           </template>
-          <v-list-item-title class="font-weight-medium activity-title">{{ activity.title }}</v-list-item-title>
+          <v-list-item-title class="font-weight-medium activity-title">{{ activity.title || activity.action }}</v-list-item-title>
           <v-list-item-subtitle class="activity-subtitle">
             <span class="text-caption d-flex align-center">
               <v-icon size="x-small" color="grey" class="mr-1">mdi-account</v-icon>
               {{ activity.user }}
             </span>
             <span class="mx-1 d-none d-sm-inline">•</span>
-            <span class="text-caption">{{ activity.action }}</span>
+            <span class="text-caption">{{ activity.action || activity.details }}</span>
           </v-list-item-subtitle>
           <v-list-item-subtitle class="text-caption text-grey d-flex align-center">
             <v-icon size="x-small" color="grey" class="mr-1">mdi-clock-outline</v-icon>
@@ -60,6 +60,23 @@
       </v-list>
       
       <v-alert
+        v-else-if="error"
+        type="error"
+        variant="tonal"
+        class="ma-4"
+        border="start"
+      >
+        <div class="text-center">
+          <v-icon size="large" color="error" class="mb-2">mdi-alert-circle</v-icon>
+          <div class="text-subtitle-1">{{ error }}</div>
+          <v-btn color="error" variant="text" class="mt-2" @click="refreshActivities">
+            <v-icon start>mdi-refresh</v-icon>
+            重试
+          </v-btn>
+        </div>
+      </v-alert>
+      
+      <v-alert
         v-else-if="!isLoading"
         type="info"
         variant="tonal"
@@ -76,15 +93,15 @@
     <!-- 活动详情对话框 -->
     <v-dialog v-model="showDialog" max-width="600">
       <v-card v-if="selectedActivity" class="activity-details-card">
-        <v-toolbar :color="selectedActivity.color" dark flat>
+        <v-toolbar :color="selectedActivity.color || 'primary'" dark flat>
           <v-toolbar-title>活动详情</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn icon="mdi-close" variant="text" @click="showDialog = false"></v-btn>
         </v-toolbar>
         <v-card-text class="pt-4">
           <h2 class="text-h5 mb-3 d-flex align-center activity-detail-title">
-            <v-icon :color="selectedActivity.color" class="mr-2">{{ selectedActivity.icon }}</v-icon>
-            {{ selectedActivity.title }}
+            <v-icon :color="selectedActivity.color || 'primary'" class="mr-2">{{ selectedActivity.icon || 'mdi-history' }}</v-icon>
+            {{ selectedActivity.title || selectedActivity.action }}
           </h2>
           
           <v-list density="compact">
@@ -118,7 +135,7 @@
               </template>
               <v-list-item-title>操作类型</v-list-item-title>
               <v-list-item-subtitle>
-                <v-chip :color="selectedActivity.color" size="small">{{ selectedActivity.type }}</v-chip>
+                <v-chip :color="selectedActivity.color || 'primary'" size="small">{{ selectedActivity.type }}</v-chip>
               </v-list-item-subtitle>
             </v-list-item>
             
@@ -128,6 +145,14 @@
               </template>
               <v-list-item-title>操作描述</v-list-item-title>
               <v-list-item-subtitle>{{ selectedActivity.details }}</v-list-item-subtitle>
+            </v-list-item>
+            
+            <v-list-item v-if="selectedActivity.action && selectedActivity.title && selectedActivity.action !== selectedActivity.title">
+              <template v-slot:prepend>
+                <v-icon color="primary">mdi-text-box-outline</v-icon>
+              </template>
+              <v-list-item-title>操作动作</v-list-item-title>
+              <v-list-item-subtitle>{{ selectedActivity.action }}</v-list-item-subtitle>
             </v-list-item>
           </v-list>
           
@@ -195,6 +220,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useActivityStore } from '../stores/activity'
 import { format } from 'date-fns'
+import Message from '../utils/notification'
 
 const props = defineProps({
   title: {
@@ -240,9 +266,10 @@ const showDialog = ref(false)
 const selectedActivity = ref(null)
 const activeTab = ref('after')
 let refreshTimer = null
+const error = ref(null)
 
-// 计算属性：获取活动列表
-const activities = computed(() => {
+// 计算属性：筛选后的活动列表
+const filteredActivities = computed(() => {
   let result = activityStore.activities;
   
   // 如果指定了部门，则按部门筛选
@@ -260,8 +287,16 @@ const activities = computed(() => {
     result = activityStore.activitiesByType(props.type);
   }
   
-  // 返回指定数量的活动
-  return result.slice(0, props.limit);
+  // 查看活动数据
+  console.log('筛选前的活动记录:', result);
+  
+  // 过滤掉无效的活动记录
+  return result.filter(activity => {
+    return activity && 
+           activity.id && 
+           (activity.title || activity.action) && 
+           activity.user;
+  });
 });
 
 // 计算属性：是否正在加载
@@ -274,15 +309,26 @@ const formatFullDateTime = (timestamp) => {
   if (!timestamp) return '未知时间';
   try {
     const date = new Date(timestamp);
+    if (isNaN(date.getTime())) {
+      return '无效日期';
+    }
     return format(date, 'yyyy-MM-dd HH:mm:ss');
   } catch (e) {
-    return timestamp;
+    console.error('日期格式化错误:', e);
+    return '日期格式错误';
   }
 };
 
 // 刷新活动数据
 const refreshActivities = async () => {
-  await activityStore.fetchActivities();
+  error.value = null;
+  try {
+    await activityStore.fetchActivities();
+  } catch (e) {
+    console.error('获取活动数据失败:', e);
+    error.value = '获取活动数据失败，请稍后重试';
+    Message.error('获取活动数据失败');
+  }
 };
 
 // 显示活动详情
@@ -296,10 +342,34 @@ const formatChanges = (changes) => {
   if (!changes) return { before: '无变更记录', after: '无变更记录' };
   
   try {
-    const before = changes.before ? JSON.stringify(changes.before, null, 2) : '无数据';
-    const after = changes.after ? JSON.stringify(changes.after, null, 2) : '无数据';
+    // 处理字符串格式的before/after字段
+    let beforeData = changes.before;
+    let afterData = changes.after;
+    
+    // 如果是字符串格式，尝试解析为JSON对象
+    if (typeof beforeData === 'string') {
+      try {
+        beforeData = JSON.parse(beforeData);
+      } catch (e) {
+        console.log('before数据不是有效的JSON字符串:', e);
+        // 保持原样
+      }
+    }
+    
+    if (typeof afterData === 'string') {
+      try {
+        afterData = JSON.parse(afterData);
+      } catch (e) {
+        console.log('after数据不是有效的JSON字符串:', e);
+        // 保持原样
+      }
+    }
+    
+    const before = beforeData ? JSON.stringify(beforeData, null, 2) : '无数据';
+    const after = afterData ? JSON.stringify(afterData, null, 2) : '无数据';
     return { before, after };
   } catch (e) {
+    console.error('格式化变更数据错误:', e);
     return { before: '数据格式错误', after: '数据格式错误' };
   }
 };
@@ -307,6 +377,7 @@ const formatChanges = (changes) => {
 // 设置自动刷新
 const setupAutoRefresh = () => {
   if (props.autoRefresh && props.refreshInterval > 0) {
+    clearAutoRefresh();
     refreshTimer = setInterval(refreshActivities, props.refreshInterval);
   }
 };
@@ -321,12 +392,18 @@ const clearAutoRefresh = () => {
 
 onMounted(async () => {
   // 初始加载活动数据
-  if (activityStore.activities.length === 0) {
-    await refreshActivities();
+  error.value = null;
+  try {
+    if (activityStore.activities.length === 0) {
+      await refreshActivities();
+    }
+    
+    // 设置自动刷新
+    setupAutoRefresh();
+  } catch (e) {
+    console.error('初始加载活动数据失败:', e);
+    error.value = '加载活动数据失败，请稍后重试';
   }
-  
-  // 设置自动刷新
-  setupAutoRefresh();
 });
 
 // 组件卸载时清除自动刷新
@@ -348,8 +425,6 @@ onUnmounted(() => {
 }
 
 .activities-container {
-  overflow-y: auto;
-  scrollbar-width: thin;
   min-height: 0;
 }
 

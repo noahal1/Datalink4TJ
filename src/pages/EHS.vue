@@ -1,114 +1,115 @@
 <template>
-  <v-container class="page-container">
-    <v-row>
-      <v-col cols="12" class="text-center mb-4">
-        <h2 class="title">LWD数据管理</h2>
-        <div class="week-filter d-flex align-center justify-center">
-          <v-text-field
-            v-model.number="startWeek"
-            label="起始周"
-            type="number"
-            min="1"
-            max="52"
-            outlined
-            dense
-            class="mr-2"
-            style="max-width: 120px"
-          />
-          <v-text-field
-            v-model.number="endWeek"
-            label="结束周"
-            type="number"
-            min="1"
-            max="52"
-            outlined
-            dense
-            class="mr-2"
-            style="max-width: 120px"
-          />
-          <v-btn 
-            color="primary" 
-            @click="applyWeekFilter"
-            class="ml-2"
-            variant="elevated"
-          >
-            应用筛选
-          </v-btn>
-        </div>
-      </v-col>
-    </v-row>
+  <unified-page-template 
+    title="LWD数据管理"
+    icon="mdi-security"
+    color="success"
+  >
+    <div class="week-filter d-flex align-center justify-center mb-6">
+      <v-text-field
+        v-model.number="startWeek"
+        label="起始周"
+        type="number"
+        min="1"
+        max="52"
+        variant="outlined"
+        density="comfortable"
+        class="mr-2"
+        style="max-width: 120px"
+      />
+      <v-text-field
+        v-model.number="endWeek"
+        label="结束周"
+        type="number"
+        min="1"
+        max="52"
+        variant="outlined"
+        density="comfortable"
+        class="mr-2"
+        style="max-width: 120px"
+      />
+      <v-btn 
+        color="primary" 
+        @click="applyWeekFilter"
+        class="ml-2"
+        variant="elevated"
+      >
+        应用筛选
+      </v-btn>
+    </div>
 
     <!-- 统计摘要 -->
-    <v-row class="mb-4">
+    <v-row class="mb-6">
       <v-col cols="12" md="4">
-        <v-card class="stat-card" color="primary" dark>
-          <v-card-text class="d-flex flex-column align-center">
-            <div class="text-h6 mb-2">总 LWD 数量</div>
-            <div class="text-h3 font-weight-bold">{{ totalLWD }}</div>
-          </v-card-text>
-        </v-card>
+        <unified-stats-card
+          title="总 LWD 数量"
+          :value="totalLWD"
+          icon="mdi-counter"
+          color="primary"
+        />
       </v-col>
       <v-col cols="12" md="4">
-        <v-card class="stat-card" color="success" dark>
-          <v-card-text class="d-flex flex-column align-center">
-            <div class="text-h6 mb-2">平均每周 LWD</div>
-            <div class="text-h3 font-weight-bold">{{ averageLWD.toFixed(2) }}</div>
-          </v-card-text>
-        </v-card>
+        <unified-stats-card
+          title="平均每周 LWD"
+          :value="averageLWD.toFixed(2)"
+          icon="mdi-chart-bar"
+          color="success"
+        />
       </v-col>
       <v-col cols="12" md="4">
-        <v-card class="stat-card" color="warning" dark>
-          <v-card-text class="d-flex flex-column align-center">
-            <div class="text-h6 mb-2">当前周 LWD</div>
-            <div class="text-h3 font-weight-bold">{{ currentWeekLWD }}</div>
-          </v-card-text>
-        </v-card>
+        <unified-stats-card
+          title="当前周 LWD"
+          :value="currentWeekLWD"
+          icon="mdi-calendar-week"
+          color="warning"
+        />
       </v-col>
     </v-row>
 
     <!-- 数据趋势图 -->
-    <v-row class="mb-6">
-      <v-col cols="12">
-        <v-card>
-          <v-card-title class="d-flex align-center">
-            <v-icon class="mr-2">mdi-chart-line</v-icon>
-            LWD 数据趋势
-          </v-card-title>
-          <v-card-text style="height: 300px">
-            <v-chart class="chart" :option="chartOption" autoresize />
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
+    <unified-data-table
+      title="LWD 数据趋势"
+      icon="mdi-chart-line"
+      :headers="[]"
+      :items="[]"
+      hide-default-footer
+      :loading="false"
+      class="mb-6"
+    >
+      <template #pre-table>
+        <div style="height: 300px">
+          <v-chart class="chart" :option="chartOption" autoresize />
+        </div>
+      </template>
+    </unified-data-table>
 
     <!-- 数据表格 -->
-    <v-card flat class="table-card">
-      <v-data-table
-        :headers="headers"
-        :items="filteredData"
-        disable-pagination
-        hide-default-footer
-        fixed-header
-        height="50vh"
-        class="elevation-1 full-width-table"
-      >
-        <template v-slot:item.dateRange="{ item }">
-          {{ item.dateRange }}
-        </template>
-        <template v-slot:item.lwd="{ item }">
-          <v-text-field
-            v-model.number="item.lwd"
-            type="number"
-            min="0"
-            single-line
-            density="compact"
-            hide-details
-            variant="outlined"
-            @input="handleInput"
-          />
-        </template>
-      </v-data-table>
-    </v-card>
+    <unified-data-table
+      title="LWD 周数据"
+      icon="mdi-table"
+      :headers="headers"
+      :items="filteredData"
+      disable-pagination
+      hide-default-footer
+      fixed-header
+      height="50vh"
+      :loading="loading"
+    >
+      <template v-slot:item.dateRange="{ item }">
+        {{ item.dateRange }}
+      </template>
+      <template v-slot:item.lwd="{ item }">
+        <v-text-field
+          v-model.number="item.lwd"
+          type="number"
+          min="0"
+          single-line
+          density="compact"
+          hide-details
+          variant="outlined"
+          @input="handleInput"
+        />
+      </template>
+    </unified-data-table>
 
     <v-btn
       v-if="isDataChanged"
@@ -123,7 +124,7 @@
     </v-btn>
     
     <app-loader v-if="loading" message="加载数据中..." />
-  </v-container>
+  </unified-page-template>
 </template>
 
 <script setup>
@@ -320,42 +321,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.page-container {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.title {
-  font-size: 2rem;
-  font-weight: 500;
-  color: #2c3e50;
-  letter-spacing: 0.5px;
-}
-
 .week-filter {
   gap: 10px;
   padding: 16px;
   background: #f8f9fa;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.stat-card {
-  border-radius: 8px;
-  transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.stat-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2) !important;
-}
-
-.table-card {
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .chart {
@@ -376,14 +347,6 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .page-container {
-    padding: 1rem;
-  }
-  
-  .title {
-    font-size: 1.5rem;
-  }
-  
   .week-filter {
     flex-wrap: wrap;
   }

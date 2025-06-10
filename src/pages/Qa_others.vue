@@ -1,185 +1,262 @@
 <template>
-  <v-container>
-    <v-card class="pa-6 quality-card">
-      <v-card-title class="d-flex align-center">
-        <v-icon class="mr-2">mdi-clipboard-check-outline</v-icon>
-        <span class="text-h5">质量数据管理</span>
-      </v-card-title>
-      
-      <!-- 月份选择器 -->
-      <v-card-text>
-        <v-row class="mb-6">
-          <v-col cols="12" md="4">
-            <v-select
-              v-model="selectedMonth"
-              :items="months"
-              label="选择月份"
-              variant="outlined"
-              density="comfortable"
-              hide-details
-              :rules="[rules.required]"
-              @update:model-value="fetchMonthData"
-              class="month-selector"
-            ></v-select>
-          </v-col>
-          <v-col cols="12" md="8" class="d-flex align-center">
-            <v-chip 
-              color="primary" 
-              label 
-              class="ml-auto"
-              size="large"
-            >
-              {{ new Date().getFullYear() }}年 {{ selectedMonth }}月
-            </v-chip>
-          </v-col>
-        </v-row>
+  <unified-page-template 
+    title="质量数据管理"
+    icon="mdi-clipboard-check-outline"
+    color="primary"
+  >
+    <template #header-actions>
+      <v-chip 
+        color="white" 
+        text-color="primary"
+        label 
+        class="font-weight-bold"
+        size="large"
+      >
+        {{ new Date().getFullYear() }}年 {{ selectedMonth }}月
+      </v-chip>
+    </template>
+    
+    <!-- 月份选择器 -->
+    <v-row class="mb-6">
+      <v-col cols="12" sm="6" md="4">
+        <v-select
+          v-model="selectedMonth"
+          :items="months"
+          label="选择月份"
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          :rules="[rules.required]"
+          @update:model-value="fetchMonthData"
+          class="month-selector"
+          prepend-inner-icon="mdi-calendar-month"
+        ></v-select>
+      </v-col>
+    </v-row>
 
-        <v-divider class="mb-6"></v-divider>
+    <v-divider class="mb-6"></v-divider>
 
-        <!-- 内容区域 -->
-        <v-expand-transition>
-          <div v-if="dataLoaded">
-            <v-form ref="form" @submit.prevent="submit">
-              <!-- KPI 数据表格 -->
-              <v-card class="mb-6">
-                <v-data-table
-                  :headers="headers"
-                  :items="kpiData"
-                  class="elevation-1"
-                  density="comfortable"
-                >
-                  <template v-slot:item.newFactory="{ item }">
-                    <v-text-field
-                      v-model.number="item.newFactory"
-                      type="number"
-                      min="0"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      class="text-field-small"
-                      @input="handleInput"
-                    ></v-text-field>
-                  </template>
-                  
-                  <template v-slot:item.oldFactory="{ item }">
-                    <v-text-field
-                      v-model.number="item.oldFactory"
-                      type="number"
-                      min="0"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      class="text-field-small"
-                      @input="handleInput"
-                    ></v-text-field>
-                  </template>
-                  
-                  <template v-slot:item.total="{ item }">
-                    <v-text-field
-                      v-model.number="item.total"
-                      type="number"
-                      min="0"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      class="text-field-small"
-                      @input="handleInput"
-                    ></v-text-field>
-                  </template>
-                </v-data-table>
-              </v-card>
-
-              <!-- 报废率模块 -->
-              <v-card class="mb-6 pa-4">
-                <v-card-title class="subtitle-1">
-                  <v-icon class="mr-2">mdi-recycle</v-icon>
-                  报废率
-                </v-card-title>
-                <v-card-text>
+    <!-- 内容区域 -->
+    <v-expand-transition>
+      <div v-if="dataLoaded">
+        <unified-form ref="form" @submit="submit">
+          <!-- 关键指标卡片 -->
+          <v-row class="mb-6">
+            <v-col cols="12" md="6" lg="3">
+              <unified-stats-card
+                title="FTT (First Time Through)"
+                icon="mdi-check-circle-outline"
+                color="primary"
+              >
+                <template #value>
                   <v-row>
-                    <v-col cols="12" md="6">
-                      <v-text-field
-                        v-model.number="formData.scrapRatesTjc[selectedMonth - 1]"
-                        label="TJC报废率 (%)"
-                        type="number"
-                        min="0"
-                        variant="outlined"
-                        density="comfortable"
-                        hint="输入TJC厂区的报废率百分比"
-                        :rules="[rules.required, rules.nonNegative]"
-                      ></v-text-field>
-                    </v-col>
-                    <v-col cols="12" md="6">
-                      <v-text-field
-                        v-model.number="formData.scrapRatesTjm[selectedMonth - 1]"
-                        label="TJM报废率 (%)"
-                        type="number"
-                        min="0"
-                        variant="outlined"
-                        density="comfortable"
-                        hint="输入TJM厂区的报废率百分比"
-                        :rules="[rules.required, rules.nonNegative]"
-                      ></v-text-field>
-                    </v-col>
-                  </v-row>
-                </v-card-text>
-              </v-card>
-
-              <!-- FTT模块 -->
-              <v-card class="mb-6 pa-4">
-                <v-card-title class="subtitle-1">
-                  <v-icon class="mr-2">mdi-check-circle-outline</v-icon>
-                  FTT (First Time Through)
-                </v-card-title>
-                <v-card-text>
-                  <v-row>
-                    <v-col cols="12" md="6">
+                    <v-col cols="6">
                       <v-text-field
                         v-model.number="formData.fttValuesTjc[selectedMonth - 1]"
-                        label="TJC FTT值 (%)"
+                        label="TJC"
                         type="number"
                         min="0"
+                        max="100"
                         variant="outlined"
                         density="comfortable"
-                        hint="输入TJC厂区的FTT百分比"
+                        suffix="%"
                         :rules="[rules.required, rules.nonNegative]"
+                        @input="handleInput"
                       ></v-text-field>
                     </v-col>
-                    <v-col cols="12" md="6">
+                    <v-col cols="6">
                       <v-text-field
                         v-model.number="formData.fttValuesTjm[selectedMonth - 1]"
-                        label="TJM FTT值 (%)"
+                        label="TJM"
                         type="number"
                         min="0"
+                        max="100"
                         variant="outlined"
                         density="comfortable"
-                        hint="输入TJM厂区的FTT百分比"
+                        suffix="%"
                         :rules="[rules.required, rules.nonNegative]"
+                        @input="handleInput"
                       ></v-text-field>
                     </v-col>
                   </v-row>
-                </v-card-text>
-              </v-card>
+                </template>
+              </unified-stats-card>
+            </v-col>
+            
+            <v-col cols="12" md="6" lg="3">
+              <unified-stats-card
+                title="报废率 (Cost of Scrap)"
+                icon="mdi-recycle"
+                color="error"
+              >
+                <template #value>
+                  <v-row>
+                    <v-col cols="6">
+                      <v-text-field
+                        v-model.number="formData.scrapRatesTjc[selectedMonth - 1]"
+                        label="TJC"
+                        type="number"
+                        min="0"
+                        max="100"
+                        variant="outlined"
+                        density="comfortable"
+                        suffix="%"
+                        :rules="[rules.required, rules.nonNegative]"
+                        @input="handleInput"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="6">
+                      <v-text-field
+                        v-model.number="formData.scrapRatesTjm[selectedMonth - 1]"
+                        label="TJM"
+                        type="number"
+                        min="0"
+                        max="100"
+                        variant="outlined"
+                        density="comfortable"
+                        suffix="%"
+                        :rules="[rules.required, rules.nonNegative]"
+                        @input="handleInput"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                </template>
+              </unified-stats-card>
+            </v-col>
+            
+            <v-col cols="12" md="6" lg="3">
+              <unified-stats-card
+                title="供应商缺陷"
+                icon="mdi-alert-circle-outline"
+                color="warning"
+              >
+                <template #value>
+                  <v-text-field
+                    v-model.number="formData.supplierDefects[selectedMonth - 1]"
+                    label="缺陷数量"
+                    type="number"
+                    min="0"
+                    variant="outlined"
+                    density="comfortable"
+                    :rules="[rules.required, rules.nonNegative]"
+                    @input="handleInput"
+                  ></v-text-field>
+                </template>
+              </unified-stats-card>
+            </v-col>
+            
+            <v-col cols="12" md="6" lg="3">
+              <unified-stats-card
+                title="客户投诉"
+                icon="mdi-comment-alert-outline"
+                color="info"
+              >
+                <template #value>
+                  <v-row>
+                    <v-col cols="6">
+                      <v-text-field
+                        v-model.number="formData.formalComplaints[selectedMonth - 1]"
+                        label="正式"
+                        type="number"
+                        min="0"
+                        variant="outlined"
+                        density="comfortable"
+                        :rules="[rules.required, rules.nonNegative]"
+                        @input="handleInput"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="6">
+                      <v-text-field
+                        v-model.number="formData.informalComplaints[selectedMonth - 1]"
+                        label="非正式"
+                        type="number"
+                        min="0"
+                        variant="outlined"
+                        density="comfortable"
+                        :rules="[rules.required, rules.nonNegative]"
+                        @input="handleInput"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                </template>
+              </unified-stats-card>
+            </v-col>
+          </v-row>
 
-              <div class="d-flex justify-end">
-                <v-btn
-                  type="submit"
-                  color="primary"
-                  size="large"
-                  :loading="submitting"
-                >
-                  保存数据
-                </v-btn>
+          <!-- KPI 数据表格 -->
+          <unified-data-table
+            title="KPI 详细数据"
+            icon="mdi-table"
+            :headers="headers"
+            :items="kpiData"
+            :loading="loading"
+            density="comfortable"
+            class="mb-6"
+          >
+            <template v-slot:item.newFactory="{ item }">
+              <v-text-field
+                v-model.number="item.raw.newFactory"
+                type="number"
+                min="0"
+                variant="outlined"
+                density="compact"
+                hide-details
+                class="text-field-small"
+                @input="handleInput"
+              ></v-text-field>
+            </template>
+            
+            <template v-slot:item.oldFactory="{ item }">
+              <v-text-field
+                v-model.number="item.raw.oldFactory"
+                type="number"
+                min="0"
+                variant="outlined"
+                density="compact"
+                hide-details
+                class="text-field-small"
+                @input="handleInput"
+              ></v-text-field>
+            </template>
+            
+            <template v-slot:item.total="{ item }">
+              <v-text-field
+                v-model.number="item.raw.total"
+                type="number"
+                min="0"
+                variant="outlined"
+                density="compact"
+                hide-details
+                class="text-field-small"
+                @input="handleInput"
+              ></v-text-field>
+            </template>
+            
+            <template v-slot:item.description="{ item }">
+              <div :class="{'highlighted-row': isHighlightedKpi(item.raw.description)}">
+                {{ item.raw.description }}
               </div>
-            </v-form>
+            </template>
+          </unified-data-table>
+
+          <div class="d-flex justify-end">
+            <v-btn
+              type="submit"
+              color="primary"
+              size="large"
+              :loading="submitting"
+              prepend-icon="mdi-content-save"
+            >
+              保存数据
+            </v-btn>
           </div>
-          <div v-else class="d-flex justify-center align-center" style="height: 300px">
-            <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
-          </div>
-        </v-expand-transition>
-      </v-card-text>
-    </v-card>
-  </v-container>
+        </unified-form>
+      </div>
+      <div v-else class="d-flex justify-center align-center" style="height: 300px">
+        <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
+      </div>
+    </v-expand-transition>
+  </unified-page-template>
 </template>
 
 <script setup>
@@ -196,6 +273,7 @@ const selectedMonth = ref(new Date().getMonth() + 1); // 默认当前月
 const submitting = ref(false);
 const dataLoaded = ref(false);
 const isDataChanged = ref(false);
+const loading = ref(false);
 
 // 月份选项
 const months = Array.from({ length: 12 }, (_, i) => ({
@@ -212,7 +290,7 @@ const rules = {
 // 表格头部
 const headers = [
   { title: '区域', key: 'area', align: 'start', width: '100px' },
-  { title: 'KPI 描述', key: 'description', align: 'start', width: '250px' },
+  { title: 'KPI 描述', key: 'description', align: 'start' },
   { title: '新厂', key: 'newFactory', align: 'center', width: '150px' },
   { title: '老厂', key: 'oldFactory', align: 'center', width: '150px' },
   { title: '汇总', key: 'total', align: 'center', width: '150px' },
@@ -274,6 +352,11 @@ const formData = reactive({
   informalComplaints: Array(12).fill(0)
 });
 
+// 检查是否是需要高亮的KPI
+const isHighlightedKpi = (description) => {
+  return description === 'Cost of Scrap' || description === 'Magna FTT - Quality Performance (New)';
+};
+
 // 输入处理
 const handleInput = debounce(() => {
   isDataChanged.value = true;
@@ -282,6 +365,7 @@ const handleInput = debounce(() => {
 // 获取月份数据
 const fetchMonthData = async () => {
   dataLoaded.value = false;
+  loading.value = true;
   
   try {
     // 获取基本数据
@@ -342,6 +426,7 @@ const fetchMonthData = async () => {
     Message.error(`获取数据失败: ${error.message || '未知错误'}`);
   } finally {
     dataLoaded.value = true;
+    loading.value = false;
   }
 };
 
@@ -413,38 +498,21 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.quality-card {
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
 .month-selector {
-  min-width: 150px;
-}
-
-.metric-card {
-  border-radius: 8px;
-  transition: transform 0.3s, box-shadow 0.3s;
-  height: 100%;
-}
-
-.metric-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2) !important;
-}
-
-.subtitle-1 {
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: #1976d2;
+  min-width: 180px;
 }
 
 .text-field-small {
   max-width: 120px;
+  margin: 0 auto;
 }
 
-@media (max-width: 768px) {
+.highlighted-row {
+  font-weight: 500;
+  color: var(--primary);
+}
+
+@media (max-width: 960px) {
   .metric-card {
     margin-bottom: 16px;
   }

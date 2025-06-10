@@ -3,7 +3,7 @@
     v-model="visible"
     :color="snackbar.color"
     :timeout="snackbar.timeout"
-    :location="location"
+    location="bottom right"
     class="global-snackbar"
   >
     {{ snackbar.text }}
@@ -19,51 +19,78 @@
 </template>
 
 <script setup>
-import { ref, onMounted, defineExpose } from 'vue'
-
-// 默认位置为右下角
-const location = 'bottom right'
+import { ref, onMounted, defineExpose } from 'vue';
+import { eventBus } from '../utils/eventBus';
 
 // 消息内容
 const snackbar = ref({
   text: '',
   color: 'success',
   timeout: 3000
-})
+});
 
 // 显示状态
-const visible = ref(false)
+const visible = ref(false);
 
 /**
  * 显示消息
- * @param {Object} options 配置选项
- * @param {string} options.text 消息文本
- * @param {string} options.color 颜色，可选值：success, error, warning, info
- * @param {number} options.timeout 显示时间，单位ms
+ * @param {Object|string} options 配置选项或消息文本
  */
 const show = (options) => {
-  snackbar.value = {
-    text: options.text || '',
-    color: options.color || 'success',
-    timeout: options.timeout || 3000
+  console.log('GlobalSnackbar.show called with:', options);
+  
+  // 处理字符串参数
+  if (typeof options === 'string') {
+    snackbar.value = {
+      text: options,
+      color: 'success',
+      timeout: 3000
+    };
+  } 
+  // 处理对象参数
+  else if (typeof options === 'object') {
+    snackbar.value = {
+      text: options.text || options.message || '',
+      color: options.color || options.type || 'success',
+      timeout: options.timeout || options.time || 3000
+    };
   }
-  visible.value = true
-}
+  
+  visible.value = true;
+  return new Promise(resolve => {
+    setTimeout(resolve, snackbar.value.timeout);
+  });
+};
 
 // 向父组件暴露方法
 defineExpose({
   show
-})
+});
 
-// 注册为全局组件
+// 监听事件总线上的snackbar事件
 onMounted(() => {
-  // 提供给 inject 使用
+  // 注册事件监听
+  const unsubscribe = eventBus.on('snackbar', (data) => {
+    console.log('GlobalSnackbar received event:', data);
+    show({
+      text: data.message,
+      color: data.type,
+      timeout: data.time
+    });
+  });
+  
+  // 提供给 window 使用
   if (window) {
     window.$snackbar = {
       show
-    }
+    };
   }
-})
+  
+  // 组件卸载时取消订阅
+  return () => {
+    unsubscribe && unsubscribe();
+  };
+});
 </script>
 
 <style scoped>

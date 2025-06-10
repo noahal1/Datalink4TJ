@@ -1,112 +1,104 @@
 <template>
-  <v-container class="events-container pa-0" fluid>
-    <v-card elevation="0" class="fill-height">
-      <!-- 标题和工具栏 -->
-      <v-card-title class="d-flex align-center fixed-header py-4">
-        <v-icon size="large" color="primary" class="mr-2">mdi-calendar-text</v-icon>
-        <span class="text-h5">重要事件管理</span>
-        
-        <v-spacer></v-spacer>
-        
-        <v-text-field
-          v-model="searchQuery"
-          prepend-inner-icon="mdi-magnify"
-          label="搜索事件"
-          density="compact"
-          variant="outlined"
-          hide-details
-          class="search-field mx-4"
-          clearable
-        ></v-text-field>
-        
-        <v-btn 
-          color="primary" 
-          @click="openDialog" 
-          prepend-icon="mdi-plus"
+  <unified-page-template 
+    title="重要事件管理"
+    icon="mdi-calendar-text"
+    color="info"
+  >
+    <template #header-actions>
+      <v-text-field
+        v-model="searchQuery"
+        prepend-inner-icon="mdi-magnify"
+        label="搜索事件"
+        density="compact"
+        variant="outlined"
+        hide-details
+        class="search-field mx-4"
+        clearable
+      ></v-text-field>
+      
+      <v-btn 
+        color="primary" 
+        @click="openDialog" 
+        prepend-icon="mdi-plus"
+      >
+        添加事件
+      </v-btn>
+    </template>
+    
+    <!-- 加载指示器 -->
+    <loading-overlay :loading="isLoading" message="加载数据中..." />
+    
+    <!-- 数据表格 -->
+    <unified-data-table
+      :headers="tableHeaders"
+      :items="events"
+      :search="searchQuery"
+      :loading="isLoading"
+      hover
+      fixed-header
+      class="events-table"
+    >
+      <template #item.importance="{ item }">
+        <v-chip
+          :color="getImportanceColor(item.importance)"
+          size="small"
+          class="font-weight-medium"
         >
-          添加事件
-        </v-btn>
-      </v-card-title>
+          {{ getImportanceLabel(item.importance) }}
+        </v-chip>
+      </template>
       
-      <v-divider></v-divider>
+      <template #item.start_time="{ item }">
+        <div class="d-flex align-center">
+          <v-icon size="small" color="primary" class="mr-1">mdi-calendar-start</v-icon>
+          {{ formatDate(item.start_time) }}
+        </div>
+      </template>
       
-      <!-- 加载指示器 -->
-      <loading-overlay :loading="isLoading" message="加载数据中..." />
+      <template #item.end_time="{ item }">
+        <div class="d-flex align-center">
+          <v-icon size="small" :color="isEventActive(item) ? 'success' : 'grey'" class="mr-1">
+            {{ isEventActive(item) ? 'mdi-calendar-clock' : 'mdi-calendar-check' }}
+          </v-icon>
+          {{ formatDate(item.end_time) }}
+        </div>
+      </template>
       
-      <!-- 数据表格 -->
-      <div class="table-container">
-        <v-data-table
-          :items="events"
-          :headers="tableHeaders"
-          :search="searchQuery"
-          density="comfortable"
-          hover
-          fixed-header
-          class="events-table"
-        >
-          <template #item.importance="{ item }">
-            <v-chip
-              :color="getImportanceColor(item.importance)"
-              size="small"
-              class="font-weight-medium"
-            >
-              {{ getImportanceLabel(item.importance) }}
-            </v-chip>
-          </template>
-          
-          <template #item.start_time="{ item }">
-            <div class="d-flex align-center">
-              <v-icon size="small" color="primary" class="mr-1">mdi-calendar-start</v-icon>
-              {{ formatDate(item.start_time) }}
-            </div>
-          </template>
-          
-          <template #item.end_time="{ item }">
-            <div class="d-flex align-center">
-              <v-icon size="small" :color="isEventActive(item) ? 'success' : 'grey'" class="mr-1">
-                {{ isEventActive(item) ? 'mdi-calendar-clock' : 'mdi-calendar-check' }}
-              </v-icon>
-              {{ formatDate(item.end_time) }}
-            </div>
-          </template>
-          
-          <template #item.actions="{ item }">
-            <div class="d-flex justify-center">
-              <v-btn
-                size="small"
-                color="primary"
-                variant="text"
-                icon="mdi-pencil"
-                @click="openDialog(item)"
-                class="mr-1"
-              />
-              <v-btn
-                size="small"
-                color="error"
-                variant="text"
-                icon="mdi-delete"
-                @click="confirmDelete(item)"
-              />
-            </div>
-          </template>
-          
-          <template #no-data>
-            <div class="text-center pa-6">
-              <v-icon size="large" color="grey" class="mb-2">mdi-calendar-remove</v-icon>
-              <div class="text-subtitle-1 text-medium-emphasis">暂无重要事件记录</div>
-              <v-btn color="primary" variant="text" class="mt-2" @click="openDialog">
-                添加新事件
-              </v-btn>
-            </div>
-          </template>
-        </v-data-table>
-      </div>
-    </v-card>
+      <template #item.actions="{ item }">
+        <div class="d-flex justify-center">
+          <v-btn
+            size="small"
+            color="primary"
+            variant="text"
+            icon="mdi-pencil"
+            @click="openDialog(item)"
+            class="mr-1"
+          />
+          <v-btn
+            size="small"
+            color="error"
+            variant="text"
+            icon="mdi-delete"
+            @click="confirmDelete(item)"
+          />
+        </div>
+      </template>
+      
+      <template #no-data>
+        <div class="text-center pa-6">
+          <v-icon size="large" color="grey" class="mb-2">mdi-calendar-remove</v-icon>
+          <div class="text-subtitle-1 text-medium-emphasis">暂无重要事件记录</div>
+          <v-btn color="primary" variant="text" class="mt-2" @click="openDialog">
+            添加新事件
+          </v-btn>
+        </div>
+      </template>
+    </unified-data-table>
 
     <!-- 添加/编辑事件对话框 -->
     <v-dialog v-model="showDialog" max-width="600" persistent>
       <v-card>
-        <v-toolbar :color="primary" dark flat>
+        <v-toolbar :color="dialogColor" dark flat>
           <v-toolbar-title>{{ dialogTitle }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn icon="mdi-close" variant="text" @click="showDialog = false"></v-btn>
@@ -118,12 +110,14 @@
               <v-row>
                 <v-col cols="12">
                   <v-text-field
-                      v-model="eventForm.name"
-                      label="事件名称"
-                      :rules="[v => !!v || '必填字段']"
-                      required
-                      variant="outlined"
-                      prepend-inner-icon="mdi-format-title"/>
+                    v-model="eventForm.name"
+                    label="事件名称"
+                    :rules="[v => !!v || '必填字段']"
+                    required
+                    variant="outlined"
+                    density="comfortable"
+                    prepend-inner-icon="mdi-format-title"
+                  />
                 </v-col>
                 <v-col cols="12" md="6">
                   <v-text-field
@@ -132,6 +126,7 @@
                     :rules="[v => !!v || '必填字段']"
                     required
                     variant="outlined"
+                    density="comfortable"
                     prepend-inner-icon="mdi-office-building"
                   />
                 </v-col>
@@ -141,6 +136,7 @@
                     label="开始时间"
                     type="date"
                     variant="outlined"
+                    density="comfortable"
                     :max="eventForm.end_time"
                     prepend-inner-icon="mdi-calendar-start"
                   />
@@ -151,6 +147,7 @@
                     label="结束时间"
                     type="date"
                     variant="outlined"
+                    density="comfortable"
                     :min="eventForm.start_time"
                     prepend-inner-icon="mdi-calendar-end"
                   />
@@ -165,7 +162,7 @@
         <v-card-actions class="pa-4">
           <v-spacer />
           <v-btn variant="tonal" @click="showDialog = false">取消</v-btn>
-          <v-btn color="primary" variant="elevated" @click="submitEvent">
+          <v-btn color="primary" variant="elevated" @click="submitEvent" :loading="isSubmitting">
             {{ eventForm.id ? '保存修改' : '添加事件' }}
           </v-btn>
         </v-card-actions>
@@ -175,8 +172,8 @@
     <!-- 删除确认对话框 -->
     <v-dialog v-model="showDeleteDialog" max-width="400">
       <v-card>
-        <v-card-title class="text-h5">确认删除</v-card-title>
-        <v-card-text>
+        <v-card-title class="text-h5 bg-error text-white">确认删除</v-card-title>
+        <v-card-text class="pt-4">
           确定要删除事件 <strong>{{ eventToDelete?.name }}</strong> 吗？此操作不可撤销。
         </v-card-text>
         <v-card-actions>
@@ -191,7 +188,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </v-container>
+  </unified-page-template>
 </template>
 
 <script setup>
@@ -220,6 +217,13 @@ const isLoading = ref(true)
 const searchQuery = ref('')
 const showDeleteDialog = ref(false)
 const eventToDelete = ref(null)
+const isSubmitting = ref(false)
+
+const importanceOptions = [
+  { title: '高', value: 'high' },
+  { title: '中', value: 'medium' },
+  { title: '低', value: 'low' }
+];
 
 const tableHeaders = [
   { title: '事件名称', key: 'name', align: 'start', width: '30%' },
@@ -231,7 +235,7 @@ const tableHeaders = [
 
 const getImportanceLabel = (importance) => {
   const option = importanceOptions.find(opt => opt.value === importance);
-  return option ? option.label : '中';
+  return option ? option.title : '中';
 };
 
 const getImportanceColor = (importance) => {
@@ -277,7 +281,6 @@ const fetchEvents = async () => {
       ...event,
       start_time: event.start_time.split('T')[0],  // 只保留日期部分
       end_time: event.end_time ? event.end_time.split('T')[0] : null,  // 只保留日期部分
-      importance: event.importance || 'medium'  // 确保有重要性字段
     }))
   } catch (error) {
     console.error('Error fetching events:', error)
@@ -299,56 +302,68 @@ const openDialog = (event = null) => {
       name: '', 
       department: '', 
       start_time: today, 
-      end_time: ''
+      end_time: '',
+      importance: 'medium'
     }
   }
   showDialog.value = true
 }
 
 const submitEvent = async () => {
-  const { valid } = await eventFormRef.value.validate()
-  if (valid) {
-    try {
-      // 检查用户是否已登录
-      if (!userStore.token) {
-        console.error('用户未登录或令牌无效');
-        Message.error('请先登录再进行操作！');
-        return;
-      }
-
-      const method = eventForm.value.id ? 'PUT' : 'POST'
-      const url = eventForm.value.id ? `${API_BASE_URL}/events/${eventForm.value.id}` : `${API_BASE_URL}/events`
-      const payload = {
-        name: eventForm.value.name,
-        department: eventForm.value.department,
-        start_time: eventForm.value.start_time,
-        end_time: eventForm.value.end_time || null
-      }
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userStore.token}`
-        },
-        body: JSON.stringify(payload)
-      })
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      
-      Message.success(eventForm.value.id ? '事件更新成功' : '事件添加成功');
-      
-      showDialog.value = false
-      eventForm.value = { id: null, name: '', department: '', start_time: '', end_time: '' }
-      await fetchEvents()
-    } catch (error) {
-      console.error('Error submitting event:', error)
-      Message.error(eventForm.value.id ? '事件更新失败' : '事件添加失败');
+  try {
+    isSubmitting.value = true;
+    // 验证表单
+    let valid = true;
+    if (eventFormRef.value) {
+      const validation = await eventFormRef.value.validate();
+      valid = validation?.valid ?? false;
     }
-  } else {
-    Message.warning('请完整填写表单');
+    
+    if (!valid) {
+      Message.warning('请完整填写表单');
+      return;
+    }
+    
+    // 检查用户是否已登录
+    if (!userStore.token) {
+      console.error('用户未登录或令牌无效');
+      Message.error('请先登录再进行操作！');
+      return;
+    }
+
+    const method = eventForm.value.id ? 'PUT' : 'POST'
+    const url = eventForm.value.id ? `${API_BASE_URL}/events/${eventForm.value.id}` : `${API_BASE_URL}/events`
+    const payload = {
+      name: eventForm.value.name,
+      department: eventForm.value.department,
+      start_time: eventForm.value.start_time,
+      end_time: eventForm.value.end_time || null,
+      importance: eventForm.value.importance
+    }
+    
+    const response = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${userStore.token}`
+      },
+      body: JSON.stringify(payload)
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    Message.success(eventForm.value.id ? '事件更新成功' : '事件添加成功');
+    
+    showDialog.value = false
+    eventForm.value = { id: null, name: '', department: '', start_time: '', end_time: '', importance: 'medium' }
+    await fetchEvents()
+  } catch (error) {
+    console.error('Error submitting event:', error)
+    Message.error(eventForm.value.id ? '事件更新失败' : '事件添加失败');
+  } finally {
+    isSubmitting.value = false;
   }
 }
 
@@ -405,62 +420,13 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.events-container {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.fill-height {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
 .search-field {
   max-width: 300px;
-}
-
-.table-container {
-  flex: 1;
-  overflow: auto;
-  position: relative;
-}
-
-.events-table {
-  height: 100%;
-}
-
-.fixed-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background-color: white;
-}
-
-.v-card {
-  border-radius: 8px;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
 }
 
 .v-btn {
   letter-spacing: normal;
   text-transform: none;
-}
-
-.v-data-table :deep(th) {
-  background-color: #f5f5f5;
-  font-weight: 600;
-  color: #424242;
-}
-
-.v-data-table :deep(td) {
-  transition: background-color 0.2s;
-  height: 56px !important;
-}
-
-.v-data-table :deep(tbody tr:hover) {
-  background-color: rgba(0, 0, 0, 0.03);
 }
 
 @media (max-width: 600px) {

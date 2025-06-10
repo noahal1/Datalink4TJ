@@ -4,6 +4,22 @@ import Message from './notification'
  * 全局错误处理器
  */
 class ErrorHandler {
+  constructor() {
+    this.lastErrorTime = 0;
+    this.errorThreshold = 3000; // 3秒内不重复显示错误
+  }
+
+  /**
+   * 节流函数，防止短时间内显示多个错误通知
+   */
+  throttledErrorMessage() {
+    const now = Date.now();
+    if (now - this.lastErrorTime > this.errorThreshold) {
+      this.lastErrorTime = now;
+      Message.error('应用发生错误，请刷新页面');
+    }
+  }
+
   /**
    * 处理全局Vue错误
    * @param {Error} error - 错误对象
@@ -56,21 +72,40 @@ class ErrorHandler {
    * @param {Event} event - 错误事件
    */
   windowErrorHandler(event) {
-    console.error('全局错误:', event.error)
+    // 检查event和error是否存在，避免null错误
+    if (!event) {
+      console.error('全局错误处理器收到空事件');
+      return;
+    }
+    
+    console.error('全局错误:', event.error || event.message || event);
+    
+    // 忽略某些第三方脚本错误和跨域错误
+    if (event.message && (
+      event.message.includes('Script error') || 
+      event.message.includes('ResizeObserver loop') ||
+      event.message.includes('ChunkLoadError')
+    )) {
+      console.warn('忽略的错误类型:', event.message);
+      return;
+    }
     
     if (import.meta.env.PROD) {
       this.reportErrorToServer({
         type: 'window',
         message: event.message,
-        error: event.error?.message,
-        stack: event.error?.stack,
-        source: event.filename,
-        line: event.lineno,
-        column: event.colno
-      })
+        error: event.error?.message || '未知错误',
+        stack: event.error?.stack || new Error().stack,
+        source: event.filename || 'unknown',
+        line: event.lineno || 0,
+        column: event.colno || 0,
+        timestamp: new Date().toISOString()
+      });
     }
 
-    Message.error('应用发生错误，请刷新页面')
+    // 避免对用户显示过多的错误通知
+    // 使用节流函数防止短时间内多次显示
+    this.throttledErrorMessage();
   }
 
   /**

@@ -95,7 +95,7 @@ const routes = [
     component: Events,
     meta: { 
       title: '重要事件',
-      permission: '*' // 所有人可访问
+      permission: "'GMO','ADMIN'" // 所有人可访问
     } 
   },
   { 

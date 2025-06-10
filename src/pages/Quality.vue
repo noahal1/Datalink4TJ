@@ -1,108 +1,102 @@
 <template>
-  <v-container class="quality-container pa-0">
-    <!-- 数据表格区域 -->
-    <v-card class=" flex-grow-1 d-flex flex-column">
-      <v-card-title class="d-flex align-center fixed-header">
-        <!-- 月份选择器 -->
-        <v-btn-toggle
-          v-model="selectedMonth"
-          mandatory
-          color="primary"
-          @update:modelValue="handleMonthChange"
-          class="month-selector mr-4"
-          density="comfortable"
-          rounded="lg"
-        >
-          <v-btn value="1">一</v-btn>
-          <v-btn value="2">二</v-btn>
-          <v-btn value="3">三</v-btn>
-          <v-btn value="4">四</v-btn>
-          <v-btn value="5">五</v-btn>
-          <v-btn value="6">六</v-btn>
-          <v-btn value="7">七</v-btn>
-          <v-btn value="8">八</v-btn>
-          <v-btn value="9">九</v-btn>
-          <v-btn value="10">十</v-btn>
-          <v-btn value="11">十一</v-btn>
-          <v-btn value="12">十二</v-btn>
-        </v-btn-toggle>
-        
-        <v-spacer></v-spacer>
-        
-        <!-- 工具栏 -->    
-        <v-btn-toggle v-model="dataView" density="comfortable" color="primary">
-          <v-btn value="regular" prepend-icon="mdi-table">GP12</v-btn>
-          <v-btn value="scrap" prepend-icon="mdi-delete">报废数</v-btn>
-        </v-btn-toggle>
-        
-        <v-btn 
-          prepend-icon="mdi-refresh"
-          variant="text"
-          class="ml-2"
-          @click="refreshData"
-          :loading="isLoading"
-
-        >
-          刷新
-        </v-btn>
-      </v-card-title>
+  <unified-page-template 
+    title="GP12数据管理"
+    icon="mdi-checkbox-multiple-marked-circle-outline"
+    color="primary"
+  >
+    <div class="d-flex align-center fixed-header">
+      <!-- 月份选择器 -->
+      <v-btn-toggle
+        v-model="selectedMonth"
+        mandatory
+        color="primary"
+        @update:modelValue="handleMonthChange"
+        class="month-selector mr-4"
+        density="comfortable"
+        rounded="lg"
+      >
+        <v-btn value="1">一</v-btn>
+        <v-btn value="2">二</v-btn>
+        <v-btn value="3">三</v-btn>
+        <v-btn value="4">四</v-btn>
+        <v-btn value="5">五</v-btn>
+        <v-btn value="6">六</v-btn>
+        <v-btn value="7">七</v-btn>
+        <v-btn value="8">八</v-btn>
+        <v-btn value="9">九</v-btn>
+        <v-btn value="10">十</v-btn>
+        <v-btn value="11">十一</v-btn>
+        <v-btn value="12">十二</v-btn>
+      </v-btn-toggle>
       
-      <v-divider></v-divider>
+      <v-spacer></v-spacer>
       
-      <!-- 加载指示器 -->
-      <loading-overlay :loading="isLoading" message="加载数据中..." />
+      <!-- 工具栏 -->    
+      <v-btn-toggle v-model="dataView" density="comfortable" color="primary">
+        <v-btn value="regular" prepend-icon="mdi-table">GP12</v-btn>
+        <v-btn value="scrap" prepend-icon="mdi-delete">报废数</v-btn>
+      </v-btn-toggle>
       
-      <div class="table-container">
-        <v-data-table
-          :headers="visibleHeaders"
-          :items="paginatedData"
-          :items-per-page="pageSize"
-          :search="search"
-          hide-default-footer
-          class="quality-table"
-          density="compact"
-          hover
-          fixed-header
-        >
-          <template v-slot:item="{ item }">
-            <tr :class="{'highlight-weekend': isWeekend(item.date)}">
-              <td class="text-center font-weight-medium" style="min-width: 60px">{{ item.date }}</td>
-              <td class="text-center" style="min-width: 80px">{{ item.welding }}</td>
-              <td class="text-center" style="min-width: 80px">{{ item.stamping }}</td>
-              <!-- 正常品或报废品字段 -->
-              <td v-for="field in dataView === 'regular' ? standardFields : scrapFields" 
-                  :key="field" 
-                  style="min-width: 90px"
-                  class="editable-cell"
-              >
-                <v-text-field
-                  v-model="item[field]"
-                  variant="outlined"
-                  density="compact"
-                  type="number"
-                  hide-details
-                  class="ma-1"
-                  :class="{'scrap-field': dataView === 'scrap'}"
-                  @input="handleInput(item, field)"
-                />
-              </td>
-            </tr>
-          </template>
-        </v-data-table>
-      </div>
-      
-      <v-divider></v-divider>
-      
-      <v-card-actions class="d-flex justify-center py-1">
-        <v-pagination
-          v-model="currentPage"
-          :length="Math.ceil(tableData.length / pageSize)"
-          rounded="circle"
-          density="comfortable"
-          active-color="primary"
-        />
-      </v-card-actions>
-    </v-card>
+      <v-btn 
+        prepend-icon="mdi-refresh"
+        variant="text"
+        class="ml-2"
+        @click="refreshData"
+        :loading="isLoading"
+      >
+        刷新
+      </v-btn>
+    </div>
+    
+    <!-- 加载指示器 -->
+    <loading-overlay :loading="isLoading" message="加载数据中..." />
+    
+    <!-- 数据表格 -->
+    <unified-data-table
+      :headers="visibleHeaders"
+      :items="paginatedData"
+      :loading="isLoading"
+      class="mt-4"
+      hide-default-footer
+      density="compact"
+      hover
+      fixed-header
+    >
+      <template v-slot:item="{ item }">
+        <tr :class="{'highlight-weekend': isWeekend(item.date)}">
+          <td class="text-center font-weight-medium" style="min-width: 60px">{{ item.date }}</td>
+          <td class="text-center" style="min-width: 80px">{{ item.welding }}</td>
+          <td class="text-center" style="min-width: 80px">{{ item.stamping }}</td>
+          <!-- 正常品或报废品字段 -->
+          <td v-for="field in dataView === 'regular' ? standardFields : scrapFields" 
+              :key="field" 
+              style="min-width: 90px"
+              class="editable-cell"
+          >
+            <v-text-field
+              v-model="item[field]"
+              variant="outlined"
+              density="compact"
+              type="number"
+              hide-details
+              class="ma-1"
+              :class="{'scrap-field': dataView === 'scrap'}"
+              @input="handleInput(item, field)"
+            />
+          </td>
+        </tr>
+      </template>
+    </unified-data-table>
+    
+    <div class="d-flex justify-center py-3 mt-2">
+      <v-pagination
+        v-model="currentPage"
+        :length="Math.ceil(tableData.length / pageSize)"
+        rounded="circle"
+        density="comfortable"
+        active-color="primary"
+      />
+    </div>
     
     <v-btn
       size="large"
@@ -116,7 +110,7 @@
       <v-icon class="mr-1">mdi-content-save</v-icon>
       保存更改
     </v-btn>
-  </v-container>
+  </unified-page-template>
 </template>
 
 <script setup>
@@ -370,24 +364,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.quality-container {
-  max-width: 100%;
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 64px); /* Adjust height to account for app bar */
-}
-
-.v-card {
-  display: flex;
-  flex-direction: column;
-}
-
-.table-container {
-  flex: 1;
-  overflow: auto;
-  position: relative;
-}
-
 .fixed-header {
   position: sticky;
   top: 0;
@@ -407,18 +383,6 @@ onMounted(async () => {
 .floating-button:hover {
   transform: translateY(-5px);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2) !important;
-}
-
-.quality-table {
-  height: 100%;
-}
-
-.quality-table :deep(table) {
-  min-width: 1000px;
-}
-
-.max-width-200 {
-  max-width: 200px;
 }
 
 .editable-cell {
@@ -447,12 +411,6 @@ onMounted(async () => {
 @media (max-width: 960px) {
   .month-selector {
     flex-wrap: wrap;
-    justify-content: center;
-  }
-  
-  .month-selector .v-btn {
-    flex: 0 0 calc(25% - 8px);
-    margin: 4px;
   }
 }
 </style>

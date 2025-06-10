@@ -83,7 +83,7 @@
           :key="btn.to"
           :to="btn.to"
           :value="btn.to"
-          :active="activeTab === btn.to"
+          :active="activeTab && activeTab === btn.to"
           class="nav-list-item"
         >
           <template v-slot:prepend>
@@ -99,7 +99,7 @@
           :key="btn.to"
           :to="btn.to"
           :value="btn.to"
-          :active="activeTab === btn.to"
+          :active="activeTab && activeTab === btn.to"
           class="nav-list-item"
         >
           <template v-slot:prepend>
@@ -115,7 +115,7 @@
           :key="btn.to"
           :to="btn.to"
           :value="btn.to"
-          :active="activeTab === btn.to"
+          :active="activeTab && activeTab === btn.to"
           class="nav-list-item"
         >
         <template v-slot:prepend>
@@ -131,7 +131,7 @@
           :key="btn.to"
           :to="btn.to"
           :value="btn.to"
-          :active="activeTab === btn.to"
+          :active="activeTab && activeTab === btn.to"
           class="nav-list-item"
         >
           <template v-slot:prepend>
@@ -147,7 +147,7 @@
           :key="btn.to"
           :to="btn.to"
           :value="btn.to"
-          :active="activeTab === btn.to"
+          :active="activeTab && activeTab === btn.to"
           class="nav-list-item"
         >
           <template v-slot:prepend>
@@ -163,7 +163,7 @@
           :key="btn.to"
           :to="btn.to"
           :value="btn.to"
-          :active="activeTab === btn.to"
+          :active="activeTab && activeTab === btn.to"
           class="nav-list-item"
         >
           <template v-slot:prepend>
@@ -182,7 +182,7 @@
             <template v-slot:activator="{ props }">
               <v-list-item
                 v-bind="props"
-                :active="activeTab.startsWith('/admin')"
+                :active="activeTab && activeTab.startsWith('/admin')"
                 class="nav-list-item"
               >
                 <template v-slot:prepend>
@@ -195,18 +195,18 @@
             <!-- 管理子菜单 -->
             <v-list-item
               to="/admin"
-              :active="activeTab === '/admin'"
+              :active="activeTab && activeTab === '/admin'"
               class="nav-list-subitem"
             >
               <template v-slot:prepend>
                 <v-icon size="small">mdi-account-group</v-icon>
               </template>
               <v-list-item-title>用户管理</v-list-item-title>
-            </v-list-item> 
+            </v-list-item>
             
             <v-list-item
               to="/admin/departments"
-              :active="activeTab === '/admin/departments'"
+              :active="activeTab && activeTab === '/admin/departments'"
               class="nav-list-subitem"
             >
               <template v-slot:prepend>
@@ -217,7 +217,7 @@
             
             <v-list-item
               to="/admin/activities"
-              :active="activeTab === '/admin/activities'"
+              :active="activeTab && activeTab === '/admin/activities'"
               class="nav-list-subitem"
             >
               <template v-slot:prepend>
@@ -312,7 +312,8 @@
             <!-- 管理子菜单 -->
             <v-list-item
               to="/admin"
-              @click="drawer = false"
+              :active="activeTab && activeTab === '/admin'"
+              class="nav-list-subitem"
             >
               <template v-slot:prepend>
                 <v-icon size="small">mdi-account-group</v-icon>
@@ -322,7 +323,8 @@
             
             <v-list-item
               to="/admin/departments"
-              @click="drawer = false"
+              :active="activeTab && activeTab === '/admin/departments'"
+              class="nav-list-subitem"
             >
               <template v-slot:prepend>
                 <v-icon size="small">mdi-office-building</v-icon>
@@ -332,7 +334,8 @@
             
             <v-list-item
               to="/admin/activities"
-              @click="drawer = false"
+              :active="activeTab && activeTab === '/admin/activities'"
+              class="nav-list-subitem"
             >
               <template v-slot:prepend>
                 <v-icon size="small">mdi-history</v-icon>
@@ -388,6 +391,8 @@ import { useUserStore } from './stores/user.js'
 import { computed, ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { getCurrentInstance } from 'vue'
+import GlobalNotification from './components/GlobalNotification.vue'
+import GlobalSnackbar from './components/GlobalSnackbar.vue'
 
 const app = getCurrentInstance()?.appContext.app
 const userStore = useUserStore()
@@ -538,6 +543,10 @@ const buttons = [
 const visibleButtons = computed(() => {
   return buttons.filter(filterVisibleButtons)
 })
+
+// 注册全局通知组件
+app.component('GlobalNotification', GlobalNotification)
+app.component('GlobalSnackbar', GlobalSnackbar)
 </script>
 
 <style>

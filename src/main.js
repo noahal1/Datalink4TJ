@@ -11,6 +11,8 @@ import performanceMonitor from './utils/performance'
 // 导入自定义样式
 import './styles/transitions.css'
 import './styles/theme.css'
+// 导入统一设计系统主题
+import './styles/unified-theme.css'
 
 // 导入全局通用组件
 import GlobalNotification from './components/GlobalNotification.vue'
@@ -19,6 +21,10 @@ import EnhancedDataTable from './components/EnhancedDataTable.vue'
 import PageHeader from './components/PageHeader.vue'
 import StatsCard from './components/StatsCard.vue'
 import GlobalSnackbar from './components/GlobalSnackbar.vue'
+import UnifiedPageTemplate from './components/UnifiedPageTemplate.vue'
+import UnifiedStatsCard from './components/UnifiedStatsCard.vue'
+import UnifiedDataTable from './components/UnifiedDataTable.vue'
+import UnifiedForm from './components/UnifiedForm.vue'
 
 // Echarts核心配置
 import { use } from "echarts/core"
@@ -51,6 +57,10 @@ app.component('EnhancedDataTable', EnhancedDataTable);
 app.component('PageHeader', PageHeader);
 app.component('StatsCard', StatsCard);
 app.component('GlobalSnackbar', GlobalSnackbar);
+app.component('UnifiedPageTemplate', UnifiedPageTemplate);
+app.component('UnifiedStatsCard', UnifiedStatsCard);
+app.component('UnifiedDataTable', UnifiedDataTable);
+app.component('UnifiedForm', UnifiedForm);
 
 // 注册 RiIcon 组件
 app.component('ri-icon', {
@@ -83,13 +93,48 @@ app.use(router)
 // 挂载应用
 const appInstance = app.mount('#app')
 
+// 存储应用实例在window对象上，方便消息通知系统使用
+if (window) {
+  window.__VUE_APP__ = appInstance;
+}
+
 // 全局挂载 $notify
 app.config.globalProperties.$notify = {
-  show: (msg, type = 'info', timeout = 3000) => appInstance.$refs.globalSnackbar?.show(msg, type, timeout),
-  success: (msg, timeout = 3000) => appInstance.$refs.globalSnackbar?.show(msg, 'success', timeout),
-  error: (msg, timeout = 3000) => appInstance.$refs.globalSnackbar?.show(msg, 'error', timeout),
-  warning: (msg, timeout = 3000) => appInstance.$refs.globalSnackbar?.show(msg, 'warning', timeout),
-  info: (msg, timeout = 3000) => appInstance.$refs.globalSnackbar?.show(msg, 'info', timeout)
+  show: (msg, type = 'info', timeout = 3000) => {
+    appInstance.$refs.globalSnackbar?.show({
+      text: msg,
+      color: type,
+      timeout
+    });
+  },
+  success: (msg, timeout = 3000) => {
+    appInstance.$refs.globalSnackbar?.show({
+      text: msg,
+      color: 'success',
+      timeout
+    });
+  },
+  error: (msg, timeout = 3000) => {
+    appInstance.$refs.globalSnackbar?.show({
+      text: msg,
+      color: 'error',
+      timeout
+    });
+  },
+  warning: (msg, timeout = 3000) => {
+    appInstance.$refs.globalSnackbar?.show({
+      text: msg,
+      color: 'warning',
+      timeout
+    });
+  },
+  info: (msg, timeout = 3000) => {
+    appInstance.$refs.globalSnackbar?.show({
+      text: msg,
+      color: 'info',
+      timeout
+    });
+  }
 }
 
 // 注册全局通知组件
