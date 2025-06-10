@@ -15,7 +15,6 @@ const Admin = createLazyComponent(() => import('../pages/Admin.vue'))
 const Pcl = createLazyComponent(() => import('../pages/Pcl.vue'))
 const Maintenance = createLazyComponent(() => import('../pages/Maintenance.vue'))
 const Qa_others = createLazyComponent(() => import('../pages/Qa_others.vue'))
-const BossDashboard = createLazyComponent(() => import('../pages/BossDashboard.vue'))
 
 // 管理页面子组件
 const AdminDepartments = createLazyComponent(() => import('../pages/admin/Departments.vue'))
@@ -130,23 +129,12 @@ const routes = [
       permission: 'QA' // 只有QA部门可访问
     }
   },
-  {
-    path: '/boss-dashboard',
-    name: 'BossDashboard',
-    component: BossDashboard,
-    meta: {
-      title: '团队工作看板',
-      keepAlive: true,
-      requireAuth: true
-    }
-  },
   // 404页面
   {
     path: '/:pathMatch(.*)*',
     redirect: '/dashboard'
   }
 ]
-
 const router = createRouter({
   history: createWebHistory(),
   routes,
