@@ -1,6 +1,6 @@
 <template>
   <v-dialog
-    v-model="visible"
+    v-model="localValue"
     max-width="400px"
     persistent
   >
@@ -16,6 +16,7 @@
         <v-btn
           variant="text"
           @click="onCancelClick"
+          :disabled="loading"
         >
           取消
         </v-btn>
@@ -23,6 +24,8 @@
           color="primary"
           variant="elevated"
           @click="onConfirmClick"
+          :loading="loading"
+          :disabled="loading"
         >
           确定
         </v-btn>
@@ -32,32 +35,71 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { eventBus } from '../utils/eventBus';
 
-const visible = ref(false);
-const title = ref('确认操作');
-const message = ref('');
+const props = defineProps({
+  modelValue: {
+    type: Boolean,
+    default: false
+  },
+  title: {
+    type: String,
+    default: '确认操作'
+  },
+  message: {
+    type: String,
+    default: ''
+  },
+  loading: {
+    type: Boolean,
+    default: false
+  }
+});
+
+const emit = defineEmits(['update:modelValue', 'confirm', 'cancel']);
+
+// 本地状态
+const localValue = ref(props.modelValue);
 let confirmCallback = null;
 let cancelCallback = null;
 
+// 监听props变化
+watch(() => props.modelValue, (newVal) => {
+  localValue.value = newVal;
+});
+
+// 监听localValue变化
+watch(() => localValue.value, (newVal) => {
+  emit('update:modelValue', newVal);
+});
+
 // 处理确认按钮点击
 const onConfirmClick = () => {
-  visible.value = false;
+  emit('confirm');
+  
   if (typeof confirmCallback === 'function') {
     confirmCallback();
   }
-  // 重置回调
-  confirmCallback = null;
-  cancelCallback = null;
+  
+  // 不自动关闭，由父组件控制
+  if (!props.loading) {
+    localValue.value = false;
+    // 重置回调
+    confirmCallback = null;
+    cancelCallback = null;
+  }
 };
 
 // 处理取消按钮点击
 const onCancelClick = () => {
-  visible.value = false;
+  emit('cancel');
+  
   if (typeof cancelCallback === 'function') {
     cancelCallback();
   }
+  
+  localValue.value = false;
   // 重置回调
   confirmCallback = null;
   cancelCallback = null;
@@ -69,7 +111,7 @@ const showConfirm = (dialogTitle, dialogMessage, onConfirm, onCancel) => {
   message.value = dialogMessage;
   confirmCallback = onConfirm;
   cancelCallback = onCancel;
-  visible.value = true;
+  localValue.value = true;
 };
 
 // 监听确认事件

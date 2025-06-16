@@ -16,7 +16,7 @@
       
       <v-data-table
         :headers="headers"
-        :items="items"
+        :items="safeItems"
         :loading="loading"
         :items-per-page="itemsPerPage"
         :hide-default-footer="hideDefaultFooter"
@@ -64,7 +64,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 
 const props = defineProps({
   title: {
@@ -85,7 +85,7 @@ const props = defineProps({
   },
   items: {
     type: Array,
-    required: true
+    default: () => [] // 提供默认空数组
   },
   loading: {
     type: Boolean,
@@ -129,9 +129,21 @@ const props = defineProps({
   }
 });
 
+// 监听items属性，确保它始终是数组
+watch(() => props.items, (newItems) => {
+  if (newItems && !Array.isArray(newItems)) {
+    console.error('UnifiedDataTable: items属性必须是数组，但收到了:', newItems);
+  }
+}, { immediate: true });
+
 // 计算内容区的样式类
 const contentClass = computed(() => {
   return props.noPadding ? 'pa-0' : '';
+});
+
+// 确保items是数组的计算属性
+const safeItems = computed(() => {
+  return Array.isArray(props.items) ? props.items : [];
 });
 </script>
 

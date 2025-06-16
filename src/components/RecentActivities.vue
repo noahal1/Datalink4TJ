@@ -321,13 +321,24 @@ const formatFullDateTime = (timestamp) => {
 
 // 刷新活动数据
 const refreshActivities = async () => {
+  isLoading.value = true;
   error.value = null;
+  
   try {
+    // 使用活动数据存储获取数据
     await activityStore.fetchActivities();
+    
+    // 检查数据是否正确获取
+    if (activityStore.activities.length === 0) {
+      console.warn('未获取到活动数据');
+    } else {
+      console.log('获取到活动数据:', activityStore.activities.length, '条');
+    }
   } catch (e) {
     console.error('获取活动数据失败:', e);
-    error.value = '获取活动数据失败，请稍后重试';
-    Message.error('获取活动数据失败');
+    error.value = '获取数据失败，请稍后重试';
+  } finally {
+    isLoading.value = false;
   }
 };
 

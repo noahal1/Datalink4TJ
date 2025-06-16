@@ -7,6 +7,7 @@ import ECharts from 'vue-echarts'
 import 'remixicon/fonts/remixicon.css'
 import errorHandler from './utils/errorHandler'
 import performanceMonitor from './utils/performance'
+import vPermission from './directives/permission'
 
 // 导入自定义样式
 import './styles/transitions.css'
@@ -17,9 +18,7 @@ import './styles/unified-theme.css'
 // 导入全局通用组件
 import GlobalNotification from './components/GlobalNotification.vue'
 import LoadingOverlay from './components/LoadingOverlay.vue'
-import EnhancedDataTable from './components/EnhancedDataTable.vue'
 import PageHeader from './components/PageHeader.vue'
-import StatsCard from './components/StatsCard.vue'
 import GlobalSnackbar from './components/GlobalSnackbar.vue'
 import UnifiedPageTemplate from './components/UnifiedPageTemplate.vue'
 import UnifiedStatsCard from './components/UnifiedStatsCard.vue'
@@ -53,14 +52,17 @@ const app = createApp(App)
 app.component('v-chart', ECharts);
 app.component('GlobalNotification', GlobalNotification);
 app.component('LoadingOverlay', LoadingOverlay);
-app.component('EnhancedDataTable', EnhancedDataTable);
+app.component('EnhancedDataTable', UnifiedDataTable);
 app.component('PageHeader', PageHeader);
-app.component('StatsCard', StatsCard);
+app.component('StatsCard', UnifiedStatsCard);
 app.component('GlobalSnackbar', GlobalSnackbar);
 app.component('UnifiedPageTemplate', UnifiedPageTemplate);
 app.component('UnifiedStatsCard', UnifiedStatsCard);
 app.component('UnifiedDataTable', UnifiedDataTable);
 app.component('UnifiedForm', UnifiedForm);
+
+// 注册权限指令
+app.directive('permission', vPermission);
 
 // 注册 RiIcon 组件
 app.component('ri-icon', {

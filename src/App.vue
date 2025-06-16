@@ -20,34 +20,45 @@
               <!-- 用户信息/登录按钮 -->
               <div>
                 <div v-if="user">
-                  <v-menu offset-y>
+                  <v-menu 
+                    close-on-content-click
+                    location="bottom" 
+                    :close-on-back="true"
+                    transition="slide-y-transition"
+                    content-class="user-menu-content"
+                  >
                     <template v-slot:activator="{ props }">
                       <v-btn 
                         variant="text" 
                         v-bind="props"
                         class="user-menu-btn"
+                        density="comfortable"
                       >
                         <v-avatar size="32" color="primary" class="mr-2">
                           <span class="text-white">{{ userInitials }}</span>
                         </v-avatar>
-                        <span class="d-none d-sm-flex">{{ user.name }}</span>
+                        <span class="d-none d-sm-flex">{{ user }}</span>
                         <v-icon size="small" class="ml-1">mdi-chevron-down</v-icon>
                       </v-btn>
                     </template>
-                    <v-list>
-                      <v-list-item>
-                        <v-list-item-title class="text-subtitle-2 text-grey">
-                          {{ userStore.department }} 部门
-                        </v-list-item-title>
-                      </v-list-item>
-                      <v-divider></v-divider>
-                      <v-list-item @click="logout">
-                        <v-list-item-title>
-                          <v-icon size="small" class="mr-2">mdi-logout</v-icon>
-                          登出
-                        </v-list-item-title>
-                      </v-list-item>
-                    </v-list>
+                    <v-card min-width="200" elevation="4" rounded="lg">
+                      <v-list density="compact">
+                        <v-list-item>
+                          <v-list-item-title class="text-subtitle-2 text-grey-darken-1">
+                            {{ userStore.department }} 部门
+                          </v-list-item-title>
+                        </v-list-item>
+                        <v-divider></v-divider>
+                        <v-list-item link @click="logout" class="logout-item">
+                          <template v-slot:prepend>
+                            <v-icon size="small" color="error">mdi-logout</v-icon>
+                          </template>
+                          <v-list-item-title class="text-error">
+                            登出
+                          </v-list-item-title>
+                        </v-list-item>
+                      </v-list>
+                    </v-card>
                   </v-menu>
                 </div>
                 
@@ -75,278 +86,43 @@
       class="d-none d-md-flex left-nav"
       width="240"
     >
-      <v-list>
-        <!-- 主要导航组 -->
-        <v-list-subheader class="nav-group-title">ALL</v-list-subheader>
-        <v-list-item
-          v-for="btn in mainNavButtons"
-          :key="btn.to"
-          :to="btn.to"
-          :value="btn.to"
-          :active="activeTab && activeTab === btn.to"
-          class="nav-list-item"
-        >
+      <!-- 使用动态导航组件 -->
+      <dynamic-navigation
+        :department="userDepartment"
+        :is-admin="showAdminMenu"
+      >
+        <!-- 底部操作按钮 -->
+        <template #bottom-actions>
+          <v-list-item @click="logout" v-if="user">
           <template v-slot:prepend>
-            <v-icon>{{ btn.icon }}</v-icon>
+              <v-icon>mdi-logout</v-icon>
           </template>
-          <v-list-item-title>{{ btn.label }}</v-list-item-title>
+            <v-list-item-title>登出</v-list-item-title>
         </v-list-item>
-        
-        <v-divider class="my-2"></v-divider>
-        <v-list-subheader class="nav-group-title">质量</v-list-subheader>
-        <v-list-item
-          v-for="btn in qaNavButtons"
-          :key="btn.to"
-          :to="btn.to"
-          :value="btn.to"
-          :active="activeTab && activeTab === btn.to"
-          class="nav-list-item"
-        >
-          <template v-slot:prepend>
-            <v-icon>{{ btn.icon }}</v-icon>
-          </template>
-          <v-list-item-title>{{ btn.label }}</v-list-item-title>
-        </v-list-item>
-        
-        <v-divider class="my-2"></v-divider>
-        <v-list-subheader class="nav-group-title">生产</v-list-subheader>
-        <v-list-item
-          v-for="btn in assyNavButtons"
-          :key="btn.to"
-          :to="btn.to"
-          :value="btn.to"
-          :active="activeTab && activeTab === btn.to"
-          class="nav-list-item"
-        >
-        <template v-slot:prepend>
-            <v-icon>{{ btn.icon }}</v-icon>
-          </template>
-          <v-list-item-title>{{ btn.label }}</v-list-item-title>
-        </v-list-item>
-
-        <v-divider class="my-2"></v-divider>
-        <v-list-subheader class="nav-group-title">维修</v-list-subheader>
-        <v-list-item
-          v-for="btn in matNavButtons"
-          :key="btn.to"
-          :to="btn.to"
-          :value="btn.to"
-          :active="activeTab && activeTab === btn.to"
-          class="nav-list-item"
-        >
-          <template v-slot:prepend>
-            <v-icon>{{ btn.icon }}</v-icon>
-          </template>
-          <v-list-item-title>{{ btn.label }}</v-list-item-title>
-        </v-list-item>
-
-        <v-divider class="my-2"></v-divider>
-        <v-list-subheader class="nav-group-title">PC&L</v-list-subheader>
-        <v-list-item
-          v-for="btn in pclNavButtons"
-          :key="btn.to"
-          :to="btn.to"
-          :value="btn.to"
-          :active="activeTab && activeTab === btn.to"
-          class="nav-list-item"
-        >
-          <template v-slot:prepend>
-            <v-icon>{{ btn.icon }}</v-icon>
-          </template>
-          <v-list-item-title>{{ btn.label }}</v-list-item-title>
-        </v-list-item>
-
-        <v-divider class="my-2"></v-divider>
-        <v-list-subheader class="nav-group-title">EHS</v-list-subheader>
-        <v-list-item
-          v-for="btn in ehsNavButtons"
-          :key="btn.to"
-          :to="btn.to"
-          :value="btn.to"
-          :active="activeTab && activeTab === btn.to"
-          class="nav-list-item"
-        >
-          <template v-slot:prepend>
-            <v-icon>{{ btn.icon }}</v-icon>
-          </template>
-          <v-list-item-title>{{ btn.label }}</v-list-item-title>
-        </v-list-item>
-
-        <!-- 系统管理组 -->
-        <template v-if="showAdminMenu">
-          <v-divider class="my-2"></v-divider>
-          <v-list-subheader class="nav-group-title">系统管理</v-list-subheader>
           
-          <!-- 管理菜单项 -->
-          <v-list-group value="admin">
-            <template v-slot:activator="{ props }">
-              <v-list-item
-                v-bind="props"
-                :active="activeTab && activeTab.startsWith('/admin')"
-                class="nav-list-item"
-              >
+          <v-list-item to="/login" v-else>
                 <template v-slot:prepend>
-                  <v-icon>mdi-cog</v-icon>
-                </template>
-                <v-list-item-title>管理</v-list-item-title>
-              </v-list-item>
+              <v-icon>mdi-login</v-icon>
             </template>
-            
-            <!-- 管理子菜单 -->
-            <v-list-item
-              to="/admin"
-              :active="activeTab && activeTab === '/admin'"
-              class="nav-list-subitem"
-            >
-              <template v-slot:prepend>
-                <v-icon size="small">mdi-account-group</v-icon>
-              </template>
-              <v-list-item-title>用户管理</v-list-item-title>
+            <v-list-item-title>登录</v-list-item-title>
             </v-list-item>
-            
-            <v-list-item
-              to="/admin/departments"
-              :active="activeTab && activeTab === '/admin/departments'"
-              class="nav-list-subitem"
-            >
-              <template v-slot:prepend>
-                <v-icon size="small">mdi-office-building</v-icon>
-              </template>
-              <v-list-item-title>部门管理</v-list-item-title>
-            </v-list-item>
-            
-            <v-list-item
-              to="/admin/activities"
-              :active="activeTab && activeTab === '/admin/activities'"
-              class="nav-list-subitem"
-            >
-              <template v-slot:prepend>
-                <v-icon size="small">mdi-history</v-icon>
-              </template>
-              <v-list-item-title>操作记录</v-list-item-title>
-            </v-list-item>
-          </v-list-group>
         </template>
-      </v-list>
+      </dynamic-navigation>
     </v-navigation-drawer>
     
     <!-- 移动端侧边导航 -->
-    <v-navigation-drawer v-model="drawer" temporary>
-      <v-list>
-        <v-list-item>
-          <template v-slot:prepend>
-            <v-avatar size="40" color="primary">
-              <span class="text-white">{{ userInitials }}</span>
-            </v-avatar>
-          </template>
-          <v-list-item-title>{{ user?.name || '访客' }}</v-list-item-title>
-          <v-list-item-subtitle v-if="user?.department">
-            {{ user.department }} 部门
-          </v-list-item-subtitle>
-        </v-list-item>
-        
-        <v-divider class="mb-2"></v-divider>
-        
-        <!-- 主要导航组 -->
-        <v-list-subheader>ALL</v-list-subheader>
-        <v-list-item
-          v-for="btn in mainNavButtons"
-          :key="btn.to"
-          :to="btn.to"
-          :value="btn.to"
-          @click="drawer = false"
-        >
-          <template v-slot:prepend>
-            <v-icon>{{ btn.icon }}</v-icon>
-          </template>
-          <v-list-item-title>{{ btn.label }}</v-list-item-title>
-        </v-list-item>
-        
-        <v-divider class="my-2"></v-divider>
-        <v-list-subheader>质量</v-list-subheader>
-        <v-list-item
-          v-for="btn in qaNavButtons"
-          :key="btn.to"
-          :to="btn.to"
-          :value="btn.to"
-          @click="drawer = false"
-        >
-          <template v-slot:prepend>
-            <v-icon>{{ btn.icon }}</v-icon>
-          </template>
-          <v-list-item-title>{{ btn.label }}</v-list-item-title>
-        </v-list-item>
-        
-        <v-divider class="my-2"></v-divider>
-        <v-list-subheader>生产</v-list-subheader>
-        <v-list-item
-          v-for="btn in assyNavButtons"
-          :key="btn.to"
-          :to="btn.to"
-          :value="btn.to"
-          @click="drawer = false"
-        >
-          <template v-slot:prepend>
-            <v-icon>{{ btn.icon }}</v-icon>
-          </template>
-          <v-list-item-title>{{ btn.label }}</v-list-item-title>
-        </v-list-item>
-        <!-- 系统管理组 -->
-        <template v-if="showAdminMenu">
-          <v-divider class="my-2"></v-divider>
-          <v-list-subheader>系统管理</v-list-subheader>
-          
-          <!-- 管理菜单项 -->
-          <v-list-group value="admin">
-            <template v-slot:activator="{ props }">
-              <v-list-item
-                v-bind="props"
-              >
-                <template v-slot:prepend>
-                  <v-icon>mdi-cog</v-icon>
-                </template>
-                <v-list-item-title>管理</v-list-item-title>
-              </v-list-item>
-            </template>
-            
-            <!-- 管理子菜单 -->
-            <v-list-item
-              to="/admin"
-              :active="activeTab && activeTab === '/admin'"
-              class="nav-list-subitem"
-            >
-              <template v-slot:prepend>
-                <v-icon size="small">mdi-account-group</v-icon>
-              </template>
-              <v-list-item-title>用户管理</v-list-item-title>
-            </v-list-item>
-            
-            <v-list-item
-              to="/admin/departments"
-              :active="activeTab && activeTab === '/admin/departments'"
-              class="nav-list-subitem"
-            >
-              <template v-slot:prepend>
-                <v-icon size="small">mdi-office-building</v-icon>
-              </template>
-              <v-list-item-title>部门管理</v-list-item-title>
-            </v-list-item>
-            
-            <v-list-item
-              to="/admin/activities"
-              :active="activeTab && activeTab === '/admin/activities'"
-              class="nav-list-subitem"
-            >
-              <template v-slot:prepend>
-                <v-icon size="small">mdi-history</v-icon>
-              </template>
-              <v-list-item-title>操作记录</v-list-item-title>
-            </v-list-item>
-          </v-list-group>
-        </template>
-        
-        <v-divider class="my-2"></v-divider>
-        
+    <v-navigation-drawer
+      v-model="drawer"
+      temporary
+      class="d-md-none"
+    >
+      <!-- 移动端导航使用相同的动态导航组件 -->
+      <dynamic-navigation
+        :department="userDepartment"
+        :is-admin="showAdminMenu"
+      >
+        <!-- 底部操作按钮 -->
+        <template #bottom-actions>
         <v-list-item @click="logout" v-if="user">
           <template v-slot:prepend>
             <v-icon>mdi-logout</v-icon>
@@ -360,22 +136,17 @@
           </template>
           <v-list-item-title>登录</v-list-item-title>
         </v-list-item> 
-      </v-list>
+        </template>
+      </dynamic-navigation>
     </v-navigation-drawer>
     
     <v-main class="main-content">
-      <transition name="fade" mode="out-in">
-        <div v-if="isLoading" class="fill-height d-flex align-center justify-center">
-          <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
-        </div>
-        <v-container v-else fluid class="px-md-4 py-md-3 px-2 py-2">
-          <router-view v-slot="{ Component, route }">
-            <transition :name="pageTransition" mode="out-in">
-              <component :is="Component" :key="route.path" />
-            </transition>
-          </router-view>
-        </v-container>
-      </transition>
+      <div v-if="isLoading" class="fill-height d-flex align-center justify-center">
+        <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
+      </div>
+      <v-container v-else fluid class="px-md-4 py-md-3 px-2 py-2">
+        <router-view></router-view>
+      </v-container>
     </v-main>
     
     <!-- 右下角通知组件 -->
@@ -395,6 +166,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { getCurrentInstance } from 'vue'
 import GlobalNotification from './components/GlobalNotification.vue'
 import GlobalSnackbar from './components/GlobalSnackbar.vue'
+import DynamicNavigation from './components/DynamicNavigation.vue'
 
 const app = getCurrentInstance()?.appContext.app
 const userStore = useUserStore()
@@ -405,8 +177,8 @@ const route = useRoute()
 
 // 用户首字母
 const userInitials = computed(() => {
-  if (!user.value?.name) return '?'
-  return user.value.name.charAt(0).toUpperCase()
+  if (!user.value) return '?'
+  return user.value.charAt(0).toUpperCase()
 })
 
 // 活动标签和抽屉状态
@@ -614,6 +386,15 @@ app.component('GlobalSnackbar', GlobalSnackbar)
 .nav-list-item:hover, .nav-list-subitem:hover {
   background-color: rgba(0, 0, 0, 0.05);
   transform: translateX(2px);
+}
+
+.user-menu-content {
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.logout-item:hover {
+  background-color: rgba(244, 67, 54, 0.08) !important;
 }
 
 .user-menu-btn {
