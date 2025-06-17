@@ -46,16 +46,29 @@ export const useActivityStore = defineStore('activity', {
         // 检查返回数据格式
         console.log('活动数据响应:', response);
         
-        // 正确处理API返回的数据格式 (支持 {items: [...]} 和 数组格式)
+        // 正确处理API返回的数据格式 (支持分页格式、items格式和数组格式)
         let activitiesData = [];
-        if (response && response.items && Array.isArray(response.items)) {
-          // 处理 {items: [...]} 格式
+        
+        if (response && response.data) {
+          // 处理axios返回的响应格式
+          if (response.data.items && Array.isArray(response.data.items)) {
+            // 处理 {items: [...]} 格式
+            activitiesData = response.data.items;
+          } else if (Array.isArray(response.data)) {
+            // 处理直接返回数组的格式
+            activitiesData = response.data;
+          } else {
+            console.warn('获取活动数据格式不符合预期:', response.data);
+            return [];
+          }
+        } else if (response && response.items && Array.isArray(response.items)) {
+          // 处理 {items: [...]} 格式（直接返回的情况）
           activitiesData = response.items;
-        } else if (response && Array.isArray(response)) {
+        } else if (Array.isArray(response)) {
           // 处理直接返回数组的格式
           activitiesData = response;
         } else {
-          console.error('获取活动数据格式错误:', response);
+          console.error('无法解析活动数据格式:', response);
           return [];
         }
         

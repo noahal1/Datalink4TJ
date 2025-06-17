@@ -1,24 +1,27 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '../stores/user'
+import { usePermissionStore } from '../stores/permission'
+import { PermissionHelper } from '../utils/permissionConstants'
 import Message from '../utils/notification'
-import { createLazyComponent } from '../utils/lazyLoader'
 
 // 使用懒加载优化性能
-const Login = createLazyComponent(() => import('../pages/Login.vue'))
-const Dashboard = createLazyComponent(() => import('../pages/Dashboard.vue'))
-const Quality = createLazyComponent(() => import('../pages/Quality.vue'))
-const EHS = createLazyComponent(() => import('../pages/EHS.vue'))
-const Assy = createLazyComponent(() => import('../pages/Assy.vue'))
-const Gmo = createLazyComponent(() => import('../pages/Gmo.vue'))
-const Events = createLazyComponent(() => import('../pages/Events.vue'))
-const Admin = createLazyComponent(() => import('../pages/Admin.vue'))
-const Pcl = createLazyComponent(() => import('../pages/Pcl.vue'))
-const Maintenance = createLazyComponent(() => import('../pages/Maintenance.vue'))
-const Qa_others = createLazyComponent(() => import('../pages/Qa_others.vue'))
+const Login = () => import('../pages/Login.vue')
+const Dashboard = () => import('../pages/Dashboard.vue')
+const EHS = () => import('../pages/EHS.vue')
+const Assy = () => import('../pages/Assy.vue')
+const Quality = () => import('../pages/Quality.vue')
+const Pcl = () => import('../pages/Pcl.vue')
+const Admin = () => import('../pages/Admin.vue')
+const Gmo = () => import('../pages/Gmo.vue')
+const Maintenance = () => import('../pages/Maintenance.vue')
+const Events = () => import('../pages/Events.vue')
+const Qa_others = () => import('../pages/Qa_others.vue')
+const RouteManagement = () => import('../pages/RouteManagement.vue')
+const PermissionManagement = () => import('../pages/PermissionManagement.vue')
 
 // 管理页面子组件
-const AdminDepartments = createLazyComponent(() => import('../pages/admin/Departments.vue'))
-const AdminActivities = createLazyComponent(() => import('../pages/admin/Activities.vue'))
+const AdminDepartments = () => import('../pages/admin/Departments.vue')
+const AdminActivities = () => import('../pages/admin/Activities.vue')
 
 const routes = [
   {
@@ -46,7 +49,7 @@ const routes = [
     component: Quality,
     meta: { 
       title: '质量',
-      permission: 'QA' // 只有QA部门可访问
+      permission: '*' // 所有人可访问
     } 
   },
   { 
@@ -54,7 +57,7 @@ const routes = [
     component: EHS,
     meta: { 
       title: 'EHS',
-      permission: 'EHS' // 只有EHS部门可访问
+      permission: { module: 'EHS', level: 'READ' } // 新格式
     } 
   },
   { 
@@ -62,7 +65,7 @@ const routes = [
     component: Assy,
     meta: { 
       title: '生产',
-      permission: 'ASSY' // 只有ASSY部门可访问
+      permission: 'ASSY' // 旧格式兼容
     }
   },
   { 
@@ -70,7 +73,7 @@ const routes = [
     component: Pcl,
     meta: { 
       title: '物流',
-      permission: 'PCL' // 只有PCL部门可访问
+      permission: 'PCL' // 旧格式兼容
     } 
   },
   { 
@@ -78,7 +81,7 @@ const routes = [
     component: Gmo,
     meta: { 
       title: 'GMO',
-      permission: 'GMO' // 只有GMO部门可访问
+      permission: 'GMO' // 旧格式兼容
     } 
   },
   { 
@@ -86,7 +89,7 @@ const routes = [
     component: Maintenance,
     meta: { 
       title: '维修',
-      permission: 'MAT' // 只有MAT部门可访问
+      permission: { module: 'MAINT', level: 'READ' } // 新格式
     } 
   },
   { 
@@ -94,7 +97,7 @@ const routes = [
     component: Events,
     meta: { 
       title: '重要事件',
-      permission: "'GMO','ADMIN'" // 所有人可访问
+      permission: { module: 'EVENT', level: 'READ' } // 新格式
     } 
   },
   { 
@@ -102,7 +105,7 @@ const routes = [
     component: Admin,
     meta: { 
       title: '用户管理',
-      permission: 'ADMIN' // 只有ADMIN可访问
+      permission: { module: 'USER', level: 'ADMIN' } // 新格式
     }
   },
   { 
@@ -110,7 +113,7 @@ const routes = [
     component: AdminDepartments,
     meta: { 
       title: '部门管理',
-      permission: 'ADMIN' // 只有ADMIN可访问
+      permission: { module: 'DEPARTMENT', level: 'ADMIN' } // 新格式
     }
   },
   { 
@@ -118,7 +121,31 @@ const routes = [
     component: AdminActivities,
     meta: { 
       title: '操作记录',
-      permission: 'ADMIN' // 只有ADMIN可访问
+      permission: { module: 'ACTIVITY', level: 'READ' } // 新格式
+    }
+  },
+  {
+    path: '/admin/users',
+    redirect: '/admin',
+    meta: {
+      title: '用户管理',
+      permission: { module: 'USER', level: 'ADMIN' } // 新格式
+    }
+  },
+  { 
+    path: '/admin/routes', 
+    component: RouteManagement,
+    meta: { 
+      title: '路由管理',
+      permission: { module: 'ROUTE', level: 'ADMIN' } // 新格式
+    }
+  },
+  { 
+    path: '/admin/permissions', 
+    component: PermissionManagement,
+    meta: { 
+      title: '权限管理',
+      permission: { module: 'USER', level: 'ADMIN' } // 新格式
     }
   },
   {
@@ -126,7 +153,7 @@ const routes = [
     component: Qa_others,
     meta: { 
       title: '质量管理',
-      permission: 'QA' // 只有QA部门可访问
+      permission: '*' // 所有人可访问
     }
   },
   // 404页面
@@ -135,6 +162,7 @@ const routes = [
     redirect: '/dashboard'
   }
 ]
+
 const router = createRouter({
   history: createWebHistory(),
   routes,
@@ -147,7 +175,7 @@ const router = createRouter({
   }
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
   
   // 设置页面标题
@@ -168,21 +196,46 @@ router.beforeEach((to, from, next) => {
     return next('/login')
   }
   
-  // 检查页面权限
-  const requiredPermission = to.meta.permission
+  // 初始化权限模块
+  const permissionStore = usePermissionStore()
   
-  // 管理员可以访问所有页面
-  if (userStore.isAdmin) {
+  // 检查权限存储是否已初始化
+  if (!permissionStore.permissionCache.size) {
+    await permissionStore.initialize()
+  }
+  
+  // 检查用户是否是超级管理员或管理员，判断是否可访问管理页面
+  const isAdmin = userStore.roles && (
+    userStore.roles.includes('超级管理员') || 
+    userStore.roles.includes('管理员')
+  )
+  
+  // 如果访问的是管理页面但不是管理员，拒绝访问
+  if (to.path.startsWith('/admin') && !isAdmin) {
+    Message.error('需要管理员权限才能访问此页面')
+    return next(from.path || '/dashboard')
+  }
+  
+  // 超级管理员可以访问所有页面
+  if (permissionStore.isSuperUser) {
     return next()
   }
   
-  // 公共页面(*表示所有人可访问)
-  if (requiredPermission === '*') {
+  // 公共路由(*表示所有人可访问)
+  if (to.meta.permission === '*') {
     return next()
   }
   
-  // 检查部门权限
-  if (requiredPermission === userStore.department) {
+  // 简化的权限检查 - 质量页面特殊处理
+  if (to.path === '/quality' || to.path === '/qa_others') {
+    return next()
+  }
+  
+  // 检查路由是否在用户的可访问路由列表中
+  const userRoutes = permissionStore.accessibleRoutes
+  const canAccess = userRoutes.some(route => route.path === to.path)
+  
+  if (canAccess) {
     return next()
   }
   

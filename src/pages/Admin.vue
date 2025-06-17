@@ -5,13 +5,14 @@
     color="secondary"
   >
     <v-row>
-      <v-col cols="12" md="6">
+      <v-col cols="12">
         <unified-data-table
           title="用户管理"
           icon="mdi-account-group"
           :headers="[
             { title: '用户名', key: 'name', align: 'start' },
             { title: '部门', key: 'department', align: 'start' },
+            { title: '角色', key: 'roles', align: 'start' },
             { title: '操作', key: 'actions', align: 'center', sortable: false }
           ]"
           :items="users"
@@ -20,10 +21,26 @@
           <template v-slot:item.department="{ item }">
             {{ item.department?.name }}
           </template>
+          <template v-slot:item.roles="{ item }">
+            <div v-if="item.roles && item.roles.length > 0">
+              <v-chip v-for="(role, i) in item.roles.slice(0, 2)" :key="i" 
+                     size="x-small" class="mr-1" :color="getRoleColor(role.name)" variant="outlined">
+                {{ role.name }}
+              </v-chip>
+              <v-chip v-if="item.roles.length > 2" size="x-small" color="grey" variant="outlined">
+                +{{ item.roles.length - 2 }}
+              </v-chip>
+            </div>
+            <span v-else class="text-caption text-grey">未分配角色</span>
+          </template>
           <template v-slot:item.actions="{ item }">
-            <v-btn size="small" variant="text" color="primary" class="mr-2" @click="editUser(item)">
+            <v-btn size="small" variant="text" color="primary" class="mr-1" @click="editUser(item)">
               <v-icon>mdi-pencil</v-icon>
               编辑
+            </v-btn>
+            <v-btn size="small" variant="text" color="info" class="mr-1" @click="manageUserRoles(item)">
+              <v-icon>mdi-account-key</v-icon>
+              角色
             </v-btn>
             <v-btn size="small" variant="text" color="error" @click="deleteUser(item)">
               <v-icon>mdi-delete</v-icon>
@@ -37,39 +54,6 @@
           </template>
         </unified-data-table>
       </v-col>
-      
-      <v-col cols="12" md="6">
-        <unified-data-table
-          title="部门管理"
-          icon="mdi-office-building"
-          :headers="[
-            { title: '部门名称', key: 'name', align: 'start' },
-            { title: '操作', key: 'actions', align: 'center', sortable: false }
-          ]"
-          :items="departments"
-          :loading="loading"
-        >
-          <template v-slot:item.actions="{ item }">
-            <v-btn size="small" variant="text" color="primary" class="mr-2" @click="editDepartment(item)">
-              <v-icon>mdi-pencil</v-icon>
-              编辑
-            </v-btn>
-            <v-btn size="small" variant="text" color="error" @click="deleteDepartment(item)">
-              <v-icon>mdi-delete</v-icon>
-              删除
-            </v-btn>
-          </template>
-          <template #actions>
-            <v-btn color="primary" prepend-icon="mdi-plus" @click="showDepartmentDialog('add')">
-              添加部门
-            </v-btn>
-          </template>
-        </unified-data-table>
-      </v-col>
-      
-      <v-col cols="12">
-        <activity-history></activity-history>
-      </v-col>
     </v-row>
  
     <!-- 用户对话框 -->
@@ -79,7 +63,7 @@
           {{ userDialogTitle }}
         </v-card-title>
         <v-card-text class="pt-4">
-          <unified-form ref="userFormRef">
+          <unified-form ref="userFormRef" :showDefaultActions="false">
             <v-text-field
               v-model="userForm.name"
               label="用户名"
@@ -119,31 +103,13 @@
       </v-card>
     </v-dialog>
  
-    <!-- 部门对话框 -->
-    <v-dialog v-model="isShowDepartmentDialog" max-width="500px">
-      <v-card>
-        <v-card-title class="text-h5 bg-primary text-white">
-          {{ departmentDialogTitle }}
-        </v-card-title>
-        <v-card-text class="pt-4">
-          <unified-form ref="departmentFormRef">
-            <v-text-field
-              v-model="departmentForm.name"
-              label="部门名称"
-              placeholder="请输入部门名称"
-              variant="outlined"
-              density="comfortable"
-              :rules="[rules.required]"
-            ></v-text-field>
-          </unified-form>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="grey" variant="text" @click="isShowDepartmentDialog = false">取消</v-btn>
-          <v-btn color="primary" @click="saveDepartment">确定</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <!-- 用户角色管理对话框 -->
+    <user-role-dialog
+      v-model="isShowUserRoleDialog"
+      :user="selectedUser"
+      @save="onUserRolesSaved"
+      @close="isShowUserRoleDialog = false"
+    />
   </unified-page-template>
 </template>
  
@@ -151,6 +117,8 @@
 import { ref, onMounted } from 'vue';
 import Message from '../utils/notification';
 import ActivityHistory from '../components/admin/ActivityHistory.vue';
+import { get, post, put, del } from '../utils/api'; // 导入api工具
+import UserRoleDialog from '../components/permissions/UserRoleDialog.vue'; // 导入用户角色对话框组件
  
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const users = ref([]);
@@ -172,28 +140,38 @@ const userForm = ref({
   department_id: ''
 });
 const userFormRef = ref(null);
- 
-// 部门相关 
-const isShowDepartmentDialog = ref(false);
-const departmentDialogTitle = ref('');
-const departmentForm = ref({
-  name: '',
-  id: ''
-});
-const departmentFormRef = ref(null);
+
+const isShowUserRoleDialog = ref(false); // 用户角色对话框
+const selectedUser = ref(null); // 当前选中的用户
  
 // 获取用户列表 
 const fetchUsers = async () => {
   loading.value = true;
   try {
-    const response = await fetch(`${API_BASE_URL}/users`);
-    if (!response.ok)  {
-      throw new Error('获取用户列表失败');
+    const response = await get('/users');
+    console.log('用户数据响应:', response);
+    
+    // 检查响应数据结构
+    if (response && response.data && Array.isArray(response.data)) {
+      // 确保每个用户对象都有roles属性
+      users.value = response.data.map(user => ({
+        ...user,
+        roles: user.roles || []
+      }));
+    } else if (response && Array.isArray(response)) {
+      users.value = response.map(user => ({
+        ...user,
+        roles: user.roles || []
+      }));
+    } else {
+      console.error('用户数据格式不正确:', response);
+      users.value = [];
+      Message.warning('用户数据格式不正确');
     }
-    users.value  = await response.json(); 
   } catch (error) {
-    console.error(error); 
+    console.error('获取用户列表失败:', error); 
     Message.error('获取用户列表失败');
+    users.value = [];
   } finally {
     loading.value = false;
   }
@@ -203,14 +181,23 @@ const fetchUsers = async () => {
 const fetchDepartments = async () => {
   loading.value = true;
   try {
-    const response = await fetch(`${API_BASE_URL}/departments`);
-    if (!response.ok)  {
-      throw new Error('获取部门列表失败');
+    const response = await get('/departments/');
+    console.log('部门数据响应:', response);
+    
+    // 检查响应数据结构
+    if (response && response.data && Array.isArray(response.data)) {
+      departments.value = response.data;
+    } else if (response && Array.isArray(response)) {
+      departments.value = response;
+    } else {
+      console.error('部门数据格式不正确:', response);
+      departments.value = [];
+      Message.warning('部门数据格式不正确');
     }
-    departments.value  = await response.json(); 
   } catch (error) {
-    console.error(error); 
+    console.error('获取部门列表失败:', error); 
     Message.error('获取部门列表失败');
+    departments.value = [];
   } finally {
     loading.value = false;
   }
@@ -256,173 +243,90 @@ const saveUser = async () => {
       Message.warning('请选择部门');
       return;
     }
- 
+    
     let response;
-    if (userDialogType.value  === 'add') {
-      response = await fetch(`${API_BASE_URL}/users/create`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(userForm.value) 
+    
+    if (userDialogType.value === 'add') {
+      // 使用api工具发送请求
+      response = await post('/users', {
+        name: userForm.value.name,
+        password: userForm.value.password,
+        department_id: parseInt(userForm.value.department_id)
       });
       
-      if (response.ok) {
-        Message.success('用户添加成功');
-      }
-    } else if (userDialogType.value  === 'edit') {
-      response = await fetch(`${API_BASE_URL}/users/${userForm.value.id}`,  {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ 
-          name: userForm.value.name, 
-          departmentId: userForm.value.department_id  
-        })
-      });
-    }
- 
-    if (!response.ok)  {
-      throw new Error('保存用户失败');
-    }
-    const data = await response.json(); 
- 
-    if (userDialogType.value  === 'add') {
-      users.value.push(data); 
+      Message.success('添加用户成功');
     } else {
-      const index = users.value.findIndex(user  => user.id  === data.id); 
-      if (index > -1) {
-        users.value.splice(index,  1, data);
-      }
+      // 使用api工具发送请求
+      response = await put(`/users/${userForm.value.id}`, {
+        name: userForm.value.name,
+        department_id: parseInt(userForm.value.department_id)
+      });
+      
+      Message.success('更新用户成功');
     }
- 
-    isShowUserDialog.value  = false;
+    
+    // 刷新用户列表
+    fetchUsers();
+    
+    // 关闭对话框
+    isShowUserDialog.value = false;
+    
   } catch (error) {
-    Message.error('保存失败');
-    console.error(error); 
+    console.error(error);
+    Message.error('操作失败: ' + (error.response?.data?.detail || error.message));
   }
 };
  
-// 展示部门对话框 
-const showDepartmentDialog = (type, row = {}) => {
-  if (type === 'add') {
-    departmentDialogTitle.value  = '添加部门';
-    departmentForm.value  = {
-      name: '',
-      id: ''
-    };
-  } else if (type === 'edit') {
-    departmentDialogTitle.value  = '编辑部门';
-    departmentForm.value  = {
-      name: row.name, 
-      id: row.id  
-    };
-  }
-  isShowDepartmentDialog.value  = true;
-};
- 
-// 保存部门 
-const saveDepartment = async () => {
-  try {
-    // 简单验证
-    if (!departmentForm.value.name) {
-      Message.warning('请输入部门名称');
-      return;
+// 删除用户 
+const deleteUser = async (user) => {
+  if (confirm(`确定要删除用户 ${user.name} 吗？`)) {
+    try {
+      await del(`/users/${user.id}`);
+      Message.success('用户删除成功');
+      fetchUsers();  // 重新获取用户列表
+    } catch (error) {
+      console.error('删除用户失败:', error);
+      Message.error('删除用户失败');
     }
- 
-    let response;
-    if (departmentForm.value.id)  {
-      response = await fetch(`${API_BASE_URL}/departments/${departmentForm.value.id}`,  {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({  name: departmentForm.value.name  })
-      });
-    } else {
-      response = await fetch(`${API_BASE_URL}/departments`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({  name: departmentForm.value.name  })
-      });
-    }
- 
-    if (!response.ok)  {
-      throw new Error('保存部门失败');
-    }
-    const data = await response.json(); 
- 
-    if (departmentForm.value.id)  {
-      const index = departments.value.findIndex(department  => department.id  === data.id); 
-      if (index > -1) {
-        departments.value.splice(index,  1, data);
-      }
-    } else {
-      departments.value.push(data); 
-    }
- 
-    isShowDepartmentDialog.value  = false;
-    Message.success('保存成功');
-  } catch (error) {
-    Message.error('保存失败');
-    console.error(error); 
   }
 };
  
+// 打开用户角色管理对话框
+const manageUserRoles = (user) => {
+  selectedUser.value = user;
+  isShowUserRoleDialog.value = true;
+};
+
 // 编辑用户 
 const editUser = (row) => {
   showUserDialog('edit', row);
 };
- 
-// 删除用户 
-const deleteUser = async (row) => {
+
+// 处理用户角色保存
+const onUserRolesSaved = async (data) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/${row.id}`,  {
-      method: 'DELETE'
-    });
-    if (!response.ok)  {
-      throw new Error('删除用户失败');
-    }
-    const index = users.value.findIndex(user  => user.id  === row.id); 
-    if (index > -1) {
-      users.value.splice(index,  1);
-    }
-    Message.success('删除成功');
+    // 重新加载用户列表以更新角色信息
+    await fetchUsers();
+    Message.success('用户角色已更新');
   } catch (error) {
-    Message.error('删除失败');
-    console.error(error); 
+    console.error('更新用户角色后刷新列表失败:', error);
   }
 };
- 
-// 编辑部门 
-const editDepartment = (row) => {
-  showDepartmentDialog('edit', row);
-};
- 
-// 删除部门 
-const deleteDepartment = async (row) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/departments/${row.id}`,  {
-      method: 'DELETE'
-    });
-    if (!response.ok)  {
-      throw new Error('删除部门失败');
-    }
-    const index = departments.value.findIndex(department  => department.id  === row.id); 
-    if (index > -1) {
-      departments.value.splice(index,  1);
-    }
-    Message.success('删除成功');
-  } catch (error) {
-    Message.error('删除失败');
-    console.error(error); 
+
+// 获取角色颜色
+const getRoleColor = (roleName) => {
+  const roleColors = {
+    '超级管理员': 'red',
+    '管理员': 'deep-orange',
+    '部门负责人': 'indigo',
+    '班组负责人': 'cyan',
+    '普通用户': 'teal'
   }
+  
+  return roleColors[roleName] || 'grey'
 };
- 
-// 初始化数据
+
+// 页面加载时获取数据 
 onMounted(() => {
   fetchUsers();
   fetchDepartments();

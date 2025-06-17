@@ -27,11 +27,7 @@ class ErrorHandler {
    * @param {String} info - 错误信息
    */
   vueErrorHandler(error, vm, info) {
-    console.error('Vue错误:', error)
-    console.error('组件:', vm)
-    console.error('信息:', info)
-
-    // 在生产环境中，可以将错误发送到服务端进行日志记录
+    // 在生产环境中，将错误发送到服务端进行日志记录
     if (import.meta.env.PROD) {
       this.reportErrorToServer({
         type: 'vue',
@@ -54,9 +50,6 @@ class ErrorHandler {
    */
   promiseErrorHandler(event) {
     if (event.reason && !event.reason.isAxiosError) {
-      console.error('未处理的Promise错误:', event.reason)
-      Message.error('操作失败，请刷新重试')
-      
       if (import.meta.env.PROD) {
         this.reportErrorToServer({
           type: 'promise',
@@ -64,6 +57,8 @@ class ErrorHandler {
           stack: event.reason?.stack
         })
       }
+      
+      Message.error('操作失败，请刷新重试')
     }
   }
 
@@ -73,12 +68,7 @@ class ErrorHandler {
    */
   windowErrorHandler(event) {
     // 检查event和error是否存在，避免null错误
-    if (!event) {
-      console.error('全局错误处理器收到空事件');
-      return;
-    }
-    
-    console.error('全局错误:', event.error || event.message || event);
+    if (!event) return;
     
     // 忽略某些第三方脚本错误和跨域错误
     if (event.message && (
@@ -86,7 +76,6 @@ class ErrorHandler {
       event.message.includes('ResizeObserver loop') ||
       event.message.includes('ChunkLoadError')
     )) {
-      console.warn('忽略的错误类型:', event.message);
       return;
     }
     
@@ -104,7 +93,6 @@ class ErrorHandler {
     }
 
     // 避免对用户显示过多的错误通知
-    // 使用节流函数防止短时间内多次显示
     this.throttledErrorMessage();
   }
 
@@ -113,9 +101,7 @@ class ErrorHandler {
    * @param {Object} errorData - 错误数据
    */
   reportErrorToServer(errorData) {
-    // TODO: 实现错误上报逻辑，例如发送到API或使用第三方服务
-    // 比如Sentry，LogRocket等
-    console.log('向服务器报告错误:', errorData)
+    // 实现错误上报逻辑
   }
 
   /**

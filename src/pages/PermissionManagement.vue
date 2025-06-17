@@ -177,20 +177,50 @@ const saveRole = async () => {
   try {
     savingRole.value = true
     
+    // 添加调试日志
+    console.log('保存角色数据:', JSON.stringify(editedRole.value))
+    
+    // 检查并清理数据，确保格式正确
+    const roleData = {
+      name: editedRole.value.name,
+      description: editedRole.value.description,
+      permission_ids: editedRole.value.permission_ids
+    }
+    
+    // 确保name字段不包含对象字符串表示
+    if (typeof roleData.name === 'string' && roleData.name.includes("name=")) {
+      console.warn('检测到name字段格式不正确，尝试修复')
+      try {
+        // 尝试提取真正的名称
+        const match = roleData.name.match(/name=['"]([^'"]+)['"]/)
+        if (match && match[1]) {
+          roleData.name = match[1]
+        }
+      } catch (e) {
+        console.error('修复name字段失败:', e)
+      }
+    }
+    
+    console.log('清理后的角色数据:', roleData)
+    
     if (editedRoleIndex.value === -1) {
       // 创建新角色
-      const response = await api.post('/roles', editedRole.value)
+      const response = await api.post('/roles', roleData)
       Message.success('角色创建成功')
       
       // 刷新角色列表
       await loadRoles()
     } else {
       // 更新现有角色
-      await api.put(`/roles/${editedRole.value.id}`, editedRole.value)
+      await api.put(`/roles/${editedRole.value.id}`, roleData)
       Message.success('角色更新成功')
       
       // 更新本地数据
-      rolesList.value[editedRoleIndex.value] = { ...editedRole.value }
+      rolesList.value[editedRoleIndex.value] = { 
+        ...editedRole.value,
+        name: roleData.name,
+        description: roleData.description
+      }
     }
     
     closeRoleDialog()

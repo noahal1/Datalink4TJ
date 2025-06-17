@@ -15,6 +15,7 @@
             { title: '标题', key: 'meta.title', align: 'start', sortable: true },
             { title: '组件', key: 'component', align: 'start' },
             { title: '类型', key: 'type', align: 'center', width: '100px' },
+            { title: '权限', key: 'permission', align: 'center', width: '120px' },
             { title: '排序', key: 'sort_order', align: 'center', width: '80px' },
             { title: '操作', key: 'actions', align: 'center', sortable: false }
           ]"
@@ -44,10 +45,26 @@
             </v-chip>
           </template>
           
+          <template v-slot:item.permission="{ item }">
+            <v-chip
+              size="small"
+              :color="getPermissionColor(item)"
+              variant="outlined"
+              class="permission-chip"
+              @click="openPermissionDialog(item)"
+            >
+              {{ getPermissionText(item) }}
+            </v-chip>
+          </template>
+          
           <template v-slot:item.actions="{ item }">
             <v-btn size="small" variant="text" color="primary" class="mr-1" @click="editRoute(item)">
               <v-icon>mdi-pencil</v-icon>
               编辑
+            </v-btn>
+            <v-btn size="small" variant="text" color="info" class="mr-1" @click="openPermissionDialog(item)">
+              <v-icon>mdi-key</v-icon>
+              权限
             </v-btn>
             <v-btn size="small" variant="text" color="error" @click="deleteRoute(item)">
               <v-icon>mdi-delete</v-icon>
@@ -156,27 +173,68 @@
                   density="comfortable"
                 ></v-text-field>
               </v-col>
-              <v-col cols="12" md="4">
+              <v-col cols="12" md="6">
+                <v-select
+                  v-model="accessType"
+                  :items="accessTypeOptions"
+                  item-title="text"
+                  item-value="value"
+                  label="访问类型"
+                  variant="outlined"
+                  density="comfortable"
+                  @update:modelValue="updateAccessType"
+                >
+                  <template v-slot:append>
+                    <v-tooltip location="bottom">
+                      <template v-slot:activator="{ props }">
+                        <v-icon v-bind="props" color="grey">mdi-help-circle-outline</v-icon>
+                      </template>
+                      <div class="pa-2">
+                        <p><strong>公开路由</strong>: 无需登录即可访问</p>
+                        <p><strong>所有登录用户</strong>: 任何登录用户都可访问</p>
+                        <p><strong>基于角色权限</strong>: 需要在权限设置中指定可访问的角色</p>
+                      </div>
+                    </v-tooltip>
+                  </template>
+                </v-select>
+                <div v-if="accessType === 'role_based'" class="mt-2">
+                  <v-alert
+                    type="info"
+                    variant="tonal"
+                    density="compact"
+                  >
+                    保存路由后，请点击"权限"按钮设置可访问的角色
+                  </v-alert>
+                </div>
+              </v-col>
+              <v-col cols="12" md="6">
                 <v-select
                   v-model="editedRoute.sort_order"
                   :items="[0,1,2,3,4,5,6,7,8,9,10]"
                   label="排序"
                   variant="outlined"
                   density="comfortable"
+                  hint="数字越小排序越靠前"
+                  persistent-hint
                 ></v-select>
               </v-col>
-              <v-col cols="12" md="4">
+              <v-col cols="12" md="6">
                 <v-checkbox
                   v-model="editedRoute.meta.requiresAuth"
                   label="需要认证"
                   color="primary"
+                  :disabled="accessType === 'public'"
+                  hint="选择公开路由时此选项自动禁用"
+                  persistent-hint
                 ></v-checkbox>
               </v-col>
-              <v-col cols="12" md="4">
+              <v-col cols="12" md="6">
                 <v-checkbox
                   v-model="editedRoute.meta.hideInMenu"
                   label="在菜单中隐藏"
                   color="primary"
+                  hint="勾选后该路由不会显示在导航菜单中"
+                  persistent-hint
                 ></v-checkbox>
               </v-col>
             </v-row>
@@ -186,6 +244,115 @@
           <v-spacer></v-spacer>
           <v-btn color="grey" variant="text" @click="closeRouteDialog">取消</v-btn>
           <v-btn color="primary" @click="saveRoute" :loading="savingRoute">确定</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    
+    <!-- 路由权限分配对话框 -->
+    <v-dialog v-model="permissionDialog" max-width="900px">
+      <v-card>
+        <v-card-title class="text-h5 bg-info text-white d-flex align-center">
+          <v-icon class="mr-2">mdi-key-variant</v-icon>
+          路由角色权限管理
+          <v-chip class="ml-4" size="small" color="white" variant="outlined">
+            {{ selectedRoute?.meta?.title || selectedRoute?.name || '未命名路由' }}
+          </v-chip>
+        </v-card-title>
+        <v-card-text class="pt-4">
+          <v-alert
+            type="info"
+            variant="tonal"
+            border="start"
+            class="mb-4"
+            density="comfortable"
+          >
+            在此页面中，您可以设置哪些角色可以访问该路由。勾选角色表示允许该角色访问此路由。
+          </v-alert>
+
+          <div v-if="loadingRoles" class="d-flex justify-center my-8">
+            <v-progress-circular indeterminate color="primary"></v-progress-circular>
+            <span class="ml-2">加载角色数据...</span>
+          </div>
+          <div v-else>
+            <v-alert
+              v-if="!roles.length"
+              type="info"
+              text="没有找到可用的角色，请先创建角色。"
+              class="mb-4"
+            ></v-alert>
+            
+            <div v-else>
+              <div class="d-flex align-center mb-4">
+                <v-text-field
+                  v-model="searchRole"
+                  label="搜索角色"
+                  placeholder="输入角色名称"
+                  prepend-inner-icon="mdi-magnify"
+                  variant="outlined"
+                  density="comfortable"
+                  hide-details
+                  class="mr-2"
+                ></v-text-field>
+                <v-btn-toggle 
+                  v-model="roleFilter" 
+                  color="primary" 
+                  density="comfortable"
+                  mandatory
+                >
+                  <v-btn value="all">全部</v-btn>
+                  <v-btn value="granted">已授权</v-btn>
+                  <v-btn value="denied">未授权</v-btn>
+                </v-btn-toggle>
+                <v-spacer></v-spacer>
+                <v-chip
+                  class="ml-2"
+                  color="info"
+                  variant="outlined"
+                >
+                  已选择: {{ roles.filter(r => r.hasAccess).length }} 个角色
+                </v-chip>
+              </div>
+              
+              <v-data-table
+                :headers="[
+                  { title: '角色名称', key: 'name', width: '30%' },
+                  { title: '描述', key: 'description' },
+                  { title: '授权访问', key: 'hasAccess', align: 'center', width: '120px' }
+                ]"
+                :items="filteredRoles"
+                :loading="loadingRoles"
+                density="comfortable"
+                hover
+              >
+                <template v-slot:item.name="{ item }">
+                  <div class="d-flex align-center">
+                    <v-icon 
+                      size="small" 
+                      :color="item.hasAccess ? 'success' : 'grey'" 
+                      class="mr-2"
+                    >
+                      {{ item.hasAccess ? 'mdi-check-circle' : 'mdi-account' }}
+                    </v-icon>
+                    <span>{{ item.name }}</span>
+                  </div>
+                </template>
+                <template v-slot:item.hasAccess="{ item }">
+                  <v-checkbox
+                    v-model="item.hasAccess"
+                    color="primary"
+                    hide-details
+                    density="compact"
+                    @change="markUnsaved"
+                  ></v-checkbox>
+                </template>
+              </v-data-table>
+            </div>
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="grey" variant="text" @click="closePermissionDialog">取消</v-btn>
+          <v-btn color="primary" @click="savePermissions" :loading="savingPermissions" :disabled="!hasPermissionChanges">保存</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -212,6 +379,8 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useUserStore } from '../stores/user.js'
+import { usePermissionStore } from '../stores/permission'
+import { Module, PermissionLevel } from '../utils/permissionConstants'
 import Message from '../utils/notification'
 import UnifiedPageTemplate from '../components/UnifiedPageTemplate.vue'
 import UnifiedDataTable from '../components/UnifiedDataTable.vue'
@@ -219,6 +388,7 @@ import UnifiedForm from '../components/UnifiedForm.vue'
 import api from '../utils/api'
 
 const userStore = useUserStore()
+const permissionStore = usePermissionStore()
 
 // 表单验证规则
 const rules = {
@@ -250,11 +420,31 @@ const editedRoute = ref({
     title: '',
     icon: '',
     requiresAuth: true,
-    hideInMenu: false
+    hideInMenu: false,
+    permission: null
   },
   parent_id: null,
   sort_order: 0
 })
+
+// 访问类型选项
+const accessTypeOptions = [
+  { text: '公开路由 (无需登录)', value: 'public' },
+  { text: '所有登录用户', value: 'all' },
+  { text: '基于角色权限', value: 'role_based' }
+]
+
+// 路由权限相关数据
+const permissionDialog = ref(false)
+const selectedRoute = ref(null)
+const roles = ref([])
+const originalRoles = ref([]) // 用于检测变更
+const loadingRoles = ref(false)
+const savingPermissions = ref(false)
+const searchRole = ref('')
+const roleFilter = ref('all')
+const accessType = ref('all')
+const hasPermissionChanges = ref(false)
 
 // 计算可作为父路由的选项
 const parentRouteOptions = computed(() => {
@@ -375,9 +565,25 @@ const onRouteTypeChange = (value) => {
 };
 
 // 打开路由对话框
-const openRouteDialog = () => {
-  editedRouteIndex.value = -1;
-  routeTypeValue.value = 'page'; // 默认为页面类型
+const openRouteDialog = (item = null) => {
+  // 是否是编辑模式
+  if (item) {
+    editedRouteIndex.value = routesList.value.indexOf(item)
+    editedRoute.value = JSON.parse(JSON.stringify(item)) // 深拷贝避免直接修改原对象
+    
+    // 确保meta对象和其中的permission对象存在
+    if (!editedRoute.value.meta) {
+      editedRoute.value.meta = {}
+    }
+    
+    // 设置路由类型
+    routeTypeValue.value = isParentMenu(editedRoute.value) ? 'parent_menu' : 'page'
+    
+    // 设置访问类型
+    determineAccessType(editedRoute.value)
+  } else {
+    // 新增路由
+    editedRouteIndex.value = -1
     editedRoute.value = {
       id: null,
       path: '',
@@ -387,13 +593,68 @@ const openRouteDialog = () => {
         title: '',
         icon: '',
         requiresAuth: true,
-      hideInMenu: false
+        hideInMenu: false,
+        permission: null
       },
       parent_id: null,
       sort_order: 0
-  };
-  routeDialog.value = true;
-};
+    }
+    routeTypeValue.value = 'page'
+    accessType.value = 'all'
+  }
+  
+  routeDialog.value = true
+}
+
+// 根据路由权限设置决定访问类型
+const determineAccessType = (route) => {
+  if (!route.meta) {
+    accessType.value = 'all'
+    return
+  }
+  
+  if (route.meta.public === true) {
+    accessType.value = 'public'
+    return
+  }
+  
+  if (route.meta.permission === '*') {
+    accessType.value = 'all'
+    return
+  }
+  
+  // 如果有allowed_roles或其他权限设置，则认为是基于角色的权限
+  accessType.value = 'role_based'
+}
+
+// 更新访问类型处理
+const updateAccessType = (type) => {
+  if (!editedRoute.value.meta) {
+    editedRoute.value.meta = {}
+  }
+  
+  // 根据类型设置权限
+  switch (type) {
+    case 'public':
+      editedRoute.value.meta.public = true
+      editedRoute.value.meta.permission = null
+      editedRoute.value.meta.requiresAuth = false
+      break
+      
+    case 'all':
+      editedRoute.value.meta.public = false
+      editedRoute.value.meta.permission = '*'
+      editedRoute.value.meta.requiresAuth = true
+      break
+      
+    case 'role_based':
+      editedRoute.value.meta.public = false
+      editedRoute.value.meta.permission = null
+      editedRoute.value.meta.requiresAuth = true
+      // 角色权限需要在权限对话框中设置
+      break
+  }
+}
 
 // 编辑路由
 const editRoute = (route) => {
@@ -448,14 +709,24 @@ const saveRoute = async () => {
       routeData.meta.requiresChildren = true;
     }
     
-    // 如果meta是对象，转换为字符串(如果API需要)
-    if (typeof routeData.meta === 'object') {
-      try {
-        // 注意：根据API要求，可能需要将meta序列化为字符串
-        // routeData.meta = JSON.stringify(routeData.meta);
-      } catch (e) {
-        console.error('序列化meta字段失败:', e);
-      }
+    // 确保权限设置正确
+    if (!routeData.meta) {
+      routeData.meta = {};
+    }
+    
+    // 根据访问类型设置权限
+    if (accessType.value === 'public') {
+      routeData.meta.public = true;
+      routeData.meta.requiresAuth = false;
+    } else if (accessType.value === 'all') {
+      routeData.meta.public = false;
+      routeData.meta.permission = '*';
+      routeData.meta.requiresAuth = true;
+    } else if (accessType.value === 'role_based') {
+      routeData.meta.public = false;
+      routeData.meta.permission = null;
+      routeData.meta.requiresAuth = true;
+      // allowed_roles将在权限对话框中设置
     }
     
     let response;
@@ -520,6 +791,191 @@ const confirmDeleteRoute = async () => {
     deletingRoute.value = false;
   }
 };
+
+// 打开权限管理对话框
+const openPermissionDialog = async (route) => {
+  selectedRoute.value = route
+  
+  // 加载角色和权限数据
+  await loadRolesForRoute(route.id)
+  
+  permissionDialog.value = true
+}
+
+// 关闭权限管理对话框
+const closePermissionDialog = () => {
+  if (hasPermissionChanges.value) {
+    if (!confirm('您有未保存的更改，确定要关闭吗？')) {
+      return
+    }
+  }
+  
+  permissionDialog.value = false
+  selectedRoute.value = null
+  roles.value = []
+  originalRoles.value = []
+  hasPermissionChanges.value = false
+}
+
+// 标记有未保存的更改
+const markUnsaved = () => {
+  hasPermissionChanges.value = true
+}
+
+// 加载路由对应的角色权限
+const loadRolesForRoute = async (routeId) => {
+  loadingRoles.value = true
+  try {
+    // 获取所有角色
+    const rolesResponse = await api.get('/roles')
+    const allRoles = rolesResponse.data || []
+    
+    // 获取当前路由的权限配置
+    const routePermResponse = await api.get(`/routes/${routeId}/permissions`)
+    const routePermissions = routePermResponse.data || []
+    
+    // 合并角色和权限数据
+    roles.value = allRoles.map(role => ({
+      ...role,
+      hasAccess: routePermissions.some(p => p.role_id === role.id)
+    }))
+    
+    // 保存原始状态用于检测变更
+    originalRoles.value = JSON.parse(JSON.stringify(roles.value))
+    hasPermissionChanges.value = false
+  } catch (error) {
+    console.error('加载路由权限数据失败:', error)
+    Message.error('加载角色权限数据失败')
+  } finally {
+    loadingRoles.value = false
+  }
+}
+
+// 获取权限显示文本
+const getPermissionText = (route) => {
+  if (!route.meta) return '默认'
+  
+  if (route.meta.public === true) return '公开'
+  
+  if (route.meta.permission === '*') return '所有用户'
+  
+  // 检查是否有allowed_roles
+  if (route.meta.allowed_roles && route.meta.allowed_roles.length > 0) {
+    // 获取角色数量
+    const roleCount = route.meta.allowed_roles.length
+    
+    // 根据角色数量返回不同的文本
+    if (roleCount === 0) {
+      return '无权限'
+    } else if (roleCount === 1) {
+      return '1个角色'
+    } else {
+      return `${roleCount}个角色`
+    }
+  }
+  
+  // 检查是否有模块权限
+  if (route.meta.permission && typeof route.meta.permission === 'object') {
+    if (route.meta.permission.module && route.meta.permission.level) {
+      return `${route.meta.permission.module}:${route.meta.permission.level}`
+    }
+  }
+  
+  return '未设置'
+}
+
+// 获取权限显示颜色
+const getPermissionColor = (route) => {
+  if (!route.meta) return 'grey'
+  
+  if (route.meta.public === true) return 'success'
+  
+  if (route.meta.permission === '*') return 'primary'
+  
+  // 检查是否有allowed_roles
+  if (route.meta.allowed_roles && route.meta.allowed_roles.length > 0) {
+    return route.meta.allowed_roles.length > 0 ? 'info' : 'error'
+  }
+  
+  // 检查是否有模块权限
+  if (route.meta.permission && typeof route.meta.permission === 'object') {
+    return 'warning'
+  }
+  
+  return 'grey'
+}
+
+// 角色过滤
+const filteredRoles = computed(() => {
+  let result = roles.value
+  
+  // 按名称搜索
+  if (searchRole.value) {
+    const keyword = searchRole.value.toLowerCase()
+    result = result.filter(role => 
+      role.name.toLowerCase().includes(keyword) || 
+      (role.description && role.description.toLowerCase().includes(keyword))
+    )
+  }
+  
+  // 按权限状态过滤
+  if (roleFilter.value === 'granted') {
+    result = result.filter(role => role.hasAccess)
+  } else if (roleFilter.value === 'denied') {
+    result = result.filter(role => !role.hasAccess)
+  }
+  
+  return result
+})
+
+// 保存角色权限设置
+const savePermissions = async () => {
+  if (!selectedRoute.value) return
+  
+  savingPermissions.value = true
+  
+  try {
+    // 保存基于角色的权限设置
+    const roleIds = roles.value
+      .filter(role => role.hasAccess)
+      .map(role => role.id)
+    
+    // 调用API保存角色权限
+    await api.post(`/routes/${selectedRoute.value.id}/permissions`, { 
+      role_ids: roleIds 
+    })
+    
+    // 同时更新本地路由对象的权限信息
+    if (!selectedRoute.value.meta) {
+      selectedRoute.value.meta = {}
+    }
+    selectedRoute.value.meta.allowed_roles = roleIds.map(id => String(id))
+    
+    // 更新本地路由列表中的路由对象
+    const routeIndex = routesList.value.findIndex(r => r.id === selectedRoute.value.id)
+    if (routeIndex !== -1) {
+      if (!routesList.value[routeIndex].meta) {
+        routesList.value[routeIndex].meta = {}
+      }
+      routesList.value[routeIndex].meta.allowed_roles = roleIds.map(id => String(id))
+    }
+    
+    Message.success('路由权限设置已更新')
+    
+    // 更新状态并关闭对话框
+    hasPermissionChanges.value = false
+    permissionDialog.value = false
+    
+    // 重新加载权限
+    await permissionStore.initialize()
+    
+  } catch (error) {
+    console.error('保存权限设置失败:', error)
+    Message.error('保存权限设置失败')
+  } finally {
+    savingPermissions.value = false
+  }
+}
 
 // 页面加载时获取数据
 onMounted(() => {

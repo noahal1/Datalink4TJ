@@ -61,6 +61,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useUserStore } from '../stores/user'
+import { usePermissionStore } from '../stores/permission'
 import { useRouter } from 'vue-router'
 import Message from '../utils/notification'
 
@@ -72,6 +73,7 @@ const rememberPassword = ref(false)
 const formValid = ref(false)
 const loading = ref(false)
 const userStore = useUserStore()
+const permissionStore = usePermissionStore()
 const router = useRouter()
 
 // 从localStorage中加载保存的用户信息
@@ -95,16 +97,13 @@ const login = async () => {
     loading.value = true 
     if (!formValid.value) return 
 
-    // 创建用户对象
-    const user = {
-      name: username.value,
-      password: password.value
-    }
-    
-    // 调用store的登录方法
-    const success = await userStore.login(user)
+    // 调用store的登录方法，直接传递用户名和密码
+    const success = await userStore.login(username.value, password.value)
     
     if (success) {
+      // 初始化权限系统
+      await permissionStore.initialize()
+      
       // 保存记住的密码
       if (rememberPassword.value) {
         localStorage.setItem('userInfo', JSON.stringify({ 

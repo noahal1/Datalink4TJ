@@ -12,8 +12,6 @@ class PerformanceMonitor {
     if (this.isSupported) {
       this.observePageMetrics()
       this.observeResourceLoading()
-    } else {
-      console.warn('Performance API 在当前浏览器中不受支持')
     }
   }
 
@@ -73,7 +71,7 @@ class PerformanceMonitor {
       window.performance.clearMarks(endMarkName)
       window.performance.clearMeasures(measureName)
     } catch (e) {
-      console.error('清理性能标记失败:', e)
+      // 清理性能标记失败时静默处理
     }
     
     delete this.measures[id]
@@ -89,8 +87,7 @@ class PerformanceMonitor {
       // First Contentful Paint (FCP)
       const fcpObserver = new PerformanceObserver(entries => {
         const fcp = entries.getEntries()[0]
-        console.log('首次内容绘制 (FCP):', fcp.startTime, 'ms')
-        
+      
         if (import.meta.env.PROD) {
           this.reportMetric('FCP', fcp.startTime)
         }
@@ -102,7 +99,6 @@ class PerformanceMonitor {
       // Largest Contentful Paint (LCP)
       const lcpObserver = new PerformanceObserver(entries => {
         const lcp = entries.getEntries().pop()
-        console.log('最大内容绘制 (LCP):', lcp.startTime, 'ms')
         
         if (import.meta.env.PROD) {
           this.reportMetric('LCP', lcp.startTime)
@@ -113,7 +109,6 @@ class PerformanceMonitor {
       // First Input Delay (FID)
       const fidObserver = new PerformanceObserver(entries => {
         const fid = entries.getEntries()[0]
-        console.log('首次输入延迟 (FID):', fid.processingStart - fid.startTime, 'ms')
         
         if (import.meta.env.PROD) {
           this.reportMetric('FID', fid.processingStart - fid.startTime)
@@ -132,8 +127,6 @@ class PerformanceMonitor {
           }
         }
         
-        console.log('累积布局偏移 (CLS):', clsValue)
-        
         if (import.meta.env.PROD) {
           this.reportMetric('CLS', clsValue)
         }
@@ -141,7 +134,7 @@ class PerformanceMonitor {
       clsObserver.observe({ type: 'layout-shift', buffered: true })
       
     } catch (e) {
-      console.error('创建性能观察器失败:', e)
+      // 创建性能观察器失败时静默处理
     }
   }
 
@@ -158,10 +151,6 @@ class PerformanceMonitor {
         // 筛选出加载时间较长的资源
         const slowResources = resources.filter(res => res.duration > 1000)
         
-        if (slowResources.length > 0 && import.meta.env.DEV) {
-          console.warn('检测到加载缓慢的资源:', slowResources)
-        }
-        
         if (import.meta.env.PROD && slowResources.length > 0) {
           this.reportSlowResources(slowResources)
         }
@@ -169,7 +158,7 @@ class PerformanceMonitor {
       
       resourceObserver.observe({ type: 'resource', buffered: true })
     } catch (e) {
-      console.error('创建资源性能观察器失败:', e)
+      // 创建资源性能观察器失败时静默处理
     }
   }
 
@@ -179,8 +168,7 @@ class PerformanceMonitor {
    * @param {Number} value - 指标值
    */
   reportMetric(name, value) {
-    // TODO: 实现向服务器报告指标的逻辑
-    console.log(`报告指标: ${name} = ${value}`)
+    // 实现向服务器报告指标的逻辑
   }
 
   /**
@@ -188,8 +176,7 @@ class PerformanceMonitor {
    * @param {Array} resources - 资源数组
    */
   reportSlowResources(resources) {
-    // TODO: 实现向服务器报告缓慢资源的逻辑
-    console.log('报告加载缓慢的资源:', resources)
+    // 实现向服务器报告缓慢资源的逻辑
   }
 
   /**
@@ -198,11 +185,6 @@ class PerformanceMonitor {
    */
   install(app) {
     app.config.globalProperties.$performance = this
-    
-    // 添加到window对象方便在控制台调试
-    if (import.meta.env.DEV) {
-      window.$performance = this
-    }
   }
 }
 

@@ -101,19 +101,11 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { usePermissionStore } from '../stores/permission'
+import { useUserStore } from '../stores/user'
 import routeService from '../services/routeService'
 
 const props = defineProps({
-  // 用户部门
-  department: {
-    type: String,
-    default: ''
-  },
-  // 是否是管理员
-  isAdmin: {
-    type: Boolean,
-    default: false
-  },
   // 导航分组配置
   groupConfig: {
     type: Array,
@@ -136,6 +128,8 @@ const props = defineProps({
 
 const router = useRouter()
 const route = useRoute()
+const permissionStore = usePermissionStore()
+const userStore = useUserStore()
 const loading = ref(true)
 const loadError = ref(false)
 const navRoutes = ref([])
@@ -239,9 +233,13 @@ const loadRoutes = async () => {
   loadError.value = false
   
   try {
+    // 确保权限已初始化
+    if (!permissionStore.roles.length) {
+      await permissionStore.initialize()
+    }
+
     // 获取当前用户可见的导航菜单
-    const routes = await routeService.getNavigationMenu(props.department, props.isAdmin)
-    console.log('导航菜单加载成功:', routes)
+    const routes = await routeService.getNavigationMenu()
     
     // 确保所有路由都有有效的path属性
     const validateRoutes = (routeList) => {
@@ -266,7 +264,6 @@ const loadRoutes = async () => {
     // 加载完路由后，自动展开当前活动路由所在的组
     updateActiveGroups()
   } catch (error) {
-    console.error('加载导航菜单失败:', error)
     loadError.value = true
     
     // 失败后尝试再次加载，最多重试3次
@@ -275,25 +272,37 @@ const loadRoutes = async () => {
     } else if (window._navRetryCount < 3) {
       window._navRetryCount++;
     } else {
-      console.error('导航菜单加载失败超过3次，停止重试');
       return;
     }
     
-    console.log(`第${window._navRetryCount}次重试加载导航菜单...`);
     setTimeout(() => loadRoutes(), 1000 * window._navRetryCount);
   } finally {
     loading.value = false
   }
 }
 
-// 监听部门或管理员状态变化，重新加载路由
-watch(() => [props.department, props.isAdmin], () => {
-  loadRoutes()
-}, { deep: true })
-
 // 监听路由变化，更新活动分组
 watch(() => route.path, () => {
   updateActiveGroups()
+})
+
+// 监听用户登录状态变化
+watch(() => userStore.isLogin, (newLoginState) => {
+  if (newLoginState) {
+    // 用户登录后，重新加载路由
+    loadRoutes()
+  } else {
+    // 用户登出后，清空路由
+    navRoutes.value = []
+  }
+}, { immediate: true })
+
+// 监听权限变化
+watch(() => permissionStore.roles.length, (newLength) => {
+  if (userStore.isLogin && newLength > 0) {
+    // 权限初始化后，重新加载路由
+    loadRoutes()
+  }
 })
 
 // 组件挂载时加载路由

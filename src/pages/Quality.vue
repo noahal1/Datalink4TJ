@@ -270,24 +270,43 @@ const handleMonthlyTotalInput = () => {
   );
 };
 
-// 获取月度总数数据 - 使用后端amount字段
+// 获取月度总数
 const fetchMonthlyTotals = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/qa/monthly?month=${selectedMonth.value}&year=${currentYear}`);
-    if (response.ok) {
-      const data = await response.json();
-      // 更新月度总数数据
-      standardFields.forEach(field => {
-        const lineData = data.find(item => item.line.toLowerCase() === field);
-        monthlyTotals.value[field] = lineData && lineData.amount ? parseInt(lineData.amount) || 0 : 0;
-      });
-      
-      originalMonthlyTotals.value = {...monthlyTotals.value};
-      isMonthlyTotalChanged.value = false;
+    // 使用api工具替代原生fetch
+    const params = { 
+      month: selectedMonth.value,
+      year: currentYear.toString()
+    };
+    
+    // 添加请求参数类型检查
+    if (!params.month || isNaN(parseInt(params.month))) {
+      console.warn('月份参数无效，使用默认值');
     }
+    
+    const response = await api.get('/qa/monthly', params);
+    
+    // 解析返回数据
+    const monthlyData = response.data || [];
+    
+    // 重置数据
+    standardFields.forEach(field => {
+      monthlyTotals.value[field] = 0;
+    });
+    
+    // 填充数据
+    monthlyData.forEach(data => {
+      const field = data.line.toLowerCase();
+      monthlyTotals.value[field] = data.amount ? parseInt(data.amount) || 0 : 0;
+    });
+    
+    // 保存原始值用于变更检测
+    originalMonthlyTotals.value = {...monthlyTotals.value};
+    isMonthlyTotalChanged.value = false;
   } catch (error) {
     console.error('获取月度总数错误:', error);
-    Message.error('获取月度生产总数失败');
+    const errorMessage = error.response?.data?.detail || error.message || '未知错误';
+    Message.error('获取月度生产总数失败: ' + errorMessage);
   }
 };
 
@@ -305,16 +324,29 @@ const saveMonthlyTotals = async () => {
     
     const response = await api.put('/qa/monthly', dataToSend);
     
-    if (response.message === "Monthly amounts updated successfully" || response.message === "success") {
+    // 正确处理Axios响应格式
+    if (response && response.data) {
+      // 处理标准Axios响应格式
+      if (response.data.message === "Monthly amounts updated successfully" || response.data.message === "success") {
+        Message.success('月度总数保存成功');
+        originalMonthlyTotals.value = {...monthlyTotals.value};
+        isMonthlyTotalChanged.value = false;
+      } else {
+        Message.error('保存失败: ' + (response.data.message || response.data.detail || '未知错误'));
+      }
+    } else if (response && (response.message === "Monthly amounts updated successfully" || response.message === "success")) {
+      // 兼容旧的直接返回格式
       Message.success('月度总数保存成功');
       originalMonthlyTotals.value = {...monthlyTotals.value};
       isMonthlyTotalChanged.value = false;
     } else {
-      Message.error('保存失败: ' + (response.message || '未知错误'));
+      console.warn('无法解析响应:', response);
+      Message.error('保存失败: 服务器响应格式不正确');
     }
   } catch (error) {
     console.error('保存月度总数错误:', error);
-    Message.error('保存失败: ' + (error.message || '未知错误'));
+    const errorMessage = error.response?.data?.detail || error.message || '未知错误';
+    Message.error('保存失败: ' + errorMessage);
   } finally {
     isSavingMonthlyTotals.value = false;
   }
@@ -350,48 +382,54 @@ const refreshData = async () => {
 const fetchData = async (month = selectedMonth.value) => {
   isLoading.value = true;
   try {
-    const response = await fetch(`${API_BASE_URL}/qa/?month=${month}`);
-    if (response.ok) {
-      const fetchedData = await response.json();
-      const daysInMonth = new Date(currentYear, parseInt(month), 0).getDate();
-      const generatedData = Array.from({ length: daysInMonth }, (_, i) => ({
-        date: (i + 1).toString().padStart(2, '0'),
-        swi: 0,
-        rwh: 0,
-        w01: 0,
-        hf: 0,
-        lc: 0,
-        scrapswi: 0,
-        scraprwh: 0,
-        scrapw01: 0,
-        scraphf: 0,
-        scraplc: 0,
-        welding: 0,
-        stamping: 0
-      }));
-
-      fetchedData.forEach(item => {
-        const day = generatedData.find(d => parseInt(d.date) === parseInt(item.day));
-        if (day) {
-          const line = item.line.toLowerCase();
-          day[item.scrapflag ? `scrap${line}` : line] = parseInt(item.value, 10);
-          // 更新welding和stamping字段
-          day.welding = day.swi + day.rwh + day.w01;
-          day.stamping = day.hf + day.lc;
-        }
-      });
-      
-      tableData.value = generatedData;
-      // 创建数据的深拷贝以便比较
-      originalData.value = JSON.parse(JSON.stringify(generatedData));
-      isDataChanged.value = false;
-    } else {
-      console.error('获取数据失败');
-      Message.error('获取质量数据失败');
+    // 添加请求参数类型检查
+    if (!month || isNaN(parseInt(month))) {
+      console.warn('月份参数无效，使用默认值');
+      month = new Date().getMonth() + 1;
     }
+    
+    const params = { month: month.toString() };
+    const response = await api.get('/qa/', params);
+    
+    // 获取响应数据
+    const fetchedData = response.data || [];
+    
+    const daysInMonth = new Date(currentYear, parseInt(month), 0).getDate();
+    const generatedData = Array.from({ length: daysInMonth }, (_, i) => ({
+      date: (i + 1).toString().padStart(2, '0'),
+      swi: 0,
+      rwh: 0,
+      w01: 0,
+      hf: 0,
+      lc: 0,
+      scrapswi: 0,
+      scraprwh: 0,
+      scrapw01: 0,
+      scraphf: 0,
+      scraplc: 0,
+      welding: 0,
+      stamping: 0
+    }));
+
+    fetchedData.forEach(item => {
+      const day = generatedData.find(d => parseInt(d.date) === parseInt(item.day));
+      if (day) {
+        const line = item.line.toLowerCase();
+        day[item.scrapflag ? `scrap${line}` : line] = parseInt(item.value, 10);
+        // 更新welding和stamping字段
+        day.welding = day.swi + day.rwh + day.w01;
+        day.stamping = day.hf + day.lc;
+      }
+    });
+    
+    tableData.value = generatedData;
+    // 创建数据的深拷贝以便比较
+    originalData.value = JSON.parse(JSON.stringify(generatedData));
+    isDataChanged.value = false;
   } catch (error) {
     console.error('获取数据错误:', error);
-    Message.error('获取质量数据失败: ' + (error.message || '未知错误'));
+    const errorMessage = error.response?.data?.detail || error.message || '未知错误';
+    Message.error('获取质量数据失败: ' + errorMessage);
   } finally {
     isLoading.value = false;
   }
@@ -471,17 +509,31 @@ const confirmChanges = async () => {
     // 发送转换后的数据格式到服务器
     const response = await api.put('/qa', apiData);
     
-    if (response.message === "QA entries updated successfully") {
+    // 正确处理Axios响应格式
+    if (response && response.data) {
+      // 处理标准Axios响应格式
+      if (response.data.message === "QA entries updated successfully") {
+        Message.success('数据保存成功');
+        // 更新原始数据
+        originalData.value = JSON.parse(JSON.stringify(tableData.value));
+        isDataChanged.value = false;
+      } else {
+        Message.error('保存失败: ' + (response.data.message || response.data.detail || '未知错误'));
+      }
+    } else if (response && response.message === "QA entries updated successfully") {
+      // 兼容旧的直接返回格式
       Message.success('数据保存成功');
       // 更新原始数据
       originalData.value = JSON.parse(JSON.stringify(tableData.value));
       isDataChanged.value = false;
     } else {
-      Message.error('保存失败: ' + (response.message || '未知错误'));
+      console.warn('无法解析响应:', response);
+      Message.error('保存失败: 服务器响应格式不正确');
     }
   } catch (error) {
     console.error('保存数据错误:', error);
-    Message.error('保存失败: ' + (error.message || '未知错误'));
+    const errorMessage = error.response?.data?.detail || error.message || '未知错误';
+    Message.error('保存失败: ' + errorMessage);
   } finally {
     isLoading.value = false;
   }

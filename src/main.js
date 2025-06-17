@@ -1,13 +1,12 @@
 import { createApp } from 'vue'
+import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
-import vuetify from './plugins/vuetify'
-import pinia from './stores'
 import ECharts from 'vue-echarts'
 import 'remixicon/fonts/remixicon.css'
 import errorHandler from './utils/errorHandler'
 import performanceMonitor from './utils/performance'
-import vPermission from './directives/permission'
+import registerPermissionDirective from './directives/permission'
 
 // 导入自定义样式
 import './styles/transitions.css'
@@ -24,6 +23,7 @@ import UnifiedPageTemplate from './components/UnifiedPageTemplate.vue'
 import UnifiedStatsCard from './components/UnifiedStatsCard.vue'
 import UnifiedDataTable from './components/UnifiedDataTable.vue'
 import UnifiedForm from './components/UnifiedForm.vue'
+import PermissionControl from './components/PermissionControl.vue'
 
 // Echarts核心配置
 import { use } from "echarts/core"
@@ -46,23 +46,46 @@ use([
   LegendComponent
 ])
 
+// 创建Pinia状态管理实例
+const pinia = createPinia()
+
+// Vuetify
+import 'vuetify/styles'
+import { createVuetify } from 'vuetify'
+import * as components from 'vuetify/components'
+import * as directives from 'vuetify/directives'
+import '@mdi/font/css/materialdesignicons.css'
+
+// 创建Vuetify实例
+const vuetify = createVuetify({
+  components,
+  directives,
+})
+
+// 创建Vue应用
 const app = createApp(App)
+
+// 注册插件和全局组件
+app.use(pinia) // 必须在router之前，因为router可能依赖pinia中的状态
+app.use(router)
+app.use(vuetify)
+
+// 注册权限指令
+registerPermissionDirective(app)
 
 // 注册全局组件
 app.component('v-chart', ECharts);
 app.component('GlobalNotification', GlobalNotification);
 app.component('LoadingOverlay', LoadingOverlay);
-app.component('EnhancedDataTable', UnifiedDataTable);
 app.component('PageHeader', PageHeader);
-app.component('StatsCard', UnifiedStatsCard);
 app.component('GlobalSnackbar', GlobalSnackbar);
 app.component('UnifiedPageTemplate', UnifiedPageTemplate);
 app.component('UnifiedStatsCard', UnifiedStatsCard);
 app.component('UnifiedDataTable', UnifiedDataTable);
+app.component('EnhancedDataTable', UnifiedDataTable);
+app.component('StatsCard', UnifiedStatsCard);
 app.component('UnifiedForm', UnifiedForm);
-
-// 注册权限指令
-app.directive('permission', vPermission);
+app.component('PermissionControl', PermissionControl);
 
 // 注册 RiIcon 组件
 app.component('ri-icon', {
@@ -86,11 +109,6 @@ app.use(errorHandler)
 
 // 注册性能监控工具
 app.use(performanceMonitor)
-
-// 插件注册
-app.use(pinia)
-app.use(vuetify)
-app.use(router)
 
 // 挂载应用
 const appInstance = app.mount('#app')

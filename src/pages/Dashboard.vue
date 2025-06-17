@@ -73,7 +73,7 @@ const chartOption = computed(() => {
 const fetchTrendData = async (period = 'month') => {
   isLoadingTrendData.value = true
   try {
-    const response = await api.get('/dashboard/trend', { period })
+    //const response = await api.get('/dashboard/trend', { period })
     if (response && response.data) {
       trendData.value = response.data
     } else {

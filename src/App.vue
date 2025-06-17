@@ -87,10 +87,7 @@
       width="240"
     >
       <!-- 使用动态导航组件 -->
-      <dynamic-navigation
-        :department="userDepartment"
-        :is-admin="showAdminMenu"
-      >
+      <dynamic-navigation>
         <!-- 底部操作按钮 -->
         <template #bottom-actions>
           <v-list-item @click="logout" v-if="user">
@@ -117,10 +114,7 @@
       class="d-md-none"
     >
       <!-- 移动端导航使用相同的动态导航组件 -->
-      <dynamic-navigation
-        :department="userDepartment"
-        :is-admin="showAdminMenu"
-      >
+      <dynamic-navigation>
         <!-- 底部操作按钮 -->
         <template #bottom-actions>
         <v-list-item @click="logout" v-if="user">
@@ -205,16 +199,15 @@ const pageTransition = computed(() => {
   const fromDepth = fromPath.split('/').length
   const toDepth = toPath.split('/').length
   
-  // 向前导航 (更深层级) 使用左滑
-  if (toDepth > fromDepth) {
+  // 如果层级增加，使用向左滑动；如果层级减少，向右滑动
+  if (fromDepth < toDepth) {
     return 'slide-left'
-  }
-  // 后退导航 (更浅层级) 使用右滑
-  else if (fromDepth > toDepth) {
+  } else if (fromDepth > toDepth) {
     return 'slide-right'
+  } else {
+    // 同级别页面使用淡入淡出
+    return 'fade'
   }
-  // 同级导航使用淡入淡出
-  return 'fade'
 })
 
 // 监听路由变化，更新活动标签
@@ -222,29 +215,38 @@ watch(() => route.path, (newPath) => {
   activeTab.value = newPath
 })
 
-// 加载用户信息
+// 恢复用户登录状态
 onMounted(async () => {
   try {
-    const initialized = await userStore.initialize()
-    if (initialized) {
-      console.log('用户状态已恢复，当前部门:', userDepartment.value)
-    }
-    activeTab.value = route.path
+    // 尝试恢复用户会话状态
+    await userStore.initialize()
     
-    // 初始化全局组件引用
-    if (app.config && app.config.globalProperties) {
-      app.config.globalProperties.$updateGlobalComponents?.()
-    }
-  } catch (error) {
-    console.error('初始化用户信息失败:', error)
-  } finally {
+    // 设置应用已加载状态
+    isLoading.value = false
+    
+    // 更新全局组件引用
+    app?.config.globalProperties?.$updateGlobalComponents?.()
+  } catch (e) {
     isLoading.value = false
   }
 })
 
-const logout = () => {
-  userStore.logout()
-  router.replace('/login')
+// 监听用户登录状态变化
+watch(() => user.value, (newVal) => {
+  // 如果没有用户登录且当前路由需要权限，重定向到登录页
+  if (!newVal && route.meta.requiresAuth) {
+    router.push('/login')
+  }
+})
+
+// 登出方法
+const logout = async () => {
+  try {
+    await userStore.logout()
+    router.push('/login')
+  } catch (error) {
+    // 处理错误
+  }
 }
 
 const mainNavButtons = computed(() => {

@@ -1,0 +1,3 @@
+@echo off
+echo 正在启动Datalink4TJ前端服务...
+npm run dev 
