@@ -20,8 +20,23 @@ export const Module = {
   EVENT: 'EVENT',          // 事件管理
   MAINT: 'MAINT',          // 维护管理
   ACTIVITY: 'ACTIVITY',    // 活动管理
-  ROUTE: 'ROUTE',          // 路线管理
+  ROUTE: 'ROUTE',          // 路由管理
   ALL: 'ALL'               // 所有模块
+}
+
+// 权限等级值映射（用于比较）
+export const PermissionLevelValues = {
+  [PermissionLevel.READ]: 1,
+  [PermissionLevel.WRITE]: 2,
+  [PermissionLevel.ADMIN]: 3,
+  [PermissionLevel.SUPER_ADMIN]: 4
+}
+
+// 预定义角色
+export const PredefinedRoles = {
+  SUPER_ADMIN: '超级管理员',
+  ADMIN: '管理员',
+  USER: '普通用户'
 }
 
 // 权限帮助函数
@@ -33,20 +48,44 @@ export const PermissionHelper = {
   
   // 解析权限字符串：MODULE:LEVEL -> { module, level }
   parsePermission: (permissionString) => {
+    if (!permissionString || permissionString.indexOf(':') === -1) {
+      return { module: null, level: null }
+    }
     const [module, level] = permissionString.split(':')
     return { module, level }
   },
   
   // 权限等级比较
   isLevelSufficient: (userLevel, requiredLevel) => {
-    const levelValues = {
-      'READ': 1,
-      'WRITE': 2,
-      'ADMIN': 3,
-      'SUPER_ADMIN': 4
-    }
+    const userLevelValue = PermissionLevelValues[userLevel] || 0
+    const requiredLevelValue = PermissionLevelValues[requiredLevel] || 0
     
-    return levelValues[userLevel] >= levelValues[requiredLevel]
+    return userLevelValue >= requiredLevelValue
+  },
+  
+  // 检查模块是否有效
+  isValidModule: (module) => {
+    return Object.values(Module).includes(module)
+  },
+  
+  // 检查权限等级是否有效
+  isValidLevel: (level) => {
+    return Object.values(PermissionLevel).includes(level)
+  },
+  
+  // 获取权限等级的数值
+  getLevelValue: (level) => {
+    return PermissionLevelValues[level] || 0
+  },
+  
+  // 获取权限等级的显示名称
+  getLevelDisplayName: (level) => {
+    return PermissionDescriptions.levels[level] || level
+  },
+  
+  // 获取模块的显示名称
+  getModuleDisplayName: (module) => {
+    return PermissionDescriptions.modules[module] || module
   }
 }
 
@@ -72,7 +111,25 @@ export const PermissionCombinations = {
     { module: Module.USER, level: PermissionLevel.ADMIN },
     { module: Module.DEPARTMENT, level: PermissionLevel.ADMIN },
     { module: Module.ROUTE, level: PermissionLevel.ADMIN }
-  ]
+  ],
+  
+  // 创建给定模块的所有权限级别
+  createModulePermissions: (module) => {
+    return [
+      { module, level: PermissionLevel.READ },
+      { module, level: PermissionLevel.WRITE },
+      { module, level: PermissionLevel.ADMIN }
+    ]
+  },
+  
+  // 创建给定模块和部门的所有权限级别
+  createModulePermissionsWithDepartment: (module, departmentId) => {
+    return [
+      { module, level: PermissionLevel.READ, department_id: departmentId },
+      { module, level: PermissionLevel.WRITE, department_id: departmentId },
+      { module, level: PermissionLevel.ADMIN, department_id: departmentId }
+    ]
+  }
 }
 
 // 权限描述映射，用于UI显示
@@ -103,5 +160,11 @@ export const PermissionDescriptions = {
     const moduleDesc = PermissionDescriptions.modules[module] || module
     const levelDesc = PermissionDescriptions.levels[level] || level
     return `${moduleDesc}(${levelDesc})`
+  },
+  
+  // 获取带部门的权限描述
+  getDescriptionWithDepartment: (module, level, departmentName) => {
+    const baseDesc = PermissionDescriptions.getDescription(module, level)
+    return departmentName ? `${baseDesc} - ${departmentName}` : baseDesc
   }
 } 

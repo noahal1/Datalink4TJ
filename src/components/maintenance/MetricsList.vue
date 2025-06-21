@@ -33,6 +33,16 @@
             clearable
           ></v-select>
         </v-col>
+        <v-col cols="12" sm="6" md="4">
+          <v-select
+            v-model="selectedShift"
+            :items="shiftTypes"
+            label="班次"
+            variant="outlined"
+            density="compact"
+            clearable
+          ></v-select>
+        </v-col>
       </v-row>
       
       <v-data-table
@@ -54,6 +64,16 @@
             class="text-white"
           >
             {{ item.equipment_type }}
+          </v-chip>
+        </template>
+        
+        <template v-slot:item.shift="{ item }">
+          <v-chip
+            :color="item.shift === 'day' ? 'amber-darken-1' : 'blue-darken-3'"
+            size="small"
+            class="text-white"
+          >
+            {{ item.shift === 'day' ? '白班' : '夜班' }}
           </v-chip>
         </template>
         
@@ -141,6 +161,7 @@ const permissionStore = usePermissionStore()
 // 表格表头
 const headers = [
   { title: '设备类型', key: 'equipment_type', sortable: true },
+  { title: '班次', key: 'shift', sortable: true },
   { title: '日期', key: 'date', sortable: true },
   { title: '停机次数', key: 'downtime_count', sortable: true, align: 'end' },
   { title: '停机时间(分钟)', key: 'downtime_minutes', sortable: true, align: 'end' },
@@ -155,11 +176,21 @@ const equipmentTypes = [
   'SWI-L',
   'SWI-R',
   'RWH-L',
-  'RWH-R'
+  'RWH-R',
+  'W01',
+  'HF',
+  'LC'
+]
+
+// 班次类型选项
+const shiftTypes = [
+  { title: '白班', value: 'day' },
+  { title: '夜班', value: 'night' }
 ]
 
 // 筛选和搜索
 const selectedEquipment = ref('')
+const selectedShift = ref('')
 const search = ref('')
 
 // 筛选后的指标数据
@@ -173,11 +204,19 @@ const filteredMetrics = computed(() => {
     )
   }
   
+  // 按班次筛选
+  if (selectedShift.value) {
+    result = result.filter(metric => 
+      metric.shift === selectedShift.value
+    )
+  }
+  
   // 搜索功能
   if (search.value) {
     const query = search.value.toLowerCase()
     result = result.filter(metric => 
       metric.equipment_type.toLowerCase().includes(query) ||
+      (metric.shift && (metric.shift === 'day' ? '白班' : '夜班').includes(query)) ||
       metric.date.toString().includes(query)
     )
   }
@@ -204,7 +243,10 @@ const getEquipmentColor = (type) => {
     'SWI-L': 'indigo',
     'SWI-R': 'deep-purple',
     'RWH-L': 'teal',
-    'RWH-R': 'cyan'
+    'RWH-R': 'cyan',
+    'W01': 'blue',
+    'HF': 'deep-orange',
+    'LC': 'green'
   }
   return colors[type] || 'grey'
 }

@@ -19,7 +19,7 @@
             <div class="d-flex align-center">
               <!-- 用户信息/登录按钮 -->
               <div>
-                <div v-if="user">
+                <div v-if="userStore.isLogin">
                   <v-menu 
                     close-on-content-click
                     location="bottom" 
@@ -37,7 +37,7 @@
                         <v-avatar size="32" color="primary" class="mr-2">
                           <span class="text-white">{{ userInitials }}</span>
                         </v-avatar>
-                        <span class="d-none d-sm-flex">{{ user }}</span>
+                        <span class="d-none d-sm-flex">{{ userStore.user }}</span>
                         <v-icon size="small" class="ml-1">mdi-chevron-down</v-icon>
                       </v-btn>
                     </template>
@@ -45,7 +45,7 @@
                       <v-list density="compact">
                         <v-list-item>
                           <v-list-item-title class="text-subtitle-2 text-grey-darken-1">
-                            {{ userStore.department }} 部门
+                            {{ getDepartmentName(userStore.department) }} 部门
                           </v-list-item-title>
                         </v-list-item>
                         <v-divider></v-divider>
@@ -90,7 +90,7 @@
       <dynamic-navigation>
         <!-- 底部操作按钮 -->
         <template #bottom-actions>
-          <v-list-item @click="logout" v-if="user">
+          <v-list-item @click="logout" v-if="userStore.isLogin">
           <template v-slot:prepend>
               <v-icon>mdi-logout</v-icon>
           </template>
@@ -117,7 +117,7 @@
       <dynamic-navigation>
         <!-- 底部操作按钮 -->
         <template #bottom-actions>
-        <v-list-item @click="logout" v-if="user">
+        <v-list-item @click="logout" v-if="userStore.isLogin">
           <template v-slot:prepend>
             <v-icon>mdi-logout</v-icon>
           </template>
@@ -139,6 +139,27 @@
         <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
       </div>
       <v-container v-else fluid class="px-md-4 py-md-3 px-2 py-2">
+        <!-- 调试信息 -->
+        <div v-if="isDebugMode" class="debug-info mb-4 pa-2 border rounded">
+          <p><strong>登录状态:</strong> {{ userStore.isLogin ? '已登录' : '未登录' }}</p>
+          <p><strong>用户名:</strong> {{ userStore.user || '无' }}</p>
+          <p><strong>部门:</strong> {{ getDepartmentName(userStore.department) }}</p>
+          <p><strong>角色:</strong> {{ Array.isArray(userStore.roles) ? userStore.roles.join(', ') : '无角色' }}</p>
+          <p><strong>原始数据:</strong></p>
+          <pre class="debug-data">{{ {
+            user: userStore.user,
+            department: userStore.department,
+            userId: userStore.userId,
+            roles: userStore.roles,
+            isLogin: userStore.isLogin
+          } }}</pre>
+          <div class="d-flex mt-2">
+            <v-btn color="warning" size="small" @click="forceRefresh">强制刷新</v-btn>
+            <v-btn color="info" size="small" @click="toggleDebug" class="ml-2">{{ isDebugMode ? '隐藏调试' : '显示调试' }}</v-btn>
+            <v-btn color="error" size="small" @click="clearUserData" class="ml-2">清除用户数据</v-btn>
+          </div>
+        </div>
+        
         <router-view></router-view>
       </v-container>
     </v-main>
@@ -164,15 +185,21 @@ import DynamicNavigation from './components/DynamicNavigation.vue'
 
 const app = getCurrentInstance()?.appContext.app
 const userStore = useUserStore()
-const user = computed(() => userStore.user)
+const user = computed({
+  get: () => userStore.user,
+  set: (value) => {
+    // 这个setter只用于特殊情况下强制更新
+    console.log('强制设置用户状态:', value);
+  }
+})
 const userDepartment = computed(() => userStore.department)
 const router = useRouter()
 const route = useRoute()
 
 // 用户首字母
 const userInitials = computed(() => {
-  if (!user.value) return '?'
-  return user.value.charAt(0).toUpperCase()
+  if (!userStore.user) return '?'
+  return userStore.user.charAt(0).toUpperCase()
 })
 
 // 活动标签和抽屉状态
@@ -180,6 +207,7 @@ const activeTab = ref(null)
 const drawer = ref(false)
 const sideNav = ref(true) // 桌面端侧边导航状态
 const isLoading = ref(true)
+const isDebugMode = ref(false) // 默认关闭调试模式
 
 // 是否显示管理菜单
 const showAdminMenu = computed(() => {
@@ -218,8 +246,46 @@ watch(() => route.path, (newPath) => {
 // 恢复用户登录状态
 onMounted(async () => {
   try {
+    // 设置加载状态
+    isLoading.value = true
+    
+    console.log('挂载时的用户状态:', {
+      user: userStore.user,
+      isLogin: userStore.isLogin,
+      department: userStore.department,
+      roles: userStore.roles
+    });
+    
     // 尝试恢复用户会话状态
-    await userStore.initialize()
+    const loginSuccess = await userStore.initialize()
+    
+    // 如果用户信息不完整但已登录，尝试补充完整
+    if (userStore.isLogin && (!userStore.user || !userStore.department)) {
+      console.log('用户信息不完整，尝试补充');
+      await userStore.ensureUserInfoIntegrity();
+    }
+    
+    console.log('初始化后的用户状态:', {
+      user: userStore.user,
+      isLogin: userStore.isLogin,
+      department: userStore.department,
+      roles: userStore.roles
+    });
+    
+    // 检查当前路由是否需要认证
+    const currentRoute = router.currentRoute.value
+    if (!userStore.isLogin && currentRoute.meta.requiresAuth && !currentRoute.meta.public) {
+      // 保存当前路径，登录后重定向回来
+      sessionStorage.setItem('redirectPath', currentRoute.path)
+      
+      // 如果是公开路由，不重定向
+      if (!currentRoute.meta.public) {
+        // 重定向到登录页面，但添加延迟避免闪烁
+        setTimeout(() => {
+          router.push('/login')
+        }, 100)
+      }
+    }
     
     // 设置应用已加载状态
     isLoading.value = false
@@ -227,17 +293,50 @@ onMounted(async () => {
     // 更新全局组件引用
     app?.config.globalProperties?.$updateGlobalComponents?.()
   } catch (e) {
+    console.error("初始化用户状态失败:", e)
     isLoading.value = false
+    
+    // 出错时，只有当前路由确实需要认证且不是公开路由时才重定向
+    const currentRoute = router.currentRoute.value
+    if (currentRoute.meta.requiresAuth && !currentRoute.meta.public) {
+      // 添加延迟避免闪烁
+      setTimeout(() => {
+        router.push('/login')
+      }, 100)
+    }
   }
 })
 
 // 监听用户登录状态变化
-watch(() => user.value, (newVal) => {
-  // 如果没有用户登录且当前路由需要权限，重定向到登录页
-  if (!newVal && route.meta.requiresAuth) {
-    router.push('/login')
+watch(() => userStore.isLogin, (isLoggedIn) => {
+  console.log('用户登录状态变化:', isLoggedIn, '用户名:', userStore.user);
+  
+  // 如果用户已登录，确保用户信息已保存
+  if (isLoggedIn) {
+    userStore.saveToStorage();
   }
-})
+  
+  // 如果用户未登录且当前路由需要权限，重定向到登录页
+  const currentRoute = router.currentRoute.value
+  if (!isLoggedIn && currentRoute.meta.requiresAuth && !currentRoute.meta.public) {
+    // 保存当前路径以便登录后重定向
+    sessionStorage.setItem('redirectPath', currentRoute.path)
+    
+    // 添加延迟避免闪烁
+    setTimeout(() => {
+      router.push('/login')
+    }, 100)
+  }
+}, { immediate: true })
+
+// 监听用户名变化
+watch(() => userStore.user, (newUser) => {
+  console.log('用户名变化:', newUser);
+  // 如果用户已登录且用户名发生变化，保存状态
+  if (userStore.isLogin && newUser) {
+    userStore.saveToStorage();
+  }
+}, { immediate: true })
 
 // 登出方法
 const logout = async () => {
@@ -291,10 +390,10 @@ const filterVisibleButtons = (btn) => {
   if (btn.departments.includes('*')) return true
   
   // 如果用户未登录且按钮不需要登录
-  if (!user.value && !btn.requiresAuth) return true
+  if (!userStore.isLogin && !btn.requiresAuth) return true
   
   // 如果用户已登录且该按钮对用户部门可见
-  if (user.value && (btn.departments.includes(userDepartment.value) || userDepartment.value === 'ADMIN')) {
+  if (userStore.isLogin && (btn.departments.includes(userDepartment.value) || userDepartment.value === 'ADMIN')) {
     return true
   }
   
@@ -320,9 +419,52 @@ const visibleButtons = computed(() => {
   return buttons.filter(filterVisibleButtons)
 })
 
+// 强制刷新页面
+const forceRefresh = () => {
+  window.location.reload()
+}
+
+// 添加调试开关方法
+const toggleDebug = () => {
+  isDebugMode.value = !isDebugMode.value;
+}
+
+// 清除用户数据
+const clearUserData = () => {
+  userStore.logout();
+  
+  // 清除所有相关的localStorage数据
+  localStorage.removeItem('user-store');
+  localStorage.removeItem('permission-store');
+  localStorage.removeItem('accessibleRoutes');
+  
+  // 清除sessionStorage
+  sessionStorage.clear();
+  
+  // 刷新页面
+  window.location.reload();
+}
+
 // 注册全局通知组件
 app.component('GlobalNotification', GlobalNotification)
 app.component('GlobalSnackbar', GlobalSnackbar)
+
+// 获取部门名称
+const getDepartmentName = (department) => {
+  if (!department) return '未知';
+  
+  // 如果是字符串，直接返回
+  if (typeof department === 'string') {
+    return department;
+  }
+  
+  // 如果是对象，返回对象的name属性
+  if (typeof department === 'object' && department !== null) {
+    return department.name || '未知';
+  }
+  
+  return '未知';
+}
 </script>
 
 <style>
@@ -512,5 +654,22 @@ app.component('GlobalSnackbar', GlobalSnackbar)
 .v-theme--dark .nav-list-item.v-list-item--active {
   background-color: rgba(64, 150, 255, 0.15);
   box-shadow: 0 3px 8px rgba(64, 150, 255, 0.1);
+}
+
+.debug-info {
+  background-color: rgba(0, 0, 0, 0.03);
+  padding: 12px;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+
+.debug-data {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 8px;
+  border-radius: 4px;
+  max-height: 200px;
+  overflow: auto;
+  font-size: 0.8rem;
 }
 </style>

@@ -14,6 +14,8 @@ const Pcl = () => import('../pages/Pcl.vue')
 const Admin = () => import('../pages/Admin.vue')
 const Gmo = () => import('../pages/Gmo.vue')
 const Maintenance = () => import('../pages/Maintenance.vue')
+const MaintenanceMetrics = () => import('../pages/MaintenanceMetrics.vue')
+const DowntimeRecords = () => import('../pages/DowntimeRecords.vue')  
 const Events = () => import('../pages/Events.vue')
 const Qa_others = () => import('../pages/Qa_others.vue')
 const RouteManagement = () => import('../pages/RouteManagement.vue')
@@ -22,6 +24,116 @@ const PermissionManagement = () => import('../pages/PermissionManagement.vue')
 // 管理页面子组件
 const AdminDepartments = () => import('../pages/admin/Departments.vue')
 const AdminActivities = () => import('../pages/admin/Activities.vue')
+
+// 路由组定义，便于统一管理
+const MODULE_ROUTES = {
+  // 维修管理相关路由
+  MAINTENANCE: {
+    path: '/maintenance',
+    name: 'Maintenance',
+    component: Maintenance,
+    meta: {
+      title: '维修管理',
+      icon: 'mdi-tools',
+      requiresAuth: true,
+      permission: { module: 'MAINT', level: 'READ' }
+    },
+    children: [
+      {
+        path: 'metrics',
+        name: 'MaintenanceMetrics',
+        component: MaintenanceMetrics,
+        meta: {
+          title: '维修指标',
+          icon: 'mdi-chart-line',
+          requiresAuth: true,
+          permission: { module: 'MAINT', level: 'READ' }
+        }
+      },
+      {
+        path: 'records',
+        name: 'DowntimeRecords',
+        component: DowntimeRecords,
+        meta: {
+          title: '停机单管理',
+          icon: 'mdi-clipboard-text',
+          requiresAuth: true,
+          permission: { module: 'MAINT', level: 'READ' }
+        }
+      }
+    ]
+  },
+  
+  // 管理模块相关路由
+  ADMIN: {
+    path: '/admin',
+    name: 'Admin',
+    component: Admin,
+    meta: {
+      title: '管理后台',
+      icon: 'mdi-cog',
+      requiresAuth: true,
+      permission: { module: 'USER', level: 'ADMIN' }
+    },
+    children: [
+      {
+        path: 'users',
+        name: 'UserManagement',
+        component: Admin,
+        meta: {
+          title: '用户管理',
+          icon: 'mdi-account-group',
+          requiresAuth: true,
+          permission: { module: 'USER', level: 'ADMIN' }
+        }
+      },
+      {
+        path: 'departments',
+        name: 'DepartmentManagement',
+        component: AdminDepartments,
+        meta: {
+          title: '部门管理',
+          icon: 'mdi-domain',
+          requiresAuth: true,
+          permission: { module: 'DEPARTMENT', level: 'ADMIN' }
+        }
+      },
+      {
+        path: 'activities',
+        name: 'ActivityLogs',
+        component: AdminActivities,
+        meta: {
+          title: '操作记录',
+          icon: 'mdi-history',
+          requiresAuth: true,
+          permission: { module: 'ACTIVITY', level: 'READ' }
+        }
+      },
+      {
+        path: 'routes',
+        name: 'RouteManagement',
+        component: RouteManagement,
+        meta: {
+          title: '路由管理',
+          icon: 'mdi-routes',
+          requiresAuth: true,
+          permission: { module: 'ROUTE', level: 'ADMIN' }
+        }
+      },
+      {
+        path: 'permissions',
+        name: 'PermissionManagement',
+        component: PermissionManagement,
+        meta: {
+          title: '权限管理',
+          icon: 'mdi-shield-account',
+          requiresAuth: true,
+          permission: { module: 'USER', level: 'ADMIN' }
+        }
+      }
+    ]
+  }
+}
 
 const routes = [
   {
@@ -33,7 +145,8 @@ const routes = [
     component: Dashboard,
     meta: { 
       title: '首页',
-      permission: '*' // 所有人可访问
+      permission: '*', 
+      requiresAuth: true
     }
   },
   { 
@@ -49,7 +162,8 @@ const routes = [
     component: Quality,
     meta: { 
       title: '质量',
-      permission: '*' // 所有人可访问
+      permission: '*', // 所有人可访问
+      requiresAuth: true
     } 
   },
   { 
@@ -57,7 +171,8 @@ const routes = [
     component: EHS,
     meta: { 
       title: 'EHS',
-      permission: { module: 'EHS', level: 'READ' } // 新格式
+      permission: { module: 'EHS', level: 'READ' }, 
+      requiresAuth: true
     } 
   },
   { 
@@ -65,7 +180,8 @@ const routes = [
     component: Assy,
     meta: { 
       title: '生产',
-      permission: 'ASSY' // 旧格式兼容
+      permission: 'ASSY', // 旧格式兼容
+      requiresAuth: true
     }
   },
   { 
@@ -73,7 +189,8 @@ const routes = [
     component: Pcl,
     meta: { 
       title: '物流',
-      permission: 'PCL' // 旧格式兼容
+      permission: 'PCL', // 旧格式兼容
+      requiresAuth: true
     } 
   },
   { 
@@ -81,15 +198,8 @@ const routes = [
     component: Gmo,
     meta: { 
       title: 'GMO',
-      permission: 'GMO' // 旧格式兼容
-    } 
-  },
-  { 
-    path: '/maintenance', 
-    component: Maintenance,
-    meta: { 
-      title: '维修',
-      permission: { module: 'MAINT', level: 'READ' } // 新格式
+      permission: 'GMO', // 旧格式兼容
+      requiresAuth: true
     } 
   },
   { 
@@ -97,63 +207,17 @@ const routes = [
     component: Events,
     meta: { 
       title: '重要事件',
-      permission: { module: 'EVENT', level: 'READ' } // 新格式
+      permission: { module: 'EVENT', level: 'READ' },
+      requiresAuth: true
     } 
-  },
-  { 
-    path: '/admin', 
-    component: Admin,
-    meta: { 
-      title: '用户管理',
-      permission: { module: 'USER', level: 'ADMIN' } // 新格式
-    }
-  },
-  { 
-    path: '/admin/departments', 
-    component: AdminDepartments,
-    meta: { 
-      title: '部门管理',
-      permission: { module: 'DEPARTMENT', level: 'ADMIN' } // 新格式
-    }
-  },
-  { 
-    path: '/admin/activities', 
-    component: AdminActivities,
-    meta: { 
-      title: '操作记录',
-      permission: { module: 'ACTIVITY', level: 'READ' } // 新格式
-    }
-  },
-  {
-    path: '/admin/users',
-    redirect: '/admin',
-    meta: {
-      title: '用户管理',
-      permission: { module: 'USER', level: 'ADMIN' } // 新格式
-    }
-  },
-  { 
-    path: '/admin/routes', 
-    component: RouteManagement,
-    meta: { 
-      title: '路由管理',
-      permission: { module: 'ROUTE', level: 'ADMIN' } // 新格式
-    }
-  },
-  { 
-    path: '/admin/permissions', 
-    component: PermissionManagement,
-    meta: { 
-      title: '权限管理',
-      permission: { module: 'USER', level: 'ADMIN' } // 新格式
-    }
   },
   {
     path: '/qa_others',
     component: Qa_others,
     meta: { 
       title: '质量管理',
-      permission: '*' // 所有人可访问
+      permission: '*', // 所有人可访问
+      requiresAuth: true
     }
   },
   // 404页面
@@ -162,6 +226,9 @@ const routes = [
     redirect: '/dashboard'
   }
 ]
+
+// 添加模块化路由
+Object.values(MODULE_ROUTES).forEach(route => routes.push(route))
 
 const router = createRouter({
   history: createWebHistory(),
@@ -186,7 +253,7 @@ router.beforeEach(async (to, from, next) => {
     return next()
   }
   
-  // 检查登录状态
+  // 检查登录状态 - 所有非公开页面都需要登录
   if (!userStore.isLogin) {
     // 保存尝试访问的路径，登录后重定向
     if (to.path !== '/login') {
@@ -200,24 +267,19 @@ router.beforeEach(async (to, from, next) => {
   const permissionStore = usePermissionStore()
   
   // 检查权限存储是否已初始化
-  if (!permissionStore.permissionCache.size) {
-    await permissionStore.initialize()
+  if (!permissionStore.permissionCache || Object.keys(permissionStore.permissionCache).length === 0) {
+    try {
+      await permissionStore.initialize()
+    } catch (error) {
+      console.error('初始化权限信息出错:', error)
+    }
   }
   
-  // 检查用户是否是超级管理员或管理员，判断是否可访问管理页面
-  const isAdmin = userStore.roles && (
-    userStore.roles.includes('超级管理员') || 
-    userStore.roles.includes('管理员')
-  )
-  
-  // 如果访问的是管理页面但不是管理员，拒绝访问
-  if (to.path.startsWith('/admin') && !isAdmin) {
-    Message.error('需要管理员权限才能访问此页面')
-    return next(from.path || '/dashboard')
-  }
+  // 检查超级管理员
+  const isSuperAdmin = permissionStore.isSuperUser
   
   // 超级管理员可以访问所有页面
-  if (permissionStore.isSuperUser) {
+  if (isSuperAdmin) {
     return next()
   }
   
@@ -226,7 +288,7 @@ router.beforeEach(async (to, from, next) => {
     return next()
   }
   
-  // 简化的权限检查 - 质量页面特殊处理
+  // 质量页面特殊处理
   if (to.path === '/quality' || to.path === '/qa_others') {
     return next()
   }

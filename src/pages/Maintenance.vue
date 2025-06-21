@@ -1,6 +1,36 @@
 <template>
   <v-container fluid>
-
+    <!-- 操作栏 -->
+    <v-row class="mb-3">
+      <v-col cols="12">
+        <v-card>
+          <v-card-text class="d-flex justify-space-between align-center py-2">
+            <div>
+              <span class="text-h6">维修管理</span>
+            </div>
+            <div>
+              <v-btn
+                color="primary"
+                variant="outlined"
+                prepend-icon="mdi-chart-line"
+                class="me-2"
+                to="/maintenance/metrics"
+              >
+                查看维修指标
+              </v-btn>
+              <v-btn
+                color="primary"
+                prepend-icon="mdi-plus"
+                @click="openTaskDialog"
+                v-permission="'MAINT:WRITE'"
+              >
+                添加任务
+              </v-btn>
+            </div>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
 
     <v-row>
       <!-- 日历组件 -->
@@ -22,19 +52,6 @@
           @edit-task="editTask"
           @delete-task="deleteTask"
           @update-status="updateTaskStatus"
-        />
-      </v-col>
-    </v-row>
-    
-    <!-- 维修数据指标部分 -->
-    <v-row class="mt-6">
-      <v-col cols="12">
-        <metrics-list
-          :metrics="metricsList"
-          :loading="loadingMetrics"
-          @add-metric="openMetricDialog()"
-          @edit-metric="editMetric"
-          @delete-metric="deleteMetric"
         />
       </v-col>
     </v-row>
@@ -121,22 +138,6 @@ const selectedDayTasks = computed(() => {
   return maintenanceTasks.value.filter(task => task.date === selectedDate.value)
 })
 const issuesList = ref([])
-
-// 维修数据指标相关数据
-const metricsList = ref([])
-const loadingMetrics = ref(false)
-const savingMetric = ref(false)
-const metricDialog = ref(false)
-const editedMetricIndex = ref(-1)
-const editedMetric = ref({
-  id: null,
-  equipment_type: '',
-  date: selectedDate.value,
-  downtime_count: 0,
-  downtime_minutes: 0,
-  parts_produced: 0,
-  user_id: userStore.userId
-})
 
 // 对话框相关
 const taskDialog = ref(false)
@@ -806,5 +807,21 @@ watch(selectedMonth, () => {
 
 .match-height .v-card {
   flex: 1;
+}
+
+.maintenance-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s;
+}
+
+.maintenance-card:hover:not([disabled]) {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.v-card__actions {
+  margin-top: auto;
 }
 </style>

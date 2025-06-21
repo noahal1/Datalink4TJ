@@ -288,6 +288,7 @@ watch(() => route.path, () => {
 
 // 监听用户登录状态变化
 watch(() => userStore.isLogin, (newLoginState) => {
+  console.log('DynamicNavigation: 用户登录状态变化', newLoginState, '用户:', userStore.user);
   if (newLoginState) {
     // 用户登录后，重新加载路由
     loadRoutes()

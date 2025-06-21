@@ -9,16 +9,34 @@ import router from '../router'
 // API 基础URL
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
-console.log('API基础URL:', API_BASE_URL)
+// 生产环境不输出敏感信息
+const isProduction = import.meta.env.PROD;
+if (!isProduction) {
+  console.log('API基础URL:', API_BASE_URL);
+}
 
-// 调试功能 - 开发模式下打印详细日志
-const isDebugMode = true;
+// 调试功能 - 仅在开发模式下打印日志
+const isDebugMode = import.meta.env.DEV && false;
 const debug = (...args) => {
   if (isDebugMode) {
     console.log(...args);
   }
 };
 
+// 公开API路径列表（不需要认证的API）
+const PUBLIC_APIS = [
+  '/users/token',
+  '/login',
+  '/auth/login',
+  '/auth/register',
+  '/public'
+];
+
+// 缓存控制 - 设置缓存最大有效时间
+const CACHE_MAX_AGE = 10 * 60 * 1000; // 10分钟
+const CACHE_PREFIX = 'api_cache_';
+
+// 创建axios实例
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000,
@@ -27,11 +45,60 @@ const api = axios.create({
   }
 })
 
+/**
+ * 获取缓存的API响应
+ * @param {string} url - API URL
+ * @returns {Object|null} - 缓存的响应数据或null
+ */
+const getCachedResponse = (url) => {
+  try {
+    const cacheKey = `${CACHE_PREFIX}${url}`;
+    const cachedItem = sessionStorage.getItem(cacheKey);
+    
+    if (!cachedItem) return null;
+    
+    const { data, timestamp } = JSON.parse(cachedItem);
+    const now = Date.now();
+    
+    // 检查缓存是否过期
+    if (now - timestamp > CACHE_MAX_AGE) {
+      sessionStorage.removeItem(cacheKey);
+      return null;
+    }
+    
+    return data;
+  } catch (e) {
+    console.warn('读取缓存失败:', e);
+    return null;
+  }
+};
+
+/**
+ * 缓存API响应
+ * @param {string} url - API URL
+ * @param {Object} data - 响应数据
+ */
+const cacheResponse = (url, data) => {
+  try {
+    const cacheKey = `${CACHE_PREFIX}${url}`;
+    const cacheItem = {
+      data,
+      timestamp: Date.now()
+    };
+    sessionStorage.setItem(cacheKey, JSON.stringify(cacheItem));
+  } catch (e) {
+    console.warn('缓存API响应失败:', e);
+  }
+};
+
 // 请求拦截器
 api.interceptors.request.use(
   config => {
     // 使用函数而不是直接导入，避免循环依赖
     const userStore = useUserStore()
+    
+    // 检查是否是公开API
+    const isPublicApi = PUBLIC_APIS.some(path => config.url.includes(path));
     
     // 如果有token，则添加到请求头
     if (userStore.token) {
@@ -39,17 +106,41 @@ api.interceptors.request.use(
       const token = userStore.token.trim();
       config.headers['Authorization'] = `Bearer ${token}`;
       debug(`请求添加认证头: ${config.method.toUpperCase()} ${config.url}`);
-      debug(`Token: ${token}`);
-    } else {
-      debug(`请求无认证: ${config.method.toUpperCase()} ${config.url}`);
+    } else if (!isPublicApi) {
+      // 如果是需要认证的API，且用户未登录，则拒绝请求
+      debug(`未授权请求: ${config.method.toUpperCase()} ${config.url}`);
       
-      // 如果是需要认证的API，且不是登录请求，则提示用户先登录
-      if (!config.url.includes('/users/token') && !config.url.includes('/login')) {
-        const isAuthRequired = true; // 大多数API都需要认证
-        if (isAuthRequired && router.currentRoute.value.path !== '/login') {
-          console.warn('未授权访问API，将重定向到登录页面');
-          // 这里不直接跳转，让响应拦截器处理401错误时跳转
+      // 如果是GET请求，尝试从缓存获取数据
+      if (config.method.toLowerCase() === 'get') {
+        const cachedData = getCachedResponse(config.url);
+        if (cachedData) {
+          debug(`使用缓存数据: ${config.url}`);
+          // 返回缓存的数据，但同时在后台尝试登录
+          return Promise.reject({
+            response: {
+              status: 200,
+              data: cachedData,
+              config,
+              headers: {},
+              isCachedData: true
+            }
+          });
         }
+      }
+      
+      // 尝试重定向到登录页面
+      if (router.currentRoute.value.path !== '/login') {
+        Message.warning('请先登录');
+        
+        // 保存当前路径，登录后重定向回来
+        const currentPath = router.currentRoute.value.path;
+        if (currentPath !== '/login') {
+          sessionStorage.setItem('redirectPath', currentPath);
+          router.push('/login');
+        }
+        
+        // 中断请求
+        return Promise.reject(new Error('未授权'));
       }
     }
     
@@ -65,15 +156,45 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   response => {
     debug(`请求成功: ${response.config.method.toUpperCase()} ${response.config.url}`);
+    
+    // 如果是GET请求，缓存响应数据
+    if (response.config.method.toLowerCase() === 'get') {
+      cacheResponse(response.config.url, response.data);
+    }
+    
     // 返回原始响应对象，保留响应结构
     return response;
   },
   error => {
+    // 处理缓存数据的特殊情况
+    if (error.response && error.response.isCachedData) {
+      console.warn('使用缓存数据响应请求');
+      return Promise.resolve(error.response);
+    }
+    
     // 网络错误处理
     if (!error.response) {
-      console.error('网络错误:', error)
-      Message.error('网络错误，请检查您的网络连接')
-      return Promise.reject(new Error('网络错误'))
+      if (!isProduction) {
+        console.error('网络错误:', error);
+      }
+      Message.error('网络错误，请检查您的网络连接');
+      
+      // 尝试从缓存获取数据
+      if (error.config && error.config.method.toLowerCase() === 'get') {
+        const cachedData = getCachedResponse(error.config.url);
+        if (cachedData) {
+          console.warn('网络错误，使用缓存数据');
+          return Promise.resolve({
+            data: cachedData,
+            status: 200,
+            config: error.config,
+            headers: {},
+            fromCache: true
+          });
+        }
+      }
+      
+      return Promise.reject(new Error('网络错误'));
     }
     
     const { status, config, data } = error.response
@@ -87,6 +208,40 @@ api.interceptors.response.use(
           Message.error('用户名或密码错误')
         } else {
           console.warn('认证失败，需要重新登录')
+          
+          // 检查是否是GET请求，尝试使用缓存
+          if (config.method.toLowerCase() === 'get') {
+            const cachedData = getCachedResponse(config.url);
+            if (cachedData) {
+              console.warn('认证失败，使用缓存数据');
+              // 在后台尝试刷新登录，但不阻塞当前请求
+              setTimeout(() => {
+                const userStore = useUserStore()
+                userStore.initialize().catch(() => {
+                  Message.error('登录已过期，请重新登录')
+                  // 清除用户信息
+                  userStore.logout()
+                  
+                  // 保存当前路径，登录后重定向回来
+                  const currentPath = router.currentRoute.value.path
+                  if (currentPath !== '/login') {
+                    sessionStorage.setItem('redirectPath', currentPath)
+                    // 重定向到登录页面
+                    router.push('/login')
+                  }
+                });
+              }, 100);
+              
+              return Promise.resolve({
+                data: cachedData,
+                status: 200,
+                config,
+                headers: {},
+                fromCache: true
+              });
+            }
+          }
+          
           Message.error('登录已过期，请重新登录')
           
           // 清除用户信息

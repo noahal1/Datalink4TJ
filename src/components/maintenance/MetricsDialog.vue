@@ -20,6 +20,17 @@
             :rules="[v => !!v || '请选择设备类型']"
           ></v-select>
           
+          <v-radio-group
+            v-model="localMetric.shift"
+            label="班次"
+            class="mb-4"
+            :rules="[v => !!v || '请选择班次']"
+            inline
+          >
+            <v-radio value="day" label="白班"></v-radio>
+            <v-radio value="night" label="夜班"></v-radio>
+          </v-radio-group>
+          
           <v-text-field
             v-model="localMetric.downtime_count"
             label="停机次数"
@@ -121,7 +132,14 @@ const form = ref(null)
 
 // 本地指标对象，用于双向绑定
 const localMetric = computed({
-  get: () => props.metric,
+  get: () => {
+    // 确保shift字段有默认值
+    const metric = props.metric || {}
+    return {
+      ...metric,
+      shift: metric.shift || 'day'
+    }
+  },
   set: (value) => emit('update:metric', value)
 })
 
@@ -130,7 +148,10 @@ const equipmentTypes = [
   'SWI-L',
   'SWI-R',
   'RWH-L',
-  'RWH-R'
+  'RWH-R',
+  'W01',
+  'HF',
+  'LC'
 ]
 
 // 计算衍生指标

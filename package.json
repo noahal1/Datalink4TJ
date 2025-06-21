@@ -26,7 +26,7 @@
     "magic-string": "^0.30.17",
     "mitt": "^3.0.1",
     "pinia": "^3.0.0",
-    "pinia-plugin-persistedstate": "^4.2.0",
+    "pinia-plugin-persistedstate": "^4.3.0",
     "plus": "^0.1.0",
     "remixicon": "^4.6.0",
     "roboto-fontface": "*",

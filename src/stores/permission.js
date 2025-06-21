@@ -4,7 +4,7 @@ import api from '../utils/api'
 import { Module, PermissionLevel, PermissionHelper } from '../utils/permissionConstants'
 
 // 调试模式 - 开发环境打印详细日志
-const isDebugMode = true
+const isDebugMode = false
 const debug = (...args) => {
   if (isDebugMode) {
     console.log('[权限模块]', ...args)
@@ -13,8 +13,8 @@ const debug = (...args) => {
 
 export const usePermissionStore = defineStore('permission', {
   state: () => ({
-    // 权限缓存
-    permissionCache: new Map(),
+    // 权限缓存 - 确保使用Map实例
+    permissionCache: {},
     // 角色列表
     roles: [],
     // 权限列表
@@ -48,8 +48,8 @@ export const usePermissionStore = defineStore('permission', {
       const cacheKey = `${module}:${level}:${departmentId || 'all'}`
       
       // 如果缓存中有结果，直接返回
-      if (state.permissionCache.has(cacheKey)) {
-        const result = state.permissionCache.get(cacheKey)
+      if (state.permissionCache[cacheKey] !== undefined) {
+        const result = state.permissionCache[cacheKey]
         debug(`使用缓存权限 [${cacheKey}]: ${result}`)
         return result
       }
@@ -61,7 +61,7 @@ export const usePermissionStore = defineStore('permission', {
       // 如果角色列表为空，直接返回false
       if (!Array.isArray(state.roles) || state.roles.length === 0) {
         debug('角色列表为空，可能用户不是管理员，无权限')
-        state.permissionCache.set(cacheKey, false)
+        state.permissionCache[cacheKey] = false
         return false
       }
       
@@ -113,14 +113,14 @@ export const usePermissionStore = defineStore('permission', {
           
           // 通过所有检查，拥有权限
           debug(`用户拥有权限 [${cacheKey}]，通过角色 ${roleName}，权限 ${permission.module}:${permission.level}`)
-          state.permissionCache.set(cacheKey, true)
+          state.permissionCache[cacheKey] = true
           return true
         }
       }
       
       // 默认无权限
       debug(`用户无权限 [${cacheKey}]`)
-      state.permissionCache.set(cacheKey, false)
+      state.permissionCache[cacheKey] = false
       return false
     },
     
@@ -197,8 +197,8 @@ export const usePermissionStore = defineStore('permission', {
         
         debug('当前用户权限信息:', this.currentUserPermissions)
         
-        // 清除权限缓存
-        this.permissionCache.clear()
+        // 清除权限缓存 - 使用对象重置方式
+        this.permissionCache = {}
         
         // 检查用户是否具有管理员角色
         const isAdmin = userStore.roles && (
@@ -236,7 +236,6 @@ export const usePermissionStore = defineStore('permission', {
             
             // 更新用户存储中的角色
             userStore.roles = this.currentUserPermissions.roles
-            userStore.saveUserToStorage()
           }
         } catch (error) {
           console.error('获取用户详细权限信息失败:', error)
@@ -330,8 +329,8 @@ export const usePermissionStore = defineStore('permission', {
       const cacheKey = `${module}:${level}:${departmentId || 'all'}`
       
       // 如果缓存中有结果，直接返回
-      if (this.permissionCache.has(cacheKey)) {
-        return this.permissionCache.get(cacheKey)
+      if (this.permissionCache[cacheKey] !== undefined) {
+        return this.permissionCache[cacheKey]
       }
       
       try {
@@ -345,7 +344,7 @@ export const usePermissionStore = defineStore('permission', {
         const result = response.data.has_permission
         
         // 缓存结果
-        this.permissionCache.set(cacheKey, result)
+        this.permissionCache[cacheKey] = result
         
         return result
       } catch (error) {
@@ -379,12 +378,17 @@ export const usePermissionStore = defineStore('permission', {
     
     // 重置权限状态
     reset() {
-      this.permissionCache.clear()
+      this.permissionCache = {}
       this.roles = []
       this.permissions = []
       this.currentUserPermissions = {
         roles: []
       }
     }
+  },
+  persist: {
+    key: 'permission-store',
+    storage: localStorage,
+    paths: ['roles', 'permissions', 'currentUserPermissions', 'accessibleRoutes'],
   }
 }) 
