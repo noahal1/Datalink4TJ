@@ -1,9 +1,9 @@
 /**
  * 权限控制指令
  * 使用方法：
- * 1. 简单模式：v-permission="'MODULE:LEVEL'"
- * 2. 对象模式：v-permission="{ module: 'MODULE', level: 'LEVEL', departmentId: 123 }"
- * 3. 多权限模式：v-permission="{ permissions: ['MODULE1:LEVEL1', 'MODULE2:LEVEL2'], logic: 'or' }"
+ * 1. 简单模式：v-permission="'permission_code'"
+ * 2. 对象模式：v-permission="{ code: 'permission_code' }"
+ * 3. 多权限模式：v-permission="{ codes: ['code1', 'code2'], logic: 'or' }"
  * 4. 角色模式：v-permission="{ roles: ['管理员', '编辑'] }"
  * 
  * 如果用户没有所需权限，元素将被从DOM中移除
@@ -31,34 +31,38 @@ function checkPermission(el, binding) {
   if (permissionStore.isSuperUser) {
     hasPermission = true
   } 
-  // 字符串模式: v-permission="'MODULE:LEVEL'"
+  // 字符串模式: v-permission="'permission_code'"
   else if (typeof binding.value === 'string') {
-    hasPermission = permissionStore.hasPermissionByString(binding.value)
+    hasPermission = permissionStore.hasPermission(binding.value)
   } 
   // 对象模式
   else if (typeof binding.value === 'object' && binding.value !== null) {
-    // 单一权限对象模式: v-permission="{ module: 'MODULE', level: 'LEVEL' }"
-    if (binding.value.module && binding.value.level) {
-      hasPermission = permissionStore.hasPermission(
-        binding.value.module, 
-        binding.value.level, 
-        binding.value.departmentId
-      )
+    // 单一权限代码模式: v-permission="{ code: 'permission_code' }"
+    if (binding.value.code) {
+      hasPermission = permissionStore.hasPermission(binding.value.code)
     }
-    // 多权限模式: v-permission="{ permissions: ['MODULE1:LEVEL1', 'MODULE2:LEVEL2'], logic: 'or' }"
-    else if (Array.isArray(binding.value.permissions) && binding.value.permissions.length > 0) {
+    // 旧版兼容 - 模块级别模式: v-permission="{ module: 'MODULE', level: 'LEVEL' }"
+    else if (binding.value.module && binding.value.level) {
+      // 使用PermissionHelper转换旧格式到新格式
+      const permissionCode = PermissionHelper.convertLegacyPermission(binding.value.module, binding.value.level)
+      if (permissionCode) {
+        hasPermission = permissionStore.hasPermission(permissionCode)
+      }
+    }
+    // 多权限模式: v-permission="{ codes: ['code1', 'code2'], logic: 'or' }"
+    else if (Array.isArray(binding.value.codes) && binding.value.codes.length > 0) {
       // 使用 AND 或 OR 逻辑
       const logic = (binding.value.logic || 'or').toLowerCase()
       
       if (logic === 'and') {
         // 需要满足所有权限
-        hasPermission = binding.value.permissions.every(perm => 
-          permissionStore.hasPermissionByString(perm)
+        hasPermission = binding.value.codes.every(code => 
+          permissionStore.hasPermission(code)
         )
       } else {
         // 默认为 OR 逻辑，满足任一权限即可
-        hasPermission = binding.value.permissions.some(perm => 
-          permissionStore.hasPermissionByString(perm)
+        hasPermission = binding.value.codes.some(code => 
+          permissionStore.hasPermission(code)
         )
       }
     }

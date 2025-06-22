@@ -142,6 +142,22 @@ const issuesList = ref([])
 // 对话框相关
 const taskDialog = ref(false)
 const issueDialog = ref(false)
+const metricDialog = ref(false)
+
+// 维修指标相关数据
+const metricsList = ref([])
+const loadingMetrics = ref(false)
+const savingMetric = ref(false)
+const editedMetricIndex = ref(-1)
+const editedMetric = ref({
+  id: null,
+  equipment_type: '',
+  date: '',
+  downtime_count: 0,
+  downtime_minutes: 0,
+  parts_produced: 0,
+  user_id: null
+})
 
 // 编辑状态
 const editedIndex = ref(-1)
@@ -173,7 +189,9 @@ const loadTasks = async () => {
   try {
     loadingTasks.value = true
     
-    const response = await fetch(`${API_BASE_URL}/maint/daily?user_id=${userStore.userId}`, {
+    // 确保user_id是整数类型
+    const userId = parseInt(userStore.userId);
+    const response = await fetch(`${API_BASE_URL}/maint/daily?user_id=${userId}`, {
       headers: {
         'Authorization': `Bearer ${userStore.token}`
       }
@@ -201,7 +219,9 @@ const loadMetrics = async () => {
   try {
     loadingMetrics.value = true
     
-    const response = await fetch(`${API_BASE_URL}/maint/metrics?user_id=${userStore.userId}`, {
+    // 确保user_id是整数类型
+    const userId = parseInt(userStore.userId);
+    const response = await fetch(`${API_BASE_URL}/maint/metrics?user_id=${userId}`, {
       headers: {
         'Authorization': `Bearer ${userStore.token}`
       }
@@ -287,7 +307,7 @@ const saveTask = async () => {
       type: parseInt(editedTask.value.type),
       content_daily: editedTask.value.content_daily,
       solved: editedTask.value.solved,
-      user_id: userStore.userId
+      user_id: parseInt(userStore.userId)
     }
     
     let response
@@ -433,7 +453,9 @@ const loadIssues = async () => {
   try {
     loadingIssues.value = true
     
-    const response = await fetch(`${API_BASE_URL}/maint/weekly?user_id=${userStore.userId}`, {
+    // 确保user_id是整数类型
+    const userId = parseInt(userStore.userId);
+    const response = await fetch(`${API_BASE_URL}/maint/weekly?user_id=${userId}`, {
       headers: {
         'Authorization': `Bearer ${userStore.token}`
       }
@@ -518,7 +540,7 @@ const saveIssue = async () => {
     // 准备保存数据 - 完全匹配后端API期望的字段
     const issueData = {
       DateTime: editedIssue.value.date || new Date().toISOString().split('T')[0],
-      user_id: userStore.userId,
+      user_id: parseInt(userStore.userId),
       title: editedIssue.value.description.substring(0, 30),
       wheres: '问题记录',
       content: editedIssue.value.description,
@@ -639,7 +661,7 @@ const openIssueDialog = (issue = null) => {
       description: '',
       severity: '中等',
       resolved: false,
-      user_id: userStore.userId
+      user_id: parseInt(userStore.userId)
     }
   }
   issueDialog.value = true
@@ -666,7 +688,7 @@ const openMetricDialog = (metric = null) => {
       downtime_count: 0,
       downtime_minutes: 0,
       parts_produced: 0,
-      user_id: userStore.userId
+      user_id: parseInt(userStore.userId)
     }
   }
   metricDialog.value = true
@@ -700,7 +722,7 @@ const saveMetric = async () => {
       downtime_count: parseInt(editedMetric.value.downtime_count),
       downtime_minutes: parseFloat(editedMetric.value.downtime_minutes),
       parts_produced: parseInt(editedMetric.value.parts_produced),
-      user_id: userStore.userId
+      user_id: parseInt(userStore.userId)
     }
     
     let response

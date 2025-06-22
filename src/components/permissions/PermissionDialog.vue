@@ -7,7 +7,7 @@
   >
     <v-card>
       <v-card-title class="text-h5">
-        {{ isNew ? '创建新权限' : '编辑权限' }}
+        {{ isNew ? '创建新路由权限' : '编辑路由权限' }}
       </v-card-title>
       
       <v-card-text>
@@ -18,47 +18,41 @@
             lazy-validation
           >
             <v-row>
-              <!-- 模块选择 -->
-              <v-col cols="12" sm="6">
-                <v-select
-                  v-model="localPermission.module"
-                  :items="moduleOptions"
-                  item-title="text"
-                  item-value="value"
-                  label="模块*"
-                  required
-                  :rules="[v => !!v || '请选择模块']"
-                  hint="选择权限所属模块"
-                  persistent-hint
-                  return-object
-                ></v-select>
-              </v-col>
-              
-              <!-- 权限等级选择 -->
-              <v-col cols="12" sm="6">
-                <v-select
-                  v-model="localPermission.level"
-                  :items="levelOptions"
-                  item-title="text"
-                  item-value="value"
-                  label="权限等级*"
-                  required
-                  :rules="[v => !!v || '请选择权限等级']"
-                  hint="选择权限等级"
-                  persistent-hint
-                  return-object
-                ></v-select>
-              </v-col>
-              
-              <!-- 部门选择 -->
+              <!-- 权限代码 -->
               <v-col cols="12">
+                <v-text-field
+                  v-model="localPermission.permission_code"
+                  label="权限代码*"
+                  required
+                  :rules="[v => !!v || '权限代码不能为空']"
+                  hint="权限代码，例如：access_dashboard、manage_users"
+                  persistent-hint
+                ></v-text-field>
+              </v-col>
+              
+              <!-- 路由选择 -->
+              <v-col cols="12" sm="6">
                 <v-select
-                  v-model="localPermission.department_id"
-                  :items="departmentOptions"
+                  v-model="localPermission.route_id"
+                  :items="routeOptions"
                   item-title="text"
                   item-value="value"
-                  label="适用部门"
-                  hint="限制权限适用的部门，不选择表示适用于所有部门"
+                  label="关联路由"
+                  hint="将权限与路由关联"
+                  persistent-hint
+                  clearable
+                ></v-select>
+              </v-col>
+              
+              <!-- 角色选择 -->
+              <v-col cols="12" sm="6">
+                <v-select
+                  v-model="localPermission.role_id"
+                  :items="roleOptions"
+                  item-title="text"
+                  item-value="value"
+                  label="关联角色"
+                  hint="将权限分配给角色"
                   persistent-hint
                   clearable
                 ></v-select>
@@ -66,13 +60,23 @@
               
               <!-- 权限描述 -->
               <v-col cols="12">
+                <v-text-field
+                  v-model="localPermission.description"
+                  label="描述"
+                  hint="权限的详细描述"
+                  persistent-hint
+                ></v-text-field>
+              </v-col>
+              
+              <!-- 权限说明 -->
+              <v-col cols="12">
                 <v-alert
                   color="info"
                   type="info"
                   variant="tonal"
                   class="permission-description"
                 >
-                  <strong>权限描述：</strong>
+                  <strong>权限说明：</strong>
                   <p>{{ permissionDescription }}</p>
                 </v-alert>
               </v-col>
@@ -106,7 +110,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { Module, PermissionLevel, PermissionDescriptions } from '../../utils/permissionConstants'
+import { PermissionDescriptions } from '../../utils/permissionConstants'
 import api from '../../utils/api'
 
 const props = defineProps({
@@ -118,9 +122,10 @@ const props = defineProps({
     type: Object,
     default: () => ({
       id: null,
-      module: '',
-      level: '',
-      department_id: null
+      permission_code: '',
+      description: '',
+      route_id: null,
+      role_id: null
     })
   },
   isNew: {
@@ -140,7 +145,8 @@ const localDialog = ref(props.modelValue)
 const localPermission = ref({...props.permission})
 const formValid = ref(false)
 const form = ref(null)
-const departments = ref([])
+const routes = ref([])
+const roles = ref([])
 
 // 监听dialog prop变化
 watch(() => props.modelValue, (newVal) => {
@@ -157,32 +163,28 @@ watch(() => props.permission, (newVal) => {
   localPermission.value = {...newVal}
 })
 
-// 模块选项
-const moduleOptions = computed(() => {
-  return Object.keys(Module).map(key => ({
-    text: PermissionDescriptions.modules[Module[key]] || Module[key],
-    value: Module[key]
-  }))
-})
-
-// 权限等级选项
-const levelOptions = computed(() => {
-  return Object.keys(PermissionLevel).map(key => ({
-    text: PermissionDescriptions.levels[PermissionLevel[key]] || PermissionLevel[key],
-    value: PermissionLevel[key]
-  }))
-})
-
-// 部门选项
-const departmentOptions = computed(() => {
-  const options = [
-    { text: '所有部门', value: null }
-  ]
+// 路由选项
+const routeOptions = computed(() => {
+  const options = []
   
-  departments.value.forEach(dept => {
+  routes.value.forEach(route => {
     options.push({
-      text: dept.name,
-      value: dept.id
+      text: `${route.name} (${route.path})`,
+      value: route.id
+    })
+  })
+  
+  return options
+})
+
+// 角色选项
+const roleOptions = computed(() => {
+  const options = []
+  
+  roles.value.forEach(role => {
+    options.push({
+      text: role.name,
+      value: role.id
     })
   })
   
@@ -191,20 +193,28 @@ const departmentOptions = computed(() => {
 
 // 权限描述
 const permissionDescription = computed(() => {
-  if (!localPermission.value.module || !localPermission.value.level) {
-    return '请选择模块和权限等级'
+  if (!localPermission.value.permission_code) {
+    return '请输入权限代码'
   }
   
-  const moduleDesc = PermissionDescriptions.modules[localPermission.value.module] || localPermission.value.module
-  const levelDesc = PermissionDescriptions.levels[localPermission.value.level] || localPermission.value.level
+  // 获取权限描述
+  const permDesc = PermissionDescriptions.getDescription(localPermission.value.permission_code)
   
-  let departmentDesc = '所有部门'
-  if (localPermission.value.department_id) {
-    const department = departments.value.find(d => d.id === localPermission.value.department_id)
-    departmentDesc = department ? department.name : `部门ID: ${localPermission.value.department_id}`
+  // 获取路由信息
+  let routeDesc = '任何路由'
+  if (localPermission.value.route_id) {
+    const route = routes.value.find(r => r.id === localPermission.value.route_id)
+    routeDesc = route ? `路由 "${route.name}"` : `路由ID: ${localPermission.value.route_id}`
   }
   
-  return `此权限允许用户对${moduleDesc}模块进行${levelDesc}操作，适用于${departmentDesc}。`
+  // 获取角色信息
+  let roleDesc = '未分配给角色'
+  if (localPermission.value.role_id) {
+    const role = roles.value.find(r => r.id === localPermission.value.role_id)
+    roleDesc = role ? `角色 "${role.name}"` : `角色ID: ${localPermission.value.role_id}`
+  }
+  
+  return `此权限代码 "${localPermission.value.permission_code}" 表示 ${permDesc}，关联到${routeDesc}，${roleDesc}。`
 })
 
 // 关闭对话框
@@ -221,21 +231,34 @@ const savePermission = () => {
   emit('save')
 }
 
-// 加载部门列表
-const loadDepartments = async () => {
+// 加载路由列表
+const loadRoutes = async () => {
   try {
-    const response = await api.get('/departments')
+    const response = await api.get('/routes')
     if (response && response.data) {
-      departments.value = response.data
+      routes.value = response.data
     }
   } catch (error) {
-    console.error('加载部门列表失败:', error)
+    console.error('加载路由列表失败:', error)
   }
 }
 
-// 组件挂载时加载部门数据
+// 加载角色列表
+const loadRoles = async () => {
+  try {
+    const response = await api.get('/roles')
+    if (response && response.data) {
+      roles.value = response.data
+    }
+  } catch (error) {
+    console.error('加载角色列表失败:', error)
+  }
+}
+
+// 组件挂载时加载数据
 onMounted(() => {
-  loadDepartments()
+  loadRoutes()
+  loadRoles()
 })
 </script>
 

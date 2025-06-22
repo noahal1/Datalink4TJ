@@ -1,7 +1,7 @@
 <template>
   <v-card class="permission-list-card">
     <v-card-title class="d-flex align-center">
-      <span>权限列表</span>
+      <span>路由权限列表</span>
       <v-spacer></v-spacer>
       <v-text-field
         v-model="search"
@@ -29,32 +29,38 @@
       class="elevation-1"
       @update:options="loadItems"
     >
-      <!-- 模块列 -->
-      <template v-slot:item.module="{ item }">
+      <!-- 权限代码列 -->
+      <template v-slot:item.permission_code="{ item }">
         <v-chip
-          :color="getModuleColor(item.module)"
+          color="info"
           text-color="white"
           size="small"
         >
-          {{ getModuleLabel(item.module) }}
-        </v-chip>
-      </template>
-
-      <!-- 权限等级列 -->
-      <template v-slot:item.level="{ item }">
-        <v-chip
-          :color="getLevelColor(item.level)"
-          text-color="white"
-          size="small"
-        >
-          {{ getLevelLabel(item.level) }}
+          {{ item.permission_code }}
         </v-chip>
       </template>
       
-      <!-- 部门列 -->
-      <template v-slot:item.department="{ item }">
-        <span v-if="item.department">{{ item.department.name }}</span>
-        <span v-else class="text-grey">所有部门</span>
+      <!-- 路由列 -->
+      <template v-slot:item.route="{ item }">
+        <span v-if="item.route">
+          <v-chip color="purple" size="small" class="mr-1">
+            {{ item.route.name }}
+          </v-chip>
+          <span class="text-caption">{{ item.route.path }}</span>
+        </span>
+        <span v-else class="text-grey">未指定路由</span>
+      </template>
+      
+      <!-- 角色列 -->
+      <template v-slot:item.role="{ item }">
+        <span v-if="item.role">{{ item.role.name }}</span>
+        <span v-else class="text-grey">未指定角色</span>
+      </template>
+      
+      <!-- 描述列 -->
+      <template v-slot:item.description="{ item }">
+        <span v-if="item.description">{{ item.description }}</span>
+        <span v-else class="text-grey">无描述</span>
       </template>
       
       <!-- 操作列 -->
@@ -84,7 +90,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { Module, PermissionLevel, PermissionDescriptions } from '../../utils/permissionConstants'
+import { PermissionHelper, PermissionDescriptions } from '../../utils/permissionConstants'
 
 const props = defineProps({
   permissions: {
@@ -109,9 +115,10 @@ const itemsPerPage = ref(10)
 
 // 表头定义
 const headers = [
-  { title: '模块', key: 'module', sortable: true },
-  { title: '权限等级', key: 'level', sortable: true },
-  { title: '部门', key: 'department', sortable: true },
+  { title: '权限代码', key: 'permission_code', sortable: true },
+  { title: '路由', key: 'route', sortable: false },
+  { title: '角色', key: 'role', sortable: true },
+  { title: '描述', key: 'description', sortable: true },
   { title: '操作', key: 'actions', sortable: false, align: 'end' }
 ]
 
@@ -120,41 +127,9 @@ const loadItems = (options) => {
   emit('load-items', options)
 }
 
-// 获取模块显示文本
-const getModuleLabel = (moduleCode) => {
-  return PermissionDescriptions.modules[moduleCode] || moduleCode
-}
-
-// 获取模块颜色
-const getModuleColor = (moduleCode) => {
-  const moduleColors = {
-    [Module.USER]: 'indigo',
-    [Module.DEPARTMENT]: 'purple',
-    [Module.EHS]: 'green',
-    [Module.QA]: 'amber',
-    [Module.EVENT]: 'red',
-    [Module.MAINT]: 'blue',
-    [Module.ACTIVITY]: 'cyan',
-    [Module.ROUTE]: 'pink',
-    [Module.ALL]: 'deep-purple'
-  }
-  return moduleColors[moduleCode] || 'grey'
-}
-
-// 获取权限等级显示文本
-const getLevelLabel = (levelCode) => {
-  return PermissionDescriptions.levels[levelCode] || levelCode
-}
-
-// 获取权限等级颜色
-const getLevelColor = (levelCode) => {
-  const levelColors = {
-    [PermissionLevel.READ]: 'green',
-    [PermissionLevel.WRITE]: 'amber',
-    [PermissionLevel.ADMIN]: 'orange',
-    [PermissionLevel.SUPER_ADMIN]: 'red'
-  }
-  return levelColors[levelCode] || 'grey'
+// 获取权限描述
+const getPermissionDescription = (permissionCode) => {
+  return PermissionDescriptions.getDescription(permissionCode)
 }
 </script>
 

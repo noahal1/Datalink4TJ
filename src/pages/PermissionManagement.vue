@@ -253,9 +253,10 @@ const permissionDialog = ref(false)
 const editedPermissionIndex = ref(-1)
 const editedPermission = ref({
   id: null,
-  module: '',
-  level: '',
-  department_id: null
+  permission_code: '',
+  description: '',
+  route_id: null,
+  role_id: null
 })
 
 // 加载权限列表
@@ -274,14 +275,14 @@ const loadPermissions = async (options = {}) => {
       params.order_desc = options.sortBy[0].order === 'desc'
     }
     
-    const response = await api.get('/permissions', { params })
+    const response = await api.get('/route-permissions', { params })
     if (response && response.data) {
       permissionsList.value = response.data
       totalPermissions.value = response.headers['x-total-count'] || permissionsList.value.length
     }
   } catch (error) {
-    console.error('加载权限列表失败:', error)
-    Message.error('加载权限列表失败')
+    console.error('加载路由权限列表失败:', error)
+    Message.error('加载路由权限列表失败')
   } finally {
     loadingPermissions.value = false
   }
@@ -296,9 +297,10 @@ const openPermissionDialog = (permission = null) => {
     editedPermissionIndex.value = -1
     editedPermission.value = {
       id: null,
-      module: '',
-      level: '',
-      department_id: null
+      permission_code: '',
+      description: '',
+      route_id: null,
+      role_id: null
     }
   }
   permissionDialog.value = true
@@ -316,24 +318,27 @@ const savePermission = async () => {
     
     if (editedPermissionIndex.value === -1) {
       // 创建新权限
-      const response = await api.post('/permissions', editedPermission.value)
-      Message.success('权限创建成功')
+      const response = await api.post('/route-permissions', editedPermission.value)
+      Message.success('路由权限创建成功')
       
       // 刷新权限列表
       await loadPermissions()
     } else {
       // 更新现有权限
-      await api.put(`/permissions/${editedPermission.value.id}`, editedPermission.value)
-      Message.success('权限更新成功')
+      await api.put(`/route-permissions/${editedPermission.value.id}`, editedPermission.value)
+      Message.success('路由权限更新成功')
       
       // 更新本地数据
       permissionsList.value[editedPermissionIndex.value] = { ...editedPermission.value }
     }
     
     closePermissionDialog()
+    
+    // 重新初始化权限存储
+    await permissionStore.initialize()
   } catch (error) {
-    console.error('保存权限失败:', error)
-    Message.error('保存权限失败: ' + (error.response?.data?.detail || error.message))
+    console.error('保存路由权限失败:', error)
+    Message.error('保存路由权限失败: ' + (error.response?.data?.detail || error.message))
   } finally {
     savingPermission.value = false
   }
@@ -345,9 +350,10 @@ const closePermissionDialog = () => {
   setTimeout(() => {
     editedPermission.value = {
       id: null,
-      module: '',
-      level: '',
-      department_id: null
+      permission_code: '',
+      description: '',
+      route_id: null,
+      role_id: null
     }
   }, 300)
 }
@@ -403,11 +409,8 @@ const confirmDeleteRole = (role) => {
 
 // 确认删除权限
 const confirmDeletePermission = (permission) => {
-  const moduleLabel = permission.module
-  const levelLabel = permission.level
-  
-  confirmDialogTitle.value = '删除权限'
-  confirmDialogMessage.value = `确定要删除 "${moduleLabel} (${levelLabel})" 权限吗？此操作不可恢复。`
+  confirmDialogTitle.value = '删除路由权限'
+  confirmDialogMessage.value = `确定要删除权限代码 "${permission.permission_code}" 吗？此操作不可恢复。`
   deleteCallback.value = deletePermission
   deleteData.value = permission
   confirmDialog.value = true
@@ -448,7 +451,7 @@ const deletePermission = async (permission) => {
   try {
     confirmDialogLoading.value = true
     
-    await api.delete(`/permissions/${permission.id}`)
+    await api.delete(`/route-permissions/${permission.id}`)
     
     // 从列表中移除
     const index = permissionsList.value.findIndex(p => p.id === permission.id)
@@ -456,11 +459,14 @@ const deletePermission = async (permission) => {
       permissionsList.value.splice(index, 1)
     }
     
-    Message.success('权限删除成功')
+    Message.success('路由权限删除成功')
     confirmDialog.value = false
+    
+    // 重新初始化权限存储
+    await permissionStore.initialize()
   } catch (error) {
-    console.error('删除权限失败:', error)
-    Message.error('删除权限失败: ' + (error.response?.data?.detail || error.message))
+    console.error('删除路由权限失败:', error)
+    Message.error('删除路由权限失败: ' + (error.response?.data?.detail || error.message))
   } finally {
     confirmDialogLoading.value = false
   }

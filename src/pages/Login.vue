@@ -37,6 +37,9 @@
                   class="mt-0 pt-0"
                 ></v-checkbox>
               </div>
+              <div v-if="errorMessage" class="error-message mb-4">
+                {{ errorMessage }}
+              </div>
             </v-form>
           </v-card-text>
           <v-card-actions>
@@ -66,12 +69,14 @@ import { useRouter } from 'vue-router'
 import Message from '../utils/notification'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+console.log('API基础URL:', API_BASE_URL)
 
 const username = ref('')
 const password = ref('')
 const rememberPassword = ref(false)
 const formValid = ref(false)
 const loading = ref(false)
+const errorMessage = ref('')
 const userStore = useUserStore()
 const permissionStore = usePermissionStore()
 const router = useRouter()
@@ -94,13 +99,25 @@ onMounted(() => {
 
 const login = async () => {
   try {
+    // 清除之前的错误信息
+    errorMessage.value = ''
     loading.value = true 
-    if (!formValid.value) return 
-
+    
+    // 表单验证
+    if (!username.value || !password.value) {
+      errorMessage.value = !username.value ? '请输入用户名' : '请输入密码'
+      loading.value = false
+      return
+    }
+    
+    console.log('尝试登录用户:', username.value)
+    
     // 调用store的登录方法，直接传递用户名和密码
     const success = await userStore.login(username.value, password.value)
     
     if (success) {
+      console.log('登录成功，初始化权限...')
+      
       // 初始化权限系统
       await permissionStore.initialize()
       
@@ -117,12 +134,22 @@ const login = async () => {
       // 重定向到首页或之前尝试访问的页面
       const redirectPath = sessionStorage.getItem('redirectPath') || '/'
       sessionStorage.removeItem('redirectPath')
+      console.log('重定向到:', redirectPath)
       router.replace(redirectPath)
       
       Message.success('登录成功')
     }
   } catch (error) {
-    Message.error(error.message || '登录失败，请重试')
+    console.error('登录失败:', error)
+    // 处理特定错误消息，避免显示"用户名或密码不正确"
+    let errorMsg = '登录失败，请检查登录信息'
+    if (error.message && error.message.includes('用户名或密码不正确')) {
+      errorMsg = '登录信息有误，请重试'
+    } else if (error.message) {
+      errorMsg = error.message
+    }
+    errorMessage.value = errorMsg
+    Message.error(errorMsg)
   } finally {
     loading.value = false
   }
@@ -168,5 +195,14 @@ const login = async () => {
 
 .v-checkbox {
   margin-top: 8px;
+}
+
+.error-message {
+  color: #ff5252;
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 8px;
+  background-color: rgba(255, 82, 82, 0.1);
+  border-radius: 4px;
 }
 </style>

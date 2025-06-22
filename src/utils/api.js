@@ -7,7 +7,7 @@ import Message from './notification'
 import router from '../router'
 
 // API 基础URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'
 
 // 生产环境不输出敏感信息
 const isProduction = import.meta.env.PROD;
@@ -16,10 +16,10 @@ if (!isProduction) {
 }
 
 // 调试功能 - 仅在开发模式下打印日志
-const isDebugMode = import.meta.env.DEV && false;
+const isDebugMode = import.meta.env.DEV && true; // 开启调试模式
 const debug = (...args) => {
   if (isDebugMode) {
-    console.log(...args);
+    console.log('[API]', ...args);
   }
 };
 
@@ -97,6 +97,11 @@ api.interceptors.request.use(
     // 使用函数而不是直接导入，避免循环依赖
     const userStore = useUserStore()
     
+    // 确保Content-Type设置正确
+    if (!config.headers['Content-Type']) {
+      config.headers['Content-Type'] = 'application/json';
+    }
+    
     // 检查是否是公开API
     const isPublicApi = PUBLIC_APIS.some(path => config.url.includes(path));
     
@@ -106,6 +111,17 @@ api.interceptors.request.use(
       const token = userStore.token.trim();
       config.headers['Authorization'] = `Bearer ${token}`;
       debug(`请求添加认证头: ${config.method.toUpperCase()} ${config.url}`);
+      
+      // 检查Token是否即将过期（少于1小时）
+      if (userStore.isTokenExpiringSoon()) {
+        debug('Token即将过期，尝试在后台刷新...');
+        // 不阻塞当前请求，在后台尝试刷新Token
+        setTimeout(() => {
+          userStore.refreshToken().catch(err => {
+            console.error('自动刷新Token失败:', err);
+          });
+        }, 100);
+      }
     } else if (!isPublicApi) {
       // 如果是需要认证的API，且用户未登录，则拒绝请求
       debug(`未授权请求: ${config.method.toUpperCase()} ${config.url}`);
@@ -142,6 +158,16 @@ api.interceptors.request.use(
         // 中断请求
         return Promise.reject(new Error('未授权'));
       }
+    }
+    
+    // 输出请求详情（调试模式）
+    if (isDebugMode) {
+      debug('发送请求:', {
+        url: config.url,
+        method: config.method,
+        headers: config.headers,
+        data: config.data
+      });
     }
     
     return config

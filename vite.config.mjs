@@ -90,6 +90,16 @@ export default defineConfig(({ mode }) => {
       },
     },
     
+    // Sass现代API配置
+    css: {
+      preprocessorOptions: {
+        scss: {
+          api: "modern",
+          silenceDeprecations: ['legacy-js-api']
+        }
+      }
+    },
+    
     // 服务器配置
     server: {
       port: parseInt(env.VITE_PORT || '3000'),

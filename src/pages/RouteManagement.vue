@@ -404,7 +404,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useUserStore } from '../stores/user.js'
 import { usePermissionStore } from '../stores/permission'
-import { Module, PermissionLevel } from '../utils/permissionConstants'
+import { PermissionHelper, PermissionDescriptions } from '../utils/permissionConstants'
 import Message from '../utils/notification'
 import UnifiedPageTemplate from '../components/UnifiedPageTemplate.vue'
 import UnifiedDataTable from '../components/UnifiedDataTable.vue'
@@ -648,13 +648,19 @@ const determineAccessType = (route) => {
     return
   }
   
-  if (route.meta.permission === '*') {
+  if (route.meta.permission === '*' || route.meta.permission_code === '*') {
     accessType.value = 'all'
     return
   }
   
   // 检查是否有allowed_roles，这表示是基于角色的权限
   if (route.meta.allowed_roles && Array.isArray(route.meta.allowed_roles) && route.meta.allowed_roles.length > 0) {
+    accessType.value = 'role_based'
+    return
+  }
+  
+  // 如果有权限代码，也认为是基于角色的权限
+  if (route.meta.permission_code && route.meta.permission_code !== '*' && route.meta.permission_code !== null) {
     accessType.value = 'role_based'
     return
   }
@@ -680,6 +686,7 @@ const updateAccessType = (type) => {
     case 'public':
       editedRoute.value.meta.public = true
       editedRoute.value.meta.permission = null
+      editedRoute.value.meta.permission_code = null
       editedRoute.value.meta.requiresAuth = false
       // 清除角色权限标记
       editedRoute.value.meta.allowed_roles = []
@@ -689,6 +696,7 @@ const updateAccessType = (type) => {
     case 'all':
       editedRoute.value.meta.public = false
       editedRoute.value.meta.permission = '*'
+      editedRoute.value.meta.permission_code = '*'
       editedRoute.value.meta.requiresAuth = true
       // 清除角色权限标记
       editedRoute.value.meta.allowed_roles = []
@@ -698,6 +706,7 @@ const updateAccessType = (type) => {
     case 'role_based':
       editedRoute.value.meta.public = false
       editedRoute.value.meta.permission = null
+      editedRoute.value.meta.permission_code = null
       editedRoute.value.meta.requiresAuth = true
       // 设置角色权限标记
       if (!editedRoute.value.meta.allowed_roles) {
@@ -925,11 +934,16 @@ const getPermissionText = (route) => {
   
   if (route.meta.public === true) return '公开'
   
-  if (route.meta.permission === '*') return '所有用户'
+  if (route.meta.permission === '*' || route.meta.permission_code === '*') return '所有用户'
   
   // 检查角色权限标记
   if (route.meta.isRoleBased === true) {
     return '基于角色'
+  }
+  
+  // 检查是否有权限代码
+  if (route.meta.permission_code && route.meta.permission_code !== '*') {
+    return route.meta.permission_code
   }
   
   // 检查是否有allowed_roles
@@ -963,11 +977,16 @@ const getPermissionColor = (route) => {
   
   if (route.meta.public === true) return 'success'
   
-  if (route.meta.permission === '*') return 'primary'
+  if (route.meta.permission === '*' || route.meta.permission_code === '*') return 'primary'
   
   // 检查角色权限标记
   if (route.meta.isRoleBased === true) {
     return 'warning'
+  }
+  
+  // 检查是否有权限代码
+  if (route.meta.permission_code && route.meta.permission_code !== '*') {
+    return 'info'
   }
   
   // 检查是否有allowed_roles
@@ -1006,6 +1025,30 @@ const filteredRoles = computed(() => {
   return result
 })
 
+// 保存路由路径
+const updateRoutePath = (path, pathData) => {
+  editedRoute.value.path = path;
+  
+  // 保存路径参数到meta
+  if (!editedRoute.value.meta) {
+    editedRoute.value.meta = {};
+  }
+  
+  // 保存路径配置到meta中
+  editedRoute.value.meta.pathConfig = pathData;
+  
+  // 如果有参数，设置相应的路由配置
+  if (pathData.hasDynamicSegments && pathData.params.length > 0) {
+    // 设置路由参数
+    editedRoute.value.meta.params = pathData.params.map(param => ({
+      name: param.name,
+      type: param.type,
+      description: param.description,
+      required: param.required
+    }));
+  }
+};
+
 // 保存角色权限设置
 const savePermissions = async () => {
   if (!selectedRoute.value) return
@@ -1023,6 +1066,9 @@ const savePermissions = async () => {
       role_ids: roleIds 
     })
     
+    // 生成路由权限代码 - 使用路由名称作为基础
+    const permissionCode = `access_${selectedRoute.value.name.toLowerCase()}`
+    
     // 同时更新本地路由对象的权限信息
     if (!selectedRoute.value.meta) {
       selectedRoute.value.meta = {}
@@ -1030,6 +1076,9 @@ const savePermissions = async () => {
     selectedRoute.value.meta.allowed_roles = roleIds.map(id => String(id))
     selectedRoute.value.meta.isRoleBased = true
     selectedRoute.value.meta.permission = null
+    selectedRoute.value.meta.permission_code = permissionCode
+    selectedRoute.value.meta.public = false
+    selectedRoute.value.meta.requiresAuth = true
     
     // 更新本地路由列表中的路由对象
     const routeIndex = routesList.value.findIndex(r => r.id === selectedRoute.value.id)
@@ -1040,17 +1089,39 @@ const savePermissions = async () => {
       routesList.value[routeIndex].meta.allowed_roles = roleIds.map(id => String(id))
       routesList.value[routeIndex].meta.isRoleBased = true
       routesList.value[routeIndex].meta.permission = null
+      routesList.value[routeIndex].meta.permission_code = permissionCode
+      routesList.value[routeIndex].meta.public = false
+      routesList.value[routeIndex].meta.requiresAuth = true
     }
     
-    // 更新路由meta信息以保存isRoleBased标记
+    // 更新路由meta信息以保存isRoleBased标记和权限代码
     try {
       await api.patch(`/routes/${selectedRoute.value.id}`, {
         meta: {
           isRoleBased: true,
           allowed_roles: roleIds.map(id => String(id)),
-          permission: null
+          permission: null,
+          permission_code: permissionCode,
+          public: false,
+          requiresAuth: true
         }
       })
+      
+      // 为每个选定的角色创建路由权限
+      for (const roleId of roleIds) {
+        try {
+          await api.post('/route-permissions', {
+            route_id: selectedRoute.value.id,
+            permission_code: permissionCode,
+            role_id: roleId,
+            description: `访问路由 ${selectedRoute.value.name}`
+          })
+        } catch (err) {
+          console.warn(`为角色ID ${roleId} 创建路由权限失败:`, err)
+          // 继续处理其他角色
+        }
+      }
+      
     } catch (error) {
       console.error('更新路由meta信息失败:', error)
       // 不影响主流程，继续执行
@@ -1076,30 +1147,6 @@ const savePermissions = async () => {
 // 打开路径设置对话框
 const openPathSettingDialog = () => {
   pathSettingDialog.value = true;
-};
-
-// 更新路由路径
-const updateRoutePath = (path, pathData) => {
-  editedRoute.value.path = path;
-  
-  // 保存路径参数到meta
-  if (!editedRoute.value.meta) {
-    editedRoute.value.meta = {};
-  }
-  
-  // 保存路径配置到meta中
-  editedRoute.value.meta.pathConfig = pathData;
-  
-  // 如果有参数，设置相应的路由配置
-  if (pathData.hasDynamicSegments && pathData.params.length > 0) {
-    // 设置路由参数
-    editedRoute.value.meta.params = pathData.params.map(param => ({
-      name: param.name,
-      type: param.type,
-      description: param.description,
-      required: param.required
-    }));
-  }
 };
 
 // 页面加载时获取数据

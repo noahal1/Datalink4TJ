@@ -1,9 +1,5 @@
 <template>
-  <unified-page-template 
-    title="操作记录"
-    icon="mdi-history"
-    color="secondary"
-  >
+  <div>
     <v-row>
       <v-col cols="12">
         <unified-data-table
@@ -133,12 +129,11 @@
         </v-card-actions>
       </v-card>
     </v-navigation-drawer>
-  </unified-page-template>
+  </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import UnifiedPageTemplate from '../../components/UnifiedPageTemplate.vue'
 import UnifiedDataTable from '../../components/UnifiedDataTable.vue'
 import UnifiedForm from '../../components/UnifiedForm.vue'
 import { useNotification } from '../../composables/useNotification'
@@ -248,61 +243,36 @@ const fetchActivities = async () => {
     }
     
     // 提取用户和操作类型以用于过滤
-    const uniqueUsers = new Set()
-    const uniqueActions = new Set()
-    
-    activities.value.forEach(activity => {
-      if (activity.username) uniqueUsers.add(activity.username)
-      if (activity.action) uniqueActions.add(activity.action)
-    })
-    
-    users.value = Array.from(uniqueUsers)
-    actions.value = Array.from(uniqueActions)
+    extractFilterOptions()
   } catch (error) {
     console.error('获取活动记录失败:', error)
     showError('获取活动记录失败')
+    
+    // 使用测试数据
+    activities.value = []
   } finally {
     loading.value = false
   }
 }
 
-// 格式化日期
-const formatDate = (dateString) => {
-  if (!dateString) return ''
-  const date = new Date(dateString)
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  })
+// 提取过滤选项
+const extractFilterOptions = () => {
+  // 提取用户
+  const uniqueUsers = new Set(activities.value.map(activity => activity.username))
+  users.value = Array.from(uniqueUsers)
+  
+  // 提取操作类型
+  const uniqueActions = new Set(activities.value.map(activity => activity.action))
+  actions.value = Array.from(uniqueActions)
 }
 
-// 获取状态颜色
-const getStatusColor = (status) => {
-  switch (status?.toLowerCase()) {
-    case '成功':
-      return 'success'
-    case '失败':
-      return 'error'
-    case '警告':
-      return 'warning'
-    case '进行中':
-      return 'info'
-    default:
-      return 'grey'
-  }
-}
-
-// 应用筛选
+// 应用过滤器
 const applyFilters = () => {
-  fetchActivities()
   filterDrawer.value = false
+  fetchActivities()
 }
 
-// 清除筛选
+// 清除过滤器
 const clearFilters = () => {
   filters.value = {
     user: null,
@@ -311,9 +281,42 @@ const clearFilters = () => {
     dateFrom: null,
     dateTo: null
   }
+  
+  // 不自动应用，等用户点击应用按钮
 }
 
-// 页面加载时获取数据
+// 格式化日期
+const formatDate = (dateString) => {
+  if (!dateString) return ''
+  
+  try {
+    const date = new Date(dateString)
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    })
+  } catch (e) {
+    return dateString
+  }
+}
+
+// 根据状态获取颜色
+const getStatusColor = (status) => {
+  const statusColors = {
+    '成功': 'success',
+    '失败': 'error',
+    '警告': 'warning',
+    '进行中': 'info'
+  }
+  
+  return statusColors[status] || 'grey'
+}
+
+// 初始化
 onMounted(() => {
   fetchActivities()
 })

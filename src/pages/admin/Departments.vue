@@ -1,9 +1,5 @@
 <template>
-  <unified-page-template 
-    title="部门管理"
-    icon="mdi-office-building"
-    color="secondary"
-  >
+  <div>
     <v-row>
       <v-col cols="12">
         <unified-data-table
@@ -94,12 +90,11 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </unified-page-template>
+  </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import UnifiedPageTemplate from '../../components/UnifiedPageTemplate.vue'
 import UnifiedDataTable from '../../components/UnifiedDataTable.vue'
 import UnifiedForm from '../../components/UnifiedForm.vue'
 import { useNotification } from '../../composables/useNotification'

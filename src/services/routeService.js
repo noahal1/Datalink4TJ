@@ -29,6 +29,7 @@ class RouteService {
   // 内部加载路由方法
   async #loadRoutes() {
     try {
+      // 修改API路径，使用正确的后端端点
       const response = await api.get('/routes')
       if (response && response.data) {
         this.#routes = this.#processRoutes(response.data)
@@ -37,6 +38,7 @@ class RouteService {
       }
       return []
     } catch (error) {
+      console.error('加载路由失败:', error)
       return []
     } finally {
       this.#loadPromise = null
@@ -91,6 +93,7 @@ class RouteService {
         return this.#processRoutes(response.data)
       }
     } catch (error) {
+      console.error('获取导航菜单失败:', error)
       // 尝试获取权限路由列表
       try {
         const permResponse = await api.get('/permissions/routes')
@@ -98,6 +101,7 @@ class RouteService {
           return this.#processRoutes(permResponse.data)
         }
       } catch (permError) {
+        console.error('获取权限路由列表失败:', permError)
         // 降级处理
       }
     }
@@ -236,6 +240,7 @@ class RouteService {
       const permissionFilteredRoutes = this.filterRoutesByPermission(visibleRoutes)
       return permissionFilteredRoutes
     } catch (error) {
+      console.error('获取导航菜单失败:', error)
       return []
     }
   }

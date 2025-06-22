@@ -43,7 +43,7 @@
                       :key="permission.id"
                       closable
                       @click:close="removePermission(permission)"
-                      :color="getModuleColor(permission.module)"
+                      color="info"
                       text-color="white"
                       class="ma-1"
                     >
@@ -64,9 +64,9 @@
                   可用权限
                   <v-spacer></v-spacer>
                   <v-select
-                    v-model="filterModule"
-                    :items="moduleOptions"
-                    label="按模块筛选"
+                    v-model="filterPrefix"
+                    :items="prefixOptions"
+                    label="按类型筛选"
                     density="compact"
                     hide-details
                     class="ml-2"
@@ -83,7 +83,7 @@
                       @click="addPermission(permission)"
                     >
                       <template v-slot:prepend>
-                        <v-icon :color="getModuleColor(permission.module)">
+                        <v-icon :color="getPermissionColor(permission)">
                           mdi-shield
                         </v-icon>
                       </template>
@@ -134,7 +134,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { Module, PermissionLevel, PermissionDescriptions } from '../../utils/permissionConstants'
+import { PermissionHelper, PermissionDescriptions, PermissionPrefixes } from '../../utils/permissionConstants'
 import api from '../../utils/api'
 
 const props = defineProps({
@@ -161,29 +161,39 @@ const emit = defineEmits(['update:modelValue', 'save', 'close'])
 // 本地状态
 const localDialog = ref(props.modelValue)
 const search = ref('')
-const filterModule = ref('')
+const filterPrefix = ref('')
 const allPermissions = ref([])
 const selectedPermissions = ref([])
 const savingPermissions = ref(false)
 
-// 模块选项
-const moduleOptions = computed(() => {
-  const options = [{ title: '全部模块', value: '' }]
+// 权限前缀选项
+const prefixOptions = computed(() => {
+  const options = [{ title: '全部类型', value: '' }]
   
-  // 从所有权限中提取模块
-  const modules = new Set()
-  allPermissions.value.forEach(perm => modules.add(perm.module))
-  
-  // 添加模块选项
-  Array.from(modules).forEach(module => {
+  // 添加前缀选项
+  Object.keys(PermissionPrefixes).forEach(key => {
+    const prefix = PermissionPrefixes[key]
     options.push({
-      title: PermissionDescriptions.modules[module] || module,
-      value: module
+      title: getPrefixDisplayName(key),
+      value: prefix
     })
   })
   
   return options
 })
+
+// 获取前缀显示名称
+function getPrefixDisplayName(prefixKey) {
+  const displayNames = {
+    'ACCESS': '访问权限',
+    'MANAGE': '管理权限',
+    'VIEW': '查看权限',
+    'EDIT': '编辑权限',
+    'CREATE': '创建权限',
+    'DELETE': '删除权限'
+  }
+  return displayNames[prefixKey] || prefixKey
+}
 
 // 可用权限（排除已选择的）
 const availablePermissions = computed(() => {
@@ -195,22 +205,23 @@ const availablePermissions = computed(() => {
 const filteredAvailablePermissions = computed(() => {
   let filtered = availablePermissions.value
   
-  // 模块过滤
-  if (filterModule.value) {
-    filtered = filtered.filter(p => p.module === filterModule.value)
+  // 前缀过滤
+  if (filterPrefix.value) {
+    filtered = filtered.filter(p => p.permission_code && p.permission_code.startsWith(filterPrefix.value))
   }
   
   // 搜索过滤
   if (search.value) {
     const searchLower = search.value.toLowerCase()
     filtered = filtered.filter(p => {
-      const moduleDesc = PermissionDescriptions.modules[p.module] || p.module
-      const levelDesc = PermissionDescriptions.levels[p.level] || p.level
-      const deptName = p.department?.name || '所有部门'
+      const permDesc = PermissionDescriptions.getDescription(p.permission_code) || p.permission_code
+      const routeName = p.route?.name || ''
+      const description = p.description || ''
       
-      return moduleDesc.toLowerCase().includes(searchLower) || 
-             levelDesc.toLowerCase().includes(searchLower) ||
-             deptName.toLowerCase().includes(searchLower)
+      return permDesc.toLowerCase().includes(searchLower) || 
+             routeName.toLowerCase().includes(searchLower) ||
+             description.toLowerCase().includes(searchLower) ||
+             (p.permission_code && p.permission_code.toLowerCase().includes(searchLower))
     })
   }
   
@@ -241,34 +252,56 @@ watch(() => props.role, (newVal) => {
 
 // 获取权限标签
 const getPermissionLabel = (permission) => {
-  const moduleDesc = PermissionDescriptions.modules[permission.module] || permission.module
-  const levelDesc = PermissionDescriptions.levels[permission.level] || permission.level
-  return `${moduleDesc} (${levelDesc})`
+  if (permission.permission_code) {
+    return PermissionDescriptions.getDescription(permission.permission_code) || permission.permission_code
+  }
+  return permission.description || '未命名权限'
 }
 
 // 获取权限描述
 const getPermissionDescription = (permission) => {
-  let departmentDesc = '所有部门'
-  if (permission.department_id) {
-    departmentDesc = permission.department?.name || `部门ID: ${permission.department_id}`
+  let desc = []
+  
+  if (permission.route) {
+    desc.push(`路由: ${permission.route.name || permission.route.path}`)
   }
-  return `适用于: ${departmentDesc}`
+  
+  if (permission.description) {
+    desc.push(permission.description)
+  }
+  
+  return desc.join(' | ') || '无描述'
 }
 
-// 获取模块颜色
-const getModuleColor = (moduleCode) => {
-  const moduleColors = {
-    [Module.USER]: 'indigo',
-    [Module.DEPARTMENT]: 'purple',
-    [Module.EHS]: 'green',
-    [Module.QA]: 'amber',
-    [Module.EVENT]: 'red',
-    [Module.MAINT]: 'blue',
-    [Module.ACTIVITY]: 'cyan',
-    [Module.ROUTE]: 'pink',
-    [Module.ALL]: 'deep-purple'
+// 获取权限颜色
+const getPermissionColor = (permission) => {
+  if (!permission.permission_code) return 'grey'
+  
+  if (permission.permission_code.startsWith(PermissionPrefixes.ACCESS)) {
+    return 'indigo'
   }
-  return moduleColors[moduleCode] || 'grey'
+  
+  if (permission.permission_code.startsWith(PermissionPrefixes.MANAGE)) {
+    return 'purple'
+  }
+  
+  if (permission.permission_code.startsWith(PermissionPrefixes.VIEW)) {
+    return 'green'
+  }
+  
+  if (permission.permission_code.startsWith(PermissionPrefixes.EDIT)) {
+    return 'amber'
+  }
+  
+  if (permission.permission_code.startsWith(PermissionPrefixes.CREATE)) {
+    return 'blue'
+  }
+  
+  if (permission.permission_code.startsWith(PermissionPrefixes.DELETE)) {
+    return 'red'
+  }
+  
+  return 'grey'
 }
 
 // 添加权限
@@ -289,7 +322,7 @@ const removePermission = (permission) => {
 // 加载所有权限
 const loadAllPermissions = async () => {
   try {
-    const response = await api.get('/permissions')
+    const response = await api.get('/route-permissions')
     if (response && response.data) {
       allPermissions.value = response.data
     }

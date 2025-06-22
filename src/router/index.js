@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import { usePermissionStore } from '../stores/permission'
-import { PermissionHelper } from '../utils/permissionConstants'
+import { PermissionPrefixes } from '../utils/permissionConstants'
 import Message from '../utils/notification'
 
 // 使用懒加载优化性能
@@ -33,80 +33,71 @@ const MODULE_ROUTES = {
     name: 'Maintenance',
     component: Maintenance,
     meta: {
+      path: '/maintenance',
       title: '维修管理',
       icon: 'mdi-tools',
       requiresAuth: true,
-      permission: { module: 'MAINT', level: 'READ' }
-    },
-    children: [
-      {
-        path: 'metrics',
-        name: 'MaintenanceMetrics',
-        component: MaintenanceMetrics,
-        meta: {
-          title: '维修指标',
-          icon: 'mdi-chart-line',
-          requiresAuth: true,
-          permission: { module: 'MAINT', level: 'READ' }
-        }
-      },
-      {
-        path: 'records',
-        name: 'DowntimeRecords',
-        component: DowntimeRecords,
-        meta: {
-          title: '停机单管理',
-          icon: 'mdi-clipboard-text',
-          requiresAuth: true,
-          permission: { module: 'MAINT', level: 'READ' }
-        }
-      }
-    ]
+      permission_code: 'access_maintenance'
+    }
+  },
+  
+  // 维修指标路由（独立路由而非子路由）
+  MAINTENANCE_METRICS: {
+    path: '/maintenance/metrics',
+    name: 'MaintenanceMetrics',
+    component: MaintenanceMetrics,
+    meta: {
+      title: '维修指标',
+      icon: 'mdi-chart-line',
+      requiresAuth: true,
+      permission_code: 'access_maintenance_metrics'
+    }
+  },
+  
+  // 停机单管理路由
+  MAINTENANCE_RECORDS: {
+    path: '/maintenance/records',
+    name: 'DowntimeRecords',
+    component: DowntimeRecords,
+    meta: {
+      title: '停机单管理',
+      icon: 'mdi-clipboard-text',
+      requiresAuth: true,
+      permission_code: 'access_maintenance_records'
+    }
   },
   
   // 管理模块相关路由
   ADMIN: {
     path: '/admin',
-    name: 'Admin',
     component: Admin,
     meta: {
-      title: '管理后台',
-      icon: 'mdi-cog',
+      title: '系统管理',
+      icon: 'mdi-cog-outline',
       requiresAuth: true,
-      permission: { module: 'USER', level: 'ADMIN' }
+      permission_code: 'access_admin'
     },
     children: [
       {
-        path: 'users',
-        name: 'UserManagement',
-        component: Admin,
-        meta: {
-          title: '用户管理',
-          icon: 'mdi-account-group',
-          requiresAuth: true,
-          permission: { module: 'USER', level: 'ADMIN' }
-        }
-      },
-      {
         path: 'departments',
-        name: 'DepartmentManagement',
+        name: 'AdminDepartments',
         component: AdminDepartments,
         meta: {
           title: '部门管理',
           icon: 'mdi-domain',
           requiresAuth: true,
-          permission: { module: 'DEPARTMENT', level: 'ADMIN' }
+          permission_code: 'manage_departments'
         }
       },
       {
         path: 'activities',
-        name: 'ActivityLogs',
+        name: 'AdminActivities',
         component: AdminActivities,
         meta: {
-          title: '操作记录',
-          icon: 'mdi-history',
+          title: '活动管理',
+          icon: 'mdi-calendar-check',
           requiresAuth: true,
-          permission: { module: 'ACTIVITY', level: 'READ' }
+          permission_code: 'manage_activities'
         }
       },
       {
@@ -117,7 +108,7 @@ const MODULE_ROUTES = {
           title: '路由管理',
           icon: 'mdi-routes',
           requiresAuth: true,
-          permission: { module: 'ROUTE', level: 'ADMIN' }
+          permission_code: 'manage_routes'
         }
       },
       {
@@ -128,7 +119,7 @@ const MODULE_ROUTES = {
           title: '权限管理',
           icon: 'mdi-shield-account',
           requiresAuth: true,
-          permission: { module: 'USER', level: 'ADMIN' }
+          permission_code: 'manage_permissions'
         }
       }
     ]
@@ -145,7 +136,7 @@ const routes = [
     component: Dashboard,
     meta: { 
       title: '首页',
-      permission: '*', 
+      permission_code: '*', 
       requiresAuth: true
     }
   },
@@ -162,7 +153,7 @@ const routes = [
     component: Quality,
     meta: { 
       title: '质量',
-      permission: '*', // 所有人可访问
+      permission_code: 'view_quality', 
       requiresAuth: true
     } 
   },
@@ -171,7 +162,7 @@ const routes = [
     component: EHS,
     meta: { 
       title: 'EHS',
-      permission: { module: 'EHS', level: 'READ' }, 
+      permission_code: 'view_ehs', 
       requiresAuth: true
     } 
   },
@@ -180,7 +171,7 @@ const routes = [
     component: Assy,
     meta: { 
       title: '生产',
-      permission: 'ASSY', // 旧格式兼容
+      permission_code: 'access_assy', // 转换为新格式
       requiresAuth: true
     }
   },
@@ -189,7 +180,7 @@ const routes = [
     component: Pcl,
     meta: { 
       title: '物流',
-      permission: 'PCL', // 旧格式兼容
+      permission_code: 'access_pcl', // 转换为新格式
       requiresAuth: true
     } 
   },
@@ -198,7 +189,7 @@ const routes = [
     component: Gmo,
     meta: { 
       title: 'GMO',
-      permission: 'GMO', // 旧格式兼容
+      permission_code: 'access_gmo', // 转换为新格式
       requiresAuth: true
     } 
   },
@@ -207,7 +198,7 @@ const routes = [
     component: Events,
     meta: { 
       title: '重要事件',
-      permission: { module: 'EVENT', level: 'READ' },
+      permission_code: 'view_events',
       requiresAuth: true
     } 
   },
@@ -216,7 +207,7 @@ const routes = [
     component: Qa_others,
     meta: { 
       title: '质量管理',
-      permission: '*', // 所有人可访问
+      permission_code: 'view_quality',
       requiresAuth: true
     }
   },
@@ -267,7 +258,7 @@ router.beforeEach(async (to, from, next) => {
   const permissionStore = usePermissionStore()
   
   // 检查权限存储是否已初始化
-  if (!permissionStore.permissionCache || Object.keys(permissionStore.permissionCache).length === 0) {
+  if (!permissionStore.permissionCodes || permissionStore.permissionCodes.length === 0) {
     try {
       await permissionStore.initialize()
     } catch (error) {
@@ -276,29 +267,63 @@ router.beforeEach(async (to, from, next) => {
   }
   
   // 检查超级管理员
-  const isSuperAdmin = permissionStore.isSuperUser
+  const isSuperAdmin = userStore.roles.includes('超级管理员')
   
   // 超级管理员可以访问所有页面
   if (isSuperAdmin) {
     return next()
   }
   
-  // 公共路由(*表示所有人可访问)
-  if (to.meta.permission === '*') {
+  // 所有人可访问的页面
+  if (to.meta.permission_code === '*') {
     return next()
   }
   
-  // 质量页面特殊处理
-  if (to.path === '/quality' || to.path === '/qa_others') {
-    return next()
+  // 提取权限代码
+  let permissionCode = null
+  
+  if (to.meta.permission_code) {
+    // 直接使用权限代码
+    permissionCode = to.meta.permission_code
+  } else if (to.meta.permission) {
+    // 兼容旧格式
+    if (typeof to.meta.permission === 'string' && to.meta.permission !== '*') {
+      // 直接使用字符串作为权限代码
+      permissionCode = `access_${to.meta.permission.toLowerCase()}`
+    } else if (typeof to.meta.permission === 'object') {
+      // 从对象中提取模块和级别，转换为权限代码
+      const { module, level } = to.meta.permission
+      if (module && level) {
+        switch (level.toLowerCase()) {
+          case 'read':
+            permissionCode = `view_${module.toLowerCase()}`
+            break
+          case 'write':
+            permissionCode = `edit_${module.toLowerCase()}`
+            break
+          case 'admin':
+            permissionCode = `manage_${module.toLowerCase()}`
+            break
+          default:
+            permissionCode = `access_${module.toLowerCase()}`
+        }
+      } else if (module) {
+        permissionCode = `access_${module.toLowerCase()}`
+      }
+    }
   }
   
-  // 检查路由是否在用户的可访问路由列表中
-  const userRoutes = permissionStore.accessibleRoutes
-  const canAccess = userRoutes.some(route => route.path === to.path)
-  
-  if (canAccess) {
-    return next()
+  // 检查用户是否有权限访问路由
+  if (permissionCode) {
+    // 检查是否有该权限代码
+    if (permissionStore.hasPermission(permissionCode)) {
+      return next()
+    }
+  } else {
+    // 没有指定权限代码的情况下，检查路由路径
+    if (permissionStore.canAccessRoute(to.path)) {
+      return next()
+    }
   }
   
   // 无权限访问

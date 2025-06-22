@@ -1,417 +1,383 @@
 import { defineStore } from 'pinia'
-import Message from '../utils/notification'
-import axios from 'axios'
+import { userService } from '../services'
 import router from '../router'
+import { usePermissionStore } from './permission'
+import Message from '../utils/notification'
 
-// API 基础URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
-
-// 调试功能 - 开发模式下打印详细日志
-const isDebugMode = true;
+// 调试模式标志
+const isDebugMode = true // 开启调试模式
 const debug = (...args) => {
   if (isDebugMode) {
-    console.log('[用户模块]', ...args);
+    console.log('[用户模块]', ...args)
   }
-};
-
-// 创建一个不使用拦截器的axios实例，避免循环依赖
-const basicApi = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 15000
-})
-
-// 从localStorage直接获取用户信息
-const getUserFromStorage = () => {
-  try {
-    const userStoreStr = localStorage.getItem('user-store');
-    if (userStoreStr) {
-      const userData = JSON.parse(userStoreStr);
-      console.log('从localStorage读取用户数据:', userData);
-      return userData;
-    }
-  } catch (e) {
-    console.error('解析localStorage中的用户数据失败:', e);
-  }
-  return null;
 }
 
 export const useUserStore = defineStore('user', {
-  state: () => {
-    // 尝试从localStorage恢复状态
-    const storedData = getUserFromStorage();
-    
-    return {
-      user: storedData?.user || null,
-      department: storedData?.department || null,
-      isLogin: storedData?.isLogin || false,
-      roles: storedData?.roles || [],
-      token: storedData?.token || null,
-      tokenExpiresAt: storedData?.tokenExpiresAt || null,
-      userId: storedData?.userId || null
-    };
-  },
+  state: () => ({
+    user: null,         // 用户信息
+    userId: null,       // 用户ID
+    token: null,        // 认证令牌
+    tokenExpiry: null,  // 令牌过期时间
+    isLogin: false,     // 是否已登录
+    department: null,   // 用户部门
+    roles: [],          // 用户角色列表
+    permissions: []     // 用户权限列表
+  }),
+
   getters: {
-    // 用户名
-    username: (state) => state.user,
-    
-    // 部门名称
-    departmentName: (state) => state.department,
-    
-    // 是否登录
-    loggedIn: (state) => state.isLogin,
-    
-    // 是否是超级管理员
-    isSuperUser: (state) => {
-      return state.roles && state.roles.includes('超级管理员')
+    // 用户显示名称
+    displayName: (state) => {
+      if (!state.user) return '未登录'
+      return state.user
     },
-    
-    // 是否是管理员
-    isAdmin: (state) => {
-      return state.roles && state.roles.some(role => 
-        role === '超级管理员' || role === '系统管理员' || role === '管理员'
-      )
+
+    // 检查是否已登录
+    isAuthenticated: (state) => {
+      return state.isLogin && state.token
+    },
+
+    // 获取完整的用户信息对象
+    userInfo: (state) => {
+      return {
+        user: state.user,
+        userId: state.userId,
+        department: state.department,
+        isLogin: state.isLogin,
+        roles: state.roles
+      }
     }
   },
+
   actions: {
     // 初始化用户状态
     async initialize() {
-      debug('初始化用户状态');
-      console.log('初始化用户状态，当前用户:', this.user, '登录状态:', this.isLogin);
+      debug('初始化用户状态')
       
-      // 如果已经从localStorage加载了状态，直接使用
-      if (this.isLogin && this.token) {
-        debug('已从localStorage加载用户状态');
-        
-        // 如果用户名为空但有其他信息，尝试从服务器获取完整信息
-        if (!this.user && this.isLogin) {
-          debug('用户名为空但已登录，尝试从服务器获取完整信息');
-          await this.ensureUserInfoIntegrity();
-        }
-        
-        // 验证token是否有效
+      // 首先从本地存储加载数据
+      this.loadFromStorage()
+      
+      // 如果有token且未过期，尝试获取用户信息
+      if (this.token && this.isTokenValid()) {
         try {
-          // 创建验证请求
-          const response = await basicApi.get('/users/me', {
-            headers: {
-              'Authorization': `Bearer ${this.token}`
-            },
-            // 增加超时时间，避免网络波动导致登出
-            timeout: 10000
-          })
+          debug('令牌有效，获取用户信息')
+          await this.getCurrentUser()
+          debug('用户信息获取成功')
           
-          // 更新用户信息
-          if (response.data) {
-            debug('令牌验证成功，更新用户信息')
-            // 确保所有字段都正确处理
-            this.user = this.processUserName(response.data.user_name)
-            this.department = this.processDepartment(response.data.department)
-            this.userId = this.processUserId(response.data.user_id)
-            this.roles = this.processRoles(response.data.roles)
-            this.isLogin = true
-            
-            // 刷新token有效期
-            this.refreshToken()
-            
-            // 保存到localStorage
-            this.saveToStorage();
-            
-            console.log('更新后的用户信息:', {
-              user: this.user,
-              department: this.department,
-              userId: this.userId,
-              roles: this.roles
-            });
-          }
+          // 确保权限信息已加载
+          const permissionStore = usePermissionStore()
+          await permissionStore.initialize()
           
+          debug('令牌验证成功，更新用户信息')
+          debug('刷新token有效期')
+          this.updateTokenExpiry()
+          this.saveToStorage()
+          debug('用户状态已保存到localStorage')
+          
+          console.log('更新后的用户信息:', this.userInfo)
           return true
         } catch (error) {
-          debug('令牌验证请求失败:', error.message)
-          
-          // 检查错误类型
-          if (error.response && error.response.status === 401) {
-            // 令牌无效，执行登出
-            debug('令牌无效，执行登出')
-            this.logout()
-            return false
-          } else if (error.code === 'ECONNABORTED' || !error.response) {
-            // 连接超时或网络错误，保持当前登录状态
-            debug('连接超时或网络错误，保持当前登录状态')
-            console.warn('无法验证令牌，但保持登录状态')
-            // 在网络错误的情况下，保持登录状态
-            return true
-          } else {
-            // 其他服务器错误，保持当前登录状态
-            debug('服务器错误，保持当前登录状态:', error.message)
-            console.warn('无法验证令牌，但保持登录状态:', error.message)
-            return true
-          }
+          console.error('初始化用户状态失败:', error)
+          this.clearUserState()
+          return false
         }
-      } else if (this.isLogin) {
-        // 如果标记为已登录但没有token，这是不一致的状态
-        debug('发现不一致状态：已登录但无token，执行登出')
-        this.logout()
+      } else {
+        debug('令牌无效或不存在')
+        this.clearUserState()
         return false
       }
-      
-      return false
     },
-    
-    // 手动保存到localStorage
-    saveToStorage() {
+
+    // 用户登录
+    async login(username, password) {
       try {
-        const stateToSave = {
-          user: this.user,
-          department: this.department,
-          isLogin: this.isLogin,
-          roles: this.roles,
-          token: this.token,
-          tokenExpiresAt: this.tokenExpiresAt,
-          userId: this.userId
-        };
+        debug('尝试登录:', username)
         
-        localStorage.setItem('user-store', JSON.stringify(stateToSave));
-        debug('用户状态已保存到localStorage');
-      } catch (e) {
-        console.error('保存用户状态到localStorage失败:', e);
-      }
-    },
-    
-    // 处理用户名，确保返回字符串
-    processUserName(userName) {
-      if (!userName) return '';
-      
-      if (typeof userName === 'string') {
-        return userName;
-      }
-      
-      if (typeof userName === 'object' && userName !== null) {
-        return userName.name || userName.username || '';
-      }
-      
-      return String(userName);
-    },
-    
-    // 处理部门信息，确保返回正确格式
-    processDepartment(department) {
-      if (!department) return '';
-      
-      // 如果是字符串，直接返回
-      if (typeof department === 'string') {
-        return department;
-      }
-      
-      // 如果是对象，返回对象的name属性
-      if (typeof department === 'object' && department !== null) {
-        return department.name || '';
-      }
-      
-      return String(department);
-    },
-    
-    // 处理用户ID
-    processUserId(userId) {
-      if (userId === null || userId === undefined) return null;
-      
-      if (typeof userId === 'number') {
-        return userId;
-      }
-      
-      if (typeof userId === 'string') {
-        const parsedId = parseInt(userId);
-        return isNaN(parsedId) ? null : parsedId;
-      }
-      
-      return null;
-    },
-    
-    // 处理角色信息，确保返回字符串数组
-    processRoles(roles) {
-      if (!roles) return [];
-      
-      // 如果已经是数组
-      if (Array.isArray(roles)) {
-        return roles.map(role => {
-          if (typeof role === 'string') {
-            return role;
-          }
-          if (typeof role === 'object' && role !== null) {
-            return role.name || '';
-          }
-          return String(role);
-        }).filter(role => role); // 过滤掉空字符串
-      }
-      
-      // 如果是字符串，可能是逗号分隔的角色列表
-      if (typeof roles === 'string') {
-        return roles.split(',').map(r => r.trim()).filter(r => r);
-      }
-      
-      // 如果是单个对象
-      if (typeof roles === 'object' && roles !== null) {
-        if (roles.name) {
-          return [roles.name];
+        // 验证输入
+        if (!username || !password) {
+          const errorMsg = !username ? '用户名不能为空' : '密码不能为空';
+          debug('登录失败: ' + errorMsg);
+          throw new Error(errorMsg);
         }
         
-        // 尝试从对象中提取角色名称
-        const roleNames = [];
-        for (const key in roles) {
-          if (typeof roles[key] === 'string') {
-            roleNames.push(roles[key]);
-          } else if (typeof roles[key] === 'object' && roles[key] && roles[key].name) {
-            roleNames.push(roles[key].name);
-          }
+        // 调用登录API
+        const userData = await userService.login(username, password)
+        
+        if (!userData || !userData.token) {
+          debug('登录失败: 服务器返回无效数据');
+          throw new Error('登录失败: 服务器返回无效数据');
         }
         
-        return roleNames.length ? roleNames : ['未知角色'];
+        debug('登录成功，获取到的数据:', JSON.stringify(userData));
+        
+        // 设置用户数据
+        this.setUserData(userData)
+        
+        // 登录成功后获取用户详细信息
+        await this.getCurrentUser()
+        
+        debug('登录成功，用户信息已更新')
+        
+        // 更新token过期时间
+        this.updateTokenExpiry()
+        
+        // 保存到本地存储
+        this.saveToStorage()
+        
+        return true
+      } catch (error) {
+        const errorMessage = error.response?.data?.detail || error.message || '登录失败';
+        debug('登录失败:', errorMessage);
+        
+        // 清除用户状态
+        this.clearUserState()
+        
+        // 重新抛出错误，包含更详细的信息
+        throw new Error(errorMessage);
       }
+    },
+
+    // 获取当前登录用户信息
+    async getCurrentUser() {
+      try {
+        // 获取用户详情
+        const userData = await userService.getCurrentUser()
+        
+        if (userData) {
+          this.user = userData.name || userData.username
+          this.userId = userData.id
+          this.department = userData.department
+          this.roles = userData.roles || []
+          this.isLogin = true
+          
+          debug('用户信息获取成功:', this.user)
+          return userData
+        } else {
+          throw new Error('获取用户信息失败')
+        }
+      } catch (error) {
+        debug('获取用户信息失败:', error)
+        throw error
+      }
+    },
+
+    // 用户登出
+    async logout() {
+      debug('用户登出')
+      this.clearUserState()
       
-      return [];
+      // 如果当前不在登录页面，重定向到登录页
+      if (router.currentRoute.value.path !== '/login') {
+        debug('重定向到登录页面')
+        router.push('/login')
+      }
     },
-    
-    // 刷新token有效期
-    refreshToken() {
-      debug('刷新token有效期')
-      // 设置token过期时间 (14天)
-      const expiresAt = new Date()
-      expiresAt.setDate(expiresAt.getDate() + 14)
-      this.tokenExpiresAt = expiresAt
+
+    // 更新令牌
+    async refreshToken() {
+      try {
+        debug('尝试刷新令牌')
+        
+        // 调用刷新令牌API
+        const tokenData = await userService.refreshToken()
+        
+        if (tokenData && tokenData.token) {
+          this.token = tokenData.token
+          this.updateTokenExpiry()
+          this.saveToStorage()
+          debug('令牌刷新成功')
+          return true
+        } else {
+          throw new Error('刷新令牌失败')
+        }
+      } catch (error) {
+        debug('刷新令牌失败:', error)
+        return false
+      }
     },
-    
-    // 确保用户信息完整性
+
+    // 确保用户信息完整
     async ensureUserInfoIntegrity() {
       debug('确保用户信息完整性')
       
-      // 如果缺少关键信息，尝试从服务器获取
+      // 如果已登录但用户信息不完整，尝试重新获取
       if (this.isLogin && this.token && (!this.user || !this.userId || !this.department)) {
-        debug('用户信息不完整，尝试从服务器获取')
-        
         try {
-          const response = await basicApi.get('/users/me', {
-            headers: {
-              'Authorization': `Bearer ${this.token}`
-            }
-          })
-          
-          if (response.data) {
-            // 只更新缺失的字段
-            if (!this.user) {
-              this.user = this.processUserName(response.data.user_name)
-            }
-            
-            if (!this.department) {
-              this.department = this.processDepartment(response.data.department)
-            }
-            
-            if (!this.userId) {
-              this.userId = this.processUserId(response.data.user_id)
-            }
-            
-            if (!this.roles || this.roles.length === 0) {
-              this.roles = this.processRoles(response.data.roles)
-            }
-            
-            // 保存到localStorage
-            this.saveToStorage();
-            
-            debug('用户信息已补充完整:', {
-              user: this.user,
-              department: this.department,
-              userId: this.userId,
-              roles: this.roles
-            })
-          }
+          debug('用户信息不完整，尝试重新获取')
+          await this.getCurrentUser()
+          this.saveToStorage()
+          debug('用户信息已补充完整')
+          return true
         } catch (error) {
-          console.warn('获取完整用户信息失败:', error.message)
+          debug('补充用户信息失败:', error)
+          
+          // 如果获取失败但有token，不要清除状态，让用户继续使用
+          // 只有在token无效时才清除状态
+          if (error.response && error.response.status === 401) {
+            debug('认证失败，清除用户状态')
+            this.clearUserState()
+          }
+          
+          return false
         }
       }
+      
+      return true
+    },
+
+    // 设置用户数据
+    setUserData(userData) {
+      if (!userData) return
+      
+      debug('设置用户数据:', userData)
+      
+      if (userData.token) {
+        this.token = userData.token
+      }
+      
+      if (userData.user) {
+        // 处理不同格式的用户数据
+        if (typeof userData.user === 'object') {
+          this.user = userData.user.username || userData.user.name || userData.user.user_name
+          this.userId = userData.user.id || userData.user.user_id
+          this.department = userData.user.department
+        } else {
+          this.user = userData.user
+        }
+      }
+      
+      // 直接从userData中获取用户ID和部门（兼容不同API返回格式）
+      if (!this.userId && userData.user_id) {
+        this.userId = userData.user_id
+      }
+      
+      if (!this.department && userData.department) {
+        this.department = userData.department
+      }
+      
+      // 处理用户名
+      if (!this.user && userData.user_name) {
+        this.user = userData.user_name
+      }
+      
+      if (userData.roles) {
+        this.roles = userData.roles
+      }
+      
+      this.isLogin = true
+      debug('用户数据设置完成:', this.userInfo)
+    },
+
+    // 更新token过期时间（默认24小时）
+    updateTokenExpiry() {
+      const now = new Date()
+      const expiryTime = new Date(now.getTime() + 24 * 60 * 60 * 1000) // 24小时后
+      this.tokenExpiry = expiryTime.toISOString()
+    },
+
+    // 检查令牌是否有效（未过期）
+    isTokenValid() {
+      if (!this.token || !this.tokenExpiry) return false
+      
+      const now = new Date()
+      const expiry = new Date(this.tokenExpiry)
+      
+      // 如果过期时间在当前时间之后，令牌有效
+      return expiry > now
     },
     
-    // 登录
-    async login(username, password) {
-      debug('尝试登录:', username)
+    // 检查令牌是否即将过期（少于1小时）
+    isTokenExpiringSoon() {
+      if (!this.token || !this.tokenExpiry) return false
+      
+      const now = new Date()
+      const expiry = new Date(this.tokenExpiry)
+      
+      // 计算过期时间与当前时间差（毫秒）
+      const timeToExpiry = expiry - now
+      
+      // 如果剩余时间小于1小时（3600000毫秒），则认为即将过期
+      return timeToExpiry < 3600000 && timeToExpiry > 0
+    },
+
+    // 从本地存储加载用户状态
+    loadFromStorage() {
       try {
-        // 构建表单数据
-        const formData = new FormData()
-        formData.append('username', username)
-        formData.append('password', password)
-        
-        // 发送登录请求
-        const response = await basicApi.post('/users/token', formData)
-        
-        debug('登录响应:', response.data)
-        
-        // 更新状态
-        this.token = response.data.access_token
-        this.user = this.processUserName(response.data.user_name)
-        this.department = this.processDepartment(response.data.department)
-        this.userId = this.processUserId(response.data.user_id)
-        this.roles = this.processRoles(response.data.roles)
-        this.isLogin = true
-        
-        // 设置token过期时间
-        this.refreshToken()
-        
-        // 确保用户信息完整性
-        this.ensureUserInfoIntegrity()
-        
-        // 手动保存到localStorage
-        this.saveToStorage();
-        
-        Message.success('登录成功')
-        return true
+        const savedState = localStorage.getItem('user-store')
+        if (savedState) {
+          const state = JSON.parse(savedState)
+          
+          this.user = state.user
+          this.userId = state.userId
+          this.token = state.token
+          this.tokenExpiry = state.tokenExpiry
+          this.isLogin = state.isLogin
+          this.department = state.department
+          this.roles = state.roles || []
+          
+          debug('从本地存储加载用户状态:', this.user)
+        }
       } catch (error) {
-        console.error('登录失败:', error)
-        const errorMessage = error.response?.data?.detail || '登录失败，请检查用户名和密码'
-        Message.error(errorMessage)
-        return false
+        console.error('从本地存储加载数据失败:', error)
       }
     },
-    
-    // 登出
-    async logout() {
-      debug('执行登出')
-      // 清除状态
-      this.token = null
+
+    // 保存用户状态到本地存储
+    saveToStorage() {
+      try {
+        const state = {
+          user: this.user,
+          userId: this.userId,
+          token: this.token,
+          tokenExpiry: this.tokenExpiry,
+          isLogin: this.isLogin,
+          department: this.department,
+          roles: this.roles
+        }
+        
+        localStorage.setItem('user-store', JSON.stringify(state))
+        debug('用户状态已保存到本地存储')
+      } catch (error) {
+        console.error('保存数据到本地存储失败:', error)
+      }
+    },
+
+    // 清除用户状态
+    clearUserState() {
+      debug('清除用户状态')
       this.user = null
-      this.department = null
       this.userId = null
-      this.roles = []
+      this.token = null
+      this.tokenExpiry = null
       this.isLogin = false
-      this.tokenExpiresAt = null
+      this.department = null
+      this.roles = []
+      this.permissions = []
       
-      // 清除localStorage中的用户数据
-      localStorage.removeItem('user-store');
-      
-      // 重定向到登录页
-      router.push('/login')
-    },
-    
-    // 获取用户详细信息
-    async getUserInfo() {
-      if (!this.isLogin || !this.userId) {
-        debug('未登录，无法获取用户信息')
-        return null
-      }
-      
-      debug('获取用户详细信息:', this.userId)
+      // 清除本地存储
       try {
-        const response = await basicApi.get(`/users/${this.userId}`, {
-          headers: {
-            'Authorization': `Bearer ${this.token}`
-          }
-        })
-        
-        debug('用户详细信息:', response.data)
-        return response.data
+        localStorage.removeItem('user-store')
       } catch (error) {
-        console.error('获取用户信息失败:', error)
-        return null
+        console.error('清除本地存储数据失败:', error)
+      }
+    },
+
+    // 添加setRoles方法，用于更新用户角色
+    setRoles(roles) {
+      if (Array.isArray(roles)) {
+        this.roles = roles;
       }
     }
   },
+  // 持久化设置
   persist: {
-    // 使用自定义持久化，不依赖pinia-plugin-persistedstate
-    enabled: false
+    enabled: true,
+    strategies: [
+      {
+        key: 'user-store',
+        storage: localStorage,
+        paths: ['user', 'userId', 'token', 'tokenExpiry', 'isLogin', 'department', 'roles']
+      }
+    ]
   }
 })
 

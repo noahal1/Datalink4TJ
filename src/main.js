@@ -113,6 +113,12 @@ app.use(errorHandler)
 // 注册性能监控工具
 app.use(performanceMonitor)
 
+// 导入服务层
+import services from './services'
+
+// 添加全局属性，使服务层在所有组件中可用
+app.config.globalProperties.$services = services
+
 // 挂载应用
 const appInstance = app.mount('#app')
 

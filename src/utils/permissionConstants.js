@@ -1,35 +1,35 @@
 /**
  * 权限常量定义
- * 与后端模型保持一致，用于统一前后端权限系统
+ * 简化的权限系统，直接使用权限代码
  */
 
-// 权限等级枚举
-export const PermissionLevel = {
-  READ: 'READ',            // 只读权限
-  WRITE: 'WRITE',          // 写入权限
-  ADMIN: 'ADMIN',          // 管理员权限
-  SUPER_ADMIN: 'SUPER_ADMIN' // 超级管理员权限
+// 常用权限代码前缀
+export const PermissionPrefixes = {
+  ACCESS: 'access_',      // 访问权限前缀
+  MANAGE: 'manage_',      // 管理权限前缀
+  VIEW: 'view_',          // 查看权限前缀
+  EDIT: 'edit_',          // 编辑权限前缀
+  CREATE: 'create_',      // 创建权限前缀
+  DELETE: 'delete_'       // 删除权限前缀
 }
 
-// 模块枚举
-export const Module = {
-  USER: 'USER',            // 用户管理
-  DEPARTMENT: 'DEPARTMENT', // 部门管理
-  EHS: 'EHS',              // EHS模块
-  QA: 'QA',                // 质量管理
-  EVENT: 'EVENT',          // 事件管理
-  MAINT: 'MAINT',          // 维护管理
-  ACTIVITY: 'ACTIVITY',    // 活动管理
-  ROUTE: 'ROUTE',          // 路由管理
-  ALL: 'ALL'               // 所有模块
-}
-
-// 权限等级值映射（用于比较）
-export const PermissionLevelValues = {
-  [PermissionLevel.READ]: 1,
-  [PermissionLevel.WRITE]: 2,
-  [PermissionLevel.ADMIN]: 3,
-  [PermissionLevel.SUPER_ADMIN]: 4
+// 预定义权限代码
+export const PredefinedPermissions = {
+  // 系统管理
+  MANAGE_USERS: 'manage_users',
+  MANAGE_ROLES: 'manage_roles',
+  MANAGE_PERMISSIONS: 'manage_permissions',
+  MANAGE_ROUTES: 'manage_routes',
+  MANAGE_DEPARTMENTS: 'manage_departments',
+  
+  // 通用操作权限
+  VIEW_DASHBOARD: 'view_dashboard',
+  VIEW_REPORTS: 'view_reports',
+  EXPORT_DATA: 'export_data',
+  IMPORT_DATA: 'import_data',
+  
+  // 所有人权限
+  ALL_USER: '*'
 }
 
 // 预定义角色
@@ -41,130 +41,139 @@ export const PredefinedRoles = {
 
 // 权限帮助函数
 export const PermissionHelper = {
-  // 格式化权限名称：MODULE:LEVEL
-  formatPermission: (module, level) => {
-    return `${module}:${level}`
+  // 生成访问路由的权限代码
+  generateRouteAccessCode: (routeName) => {
+    if (!routeName) return null
+    return `${PermissionPrefixes.ACCESS}${routeName.toLowerCase()}`
   },
   
-  // 解析权限字符串：MODULE:LEVEL -> { module, level }
-  parsePermission: (permissionString) => {
-    if (!permissionString || permissionString.indexOf(':') === -1) {
-      return { module: null, level: null }
-    }
-    const [module, level] = permissionString.split(':')
-    return { module, level }
+  // 生成管理资源的权限代码
+  generateManageCode: (resource) => {
+    if (!resource) return null
+    return `${PermissionPrefixes.MANAGE}${resource.toLowerCase()}`
   },
   
-  // 权限等级比较
-  isLevelSufficient: (userLevel, requiredLevel) => {
-    const userLevelValue = PermissionLevelValues[userLevel] || 0
-    const requiredLevelValue = PermissionLevelValues[requiredLevel] || 0
+  // 生成查看资源的权限代码
+  generateViewCode: (resource) => {
+    if (!resource) return null
+    return `${PermissionPrefixes.VIEW}${resource.toLowerCase()}`
+  },
+  
+  // 生成编辑资源的权限代码
+  generateEditCode: (resource) => {
+    if (!resource) return null
+    return `${PermissionPrefixes.EDIT}${resource.toLowerCase()}`
+  },
+  
+  // 检查是否是公开权限代码
+  isPublicCode: (code) => {
+    return code === '*' || code === 'public'
+  },
+  
+  // 将旧的MODULE.LEVEL格式转换为新的权限代码格式
+  convertLegacyPermission: (module, level) => {
+    if (!module || !level) return null
     
-    return userLevelValue >= requiredLevelValue
-  },
-  
-  // 检查模块是否有效
-  isValidModule: (module) => {
-    return Object.values(Module).includes(module)
-  },
-  
-  // 检查权限等级是否有效
-  isValidLevel: (level) => {
-    return Object.values(PermissionLevel).includes(level)
-  },
-  
-  // 获取权限等级的数值
-  getLevelValue: (level) => {
-    return PermissionLevelValues[level] || 0
-  },
-  
-  // 获取权限等级的显示名称
-  getLevelDisplayName: (level) => {
-    return PermissionDescriptions.levels[level] || level
-  },
-  
-  // 获取模块的显示名称
-  getModuleDisplayName: (module) => {
-    return PermissionDescriptions.modules[module] || module
-  }
-}
-
-// 权限组合辅助函数
-export const PermissionCombinations = {
-  // 生成常用权限组合
-  // 例如：所有用户模块权限
-  allUserPermissions: [
-    { module: Module.USER, level: PermissionLevel.READ },
-    { module: Module.USER, level: PermissionLevel.WRITE },
-    { module: Module.USER, level: PermissionLevel.ADMIN }
-  ],
-  
-  // 部门管理权限
-  allDepartmentPermissions: [
-    { module: Module.DEPARTMENT, level: PermissionLevel.READ },
-    { module: Module.DEPARTMENT, level: PermissionLevel.WRITE },
-    { module: Module.DEPARTMENT, level: PermissionLevel.ADMIN }
-  ],
-  
-  // 所有管理员权限组合
-  adminPermissions: [
-    { module: Module.USER, level: PermissionLevel.ADMIN },
-    { module: Module.DEPARTMENT, level: PermissionLevel.ADMIN },
-    { module: Module.ROUTE, level: PermissionLevel.ADMIN }
-  ],
-  
-  // 创建给定模块的所有权限级别
-  createModulePermissions: (module) => {
-    return [
-      { module, level: PermissionLevel.READ },
-      { module, level: PermissionLevel.WRITE },
-      { module, level: PermissionLevel.ADMIN }
-    ]
-  },
-  
-  // 创建给定模块和部门的所有权限级别
-  createModulePermissionsWithDepartment: (module, departmentId) => {
-    return [
-      { module, level: PermissionLevel.READ, department_id: departmentId },
-      { module, level: PermissionLevel.WRITE, department_id: departmentId },
-      { module, level: PermissionLevel.ADMIN, department_id: departmentId }
-    ]
+    module = module.toLowerCase()
+    level = level.toLowerCase()
+    
+    // 根据不同级别生成不同前缀的权限代码
+    switch (level) {
+      case 'read':
+        return `${PermissionPrefixes.VIEW}${module}`
+      case 'write':
+        return `${PermissionPrefixes.EDIT}${module}`
+      case 'admin':
+        return `${PermissionPrefixes.MANAGE}${module}`
+      default:
+        return null
+    }
   }
 }
 
 // 权限描述映射，用于UI显示
 export const PermissionDescriptions = {
-  // 模块描述
-  modules: {
-    [Module.USER]: '用户管理',
-    [Module.DEPARTMENT]: '部门管理',
-    [Module.EHS]: 'EHS管理',
-    [Module.QA]: '质量管理',
-    [Module.EVENT]: '事件管理',
-    [Module.MAINT]: '维护管理',
-    [Module.ACTIVITY]: '活动管理',
-    [Module.ROUTE]: '路由管理',
-    [Module.ALL]: '所有模块'
-  },
-  
-  // 权限等级描述
-  levels: {
-    [PermissionLevel.READ]: '只读',
-    [PermissionLevel.WRITE]: '编辑',
-    [PermissionLevel.ADMIN]: '管理',
-    [PermissionLevel.SUPER_ADMIN]: '超级管理'
-  },
-  
-  // 格式化权限描述
-  getDescription: (module, level) => {
-    const moduleDesc = PermissionDescriptions.modules[module] || module
-    const levelDesc = PermissionDescriptions.levels[level] || level
-    return `${moduleDesc}(${levelDesc})`
-  },
-  
-  // 获取带部门的权限描述
-  getDescriptionWithDepartment: (module, level, departmentName) => {
-    const baseDesc = PermissionDescriptions.getDescription(module, level)
-    return departmentName ? `${baseDesc} - ${departmentName}` : baseDesc
+  // 获取权限代码的友好描述
+  getDescription: (permissionCode) => {
+    if (!permissionCode) return '未知权限'
+    if (permissionCode === '*') return '所有用户权限'
+    
+    // 检查是否是预定义权限
+    const predefinedDesc = getPredefinedDescription(permissionCode)
+    if (predefinedDesc) return predefinedDesc
+    
+    // 根据前缀生成描述
+    if (permissionCode.startsWith(PermissionPrefixes.ACCESS)) {
+      const resource = permissionCode.substring(PermissionPrefixes.ACCESS.length)
+      return `访问${formatResource(resource)}`
+    }
+    
+    if (permissionCode.startsWith(PermissionPrefixes.MANAGE)) {
+      const resource = permissionCode.substring(PermissionPrefixes.MANAGE.length)
+      return `管理${formatResource(resource)}`
+    }
+    
+    if (permissionCode.startsWith(PermissionPrefixes.VIEW)) {
+      const resource = permissionCode.substring(PermissionPrefixes.VIEW.length)
+      return `查看${formatResource(resource)}`
+    }
+    
+    if (permissionCode.startsWith(PermissionPrefixes.EDIT)) {
+      const resource = permissionCode.substring(PermissionPrefixes.EDIT.length)
+      return `编辑${formatResource(resource)}`
+    }
+    
+    if (permissionCode.startsWith(PermissionPrefixes.CREATE)) {
+      const resource = permissionCode.substring(PermissionPrefixes.CREATE.length)
+      return `创建${formatResource(resource)}`
+    }
+    
+    if (permissionCode.startsWith(PermissionPrefixes.DELETE)) {
+      const resource = permissionCode.substring(PermissionPrefixes.DELETE.length)
+      return `删除${formatResource(resource)}`
+    }
+    
+    // 如果没有匹配的前缀，直接返回权限代码
+    return permissionCode
   }
+}
+
+// 获取预定义权限的描述
+function getPredefinedDescription(permissionCode) {
+  const predefinedDescriptions = {
+    [PredefinedPermissions.MANAGE_USERS]: '管理用户',
+    [PredefinedPermissions.MANAGE_ROLES]: '管理角色',
+    [PredefinedPermissions.MANAGE_PERMISSIONS]: '管理权限',
+    [PredefinedPermissions.MANAGE_ROUTES]: '管理路由',
+    [PredefinedPermissions.MANAGE_DEPARTMENTS]: '管理部门',
+    [PredefinedPermissions.VIEW_DASHBOARD]: '查看仪表盘',
+    [PredefinedPermissions.VIEW_REPORTS]: '查看报表',
+    [PredefinedPermissions.EXPORT_DATA]: '导出数据',
+    [PredefinedPermissions.IMPORT_DATA]: '导入数据',
+  }
+  
+  return predefinedDescriptions[permissionCode]
+}
+
+// 格式化资源名称
+function formatResource(resource) {
+  if (!resource) return ''
+  
+  // 常见资源映射
+  const resourceMapping = {
+    users: '用户',
+    roles: '角色',
+    permissions: '权限',
+    routes: '路由',
+    departments: '部门',
+    dashboard: '仪表盘',
+    reports: '报表',
+    data: '数据',
+    quality: '质量管理',
+    ehs: 'EHS管理',
+    events: '事件管理',
+    maintenance: '维护管理',
+  }
+  
+  return resourceMapping[resource] || resource
 } 
