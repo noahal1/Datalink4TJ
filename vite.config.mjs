@@ -91,7 +91,7 @@ export default defineConfig(({ mode }) => {
       preprocessorOptions: {
         scss: {
           sassOptions: {
-            api: "new",
+            api: "modern-compiler",
             quietDeps: true
           }
         }

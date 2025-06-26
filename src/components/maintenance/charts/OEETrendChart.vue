@@ -98,7 +98,6 @@ const chartOption = computed(() => {
   const formatDate = (date) => format(new Date(date), 'MM-dd');
   // 获取所有唯一日期并排序
   const allDates = [...new Set(props.chartData.map(item => item.date))].sort().map(date => formatDate(date));
-  we
   // 准备系列数据
   const series = [];
   const legendData = [];
