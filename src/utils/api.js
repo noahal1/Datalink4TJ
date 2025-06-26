@@ -326,45 +326,69 @@ api.interceptors.response.use(
   }
 )
 
-export default api
-
+// 对外导出的方法
 /**
  * GET请求
+ * @param {string} endpoint - API端点
+ * @param {object} options - 请求选项，包含params等
+ * @returns {Promise} - 请求Promise
  */
-export function get(endpoint, params = {}) {
-  debug(`发起GET请求: ${endpoint}`, params);
+export function get(endpoint, options = {}) {
+  // 添加默认的参数序列化器，确保参数不会被嵌套
+  const defaultOptions = {
+    paramsSerializer: params => {
+      // 使用URLSearchParams确保参数格式正确
+      return Object.entries(params)
+        .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+        .join('&');
+    }
+  };
   
-  // 构建查询字符串
-  const queryString = Object.keys(params)
-    .filter(key => params[key] !== undefined && params[key] !== null)
-    .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
-    .join('&')
-    
-  const url = queryString ? `${endpoint}?${queryString}` : endpoint
+  // 合并用户提供的选项和默认选项
+  const mergedOptions = { ...defaultOptions, ...options };
   
-  return api.get(url)
+  // 记录实际发送的请求参数
+  if (isDebugMode && options.params) {
+    debug('GET请求参数:', options.params);
+    debug('序列化后的查询字符串:', mergedOptions.paramsSerializer(options.params));
+  }
+  
+  return api.get(endpoint, mergedOptions);
 }
 
 /**
  * POST请求
+ * @param {string} endpoint - API端点
+ * @param {object} data - 请求体数据
+ * @returns {Promise} - 请求Promise
  */
 export function post(endpoint, data = {}) {
-  debug(`发起POST请求: ${endpoint}`, data);
   return api.post(endpoint, data)
 }
 
 /**
  * PUT请求
+ * @param {string} endpoint - API端点
+ * @param {object} data - 请求体数据
+ * @returns {Promise} - 请求Promise
  */
 export function put(endpoint, data = {}) {
-  debug(`发起PUT请求: ${endpoint}`, data);
   return api.put(endpoint, data)
 }
 
 /**
  * DELETE请求
+ * @param {string} endpoint - API端点
+ * @returns {Promise} - 请求Promise
  */
 export function del(endpoint) {
-  debug(`发起DELETE请求: ${endpoint}`);
   return api.delete(endpoint)
+}
+
+// 导出默认对象
+export default {
+  get,
+  post,
+  put,
+  delete: del
 } 

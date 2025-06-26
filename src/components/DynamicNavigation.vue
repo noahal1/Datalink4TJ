@@ -62,6 +62,7 @@
             :active="isActiveRoute(route.path)"
             class="nav-list-item"
             v-ripple
+            @click="logRouteClick(route)"
           >
             <template v-slot:prepend>
               <v-icon>{{ route.meta?.icon || 'mdi-link' }}</v-icon>
@@ -125,6 +126,15 @@
       <!-- 底部固定菜单项 -->
       <template v-if="showBottomActions && !loading && !loadError">
         <v-divider class="my-2"></v-divider>
+        
+        <!-- 添加重新加载路由按钮 -->
+        <v-list-item @click="forceReloadRoutes" class="reload-routes-item" rounded="lg">
+          <template v-slot:prepend>
+            <v-icon>mdi-refresh-circle</v-icon>
+          </template>
+          <v-list-item-title>刷新路由表</v-list-item-title>
+        </v-list-item>
+        
         <slot name="bottom-actions"></slot>
       </template>
     </v-list>
@@ -469,6 +479,88 @@ onMounted(() => {
   // 确保侧边栏在大屏幕上可见
   ensureDrawerVisible()
 })
+
+// 在组件的<script setup>部分添加此方法
+const logRouteClick = (route) => {
+  console.log('菜单项点击:', {
+    路径: route.path,
+    名称: route.name,
+    组件: route.component,
+    元数据: route.meta,
+    是否激活: isActiveRoute(route.path),
+    路由已注册: !!router.hasRoute(route.name)
+  })
+  
+  // 检查路由是否存在于路由表中
+  const registeredRoutes = router.getRoutes()
+  const matchedRoute = registeredRoutes.find(r => r.path === route.path)
+  
+  console.log(`路由${matchedRoute ? '已' : '未'}在路由表中找到:`, 
+    matchedRoute ? {
+      路径: matchedRoute.path,
+      名称: matchedRoute.name,
+      组件: matchedRoute.components,
+      元数据: matchedRoute.meta
+    } : '未找到'
+  )
+  
+  // 尝试提前加载动态路由
+  if (!matchedRoute) {
+    console.log('尝试加载动态路由...')
+    import('../services').then(({ routeService }) => {
+      routeService.getNavigationTree().then(() => {
+        console.log('动态路由重新加载完成')
+      })
+    }).catch(err => {
+      console.error('加载动态路由失败:', err)
+    })
+  }
+}
+
+// 添加强制重新加载路由的方法
+const forceReloadRoutes = async () => {
+  try {
+    loading.value = true
+    console.log('强制重新加载路由表...')
+    
+    // 清除路由缓存
+    sessionStorage.removeItem('accessibleRoutes')
+    
+    // 重新初始化权限存储
+    await permissionStore.initialize()
+    
+    // 重新加载导航菜单
+    await loadRoutes()
+    
+    // 手动触发动态路由注册
+    try {
+      // 动态导入路由模块中的addDynamicRoutes函数
+      const { addDynamicRoutes } = await import('../router')
+      
+      // 调用函数添加动态路由
+      console.log('调用addDynamicRoutes添加动态路由...')
+      const routes = await addDynamicRoutes()
+      console.log(`成功添加 ${routes.length} 个动态路由`)
+      
+      // 强制刷新当前页面以应用新路由
+      setTimeout(() => {
+        const currentPath = router.currentRoute.value.path
+        console.log(`当前路径: ${currentPath}, 尝试重新导航...`)
+        router.replace(currentPath)
+      }, 100)
+      
+      console.log('路由表已刷新')
+    } catch (error) {
+      console.error('刷新路由表失败:', error)
+    }
+    
+    loading.value = false
+  } catch (error) {
+    console.error('强制重新加载路由失败:', error)
+    loading.value = false
+    loadError.value = true
+  }
+}
 </script>
 
 <style scoped>

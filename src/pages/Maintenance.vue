@@ -112,6 +112,7 @@
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useUserStore } from '../stores/user.js'
 import Message from '../utils/notification'
+import api from '../utils/api'
 import MaintenanceCalendar from '../components/maintenance/MaintenanceCalendar.vue'
 import DailyTasksList from '../components/maintenance/DailyTasksList.vue'
 import WeeklyPlan from '../components/maintenance/WeeklyPlan.vue'
@@ -121,7 +122,6 @@ import IssueDialog from '../components/maintenance/IssueDialog.vue'
 import MetricsList from '../components/maintenance/MetricsList.vue'
 import MetricsDialog from '../components/maintenance/MetricsDialog.vue'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 const userStore = useUserStore()
 
 // 日历选择相关数据
@@ -191,18 +191,11 @@ const loadTasks = async () => {
     
     // 确保user_id是整数类型
     const userId = parseInt(userStore.userId);
-    const response = await fetch(`${API_BASE_URL}/maint/daily?user_id=${userId}`, {
-      headers: {
-        'Authorization': `Bearer ${userStore.token}`
-      }
+    const response = await api.get('/maint/daily', { 
+      params: { user_id: userId }
     })
     
-    if (!response.ok) {
-      throw new Error('获取维修任务失败')
-    }
-    
-    const data = await response.json()
-    maintenanceTasks.value = data
+    maintenanceTasks.value = response.data
     
     // 加载本周任务
     loadWeeklyTasks()
@@ -221,18 +214,11 @@ const loadMetrics = async () => {
     
     // 确保user_id是整数类型
     const userId = parseInt(userStore.userId);
-    const response = await fetch(`${API_BASE_URL}/maint/metrics?user_id=${userId}`, {
-      headers: {
-        'Authorization': `Bearer ${userStore.token}`
-      }
+    const response = await api.get('/maint/metrics', { 
+      params: { user_id: userId }
     })
     
-    if (!response.ok) {
-      throw new Error('获取维修数据指标失败')
-    }
-    
-    const data = await response.json()
-    metricsList.value = data
+    metricsList.value = response.data
     
   } catch (error) {
     console.error('加载维修数据指标出错:', error)
@@ -310,32 +296,12 @@ const saveTask = async () => {
       user_id: parseInt(userStore.userId)
     }
     
-    let response
-    
     if (editedIndex.value === -1) {
       // 创建新任务
-      response = await fetch(`${API_BASE_URL}/maint/daily`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userStore.token}`
-        },
-        body: JSON.stringify(taskData)
-      })
+      await api.post('/maint/daily', taskData)
     } else {
       // 更新现有任务
-      response = await fetch(`${API_BASE_URL}/maint/daily/${editedTask.value.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userStore.token}`
-        },
-        body: JSON.stringify(taskData)
-      })
-    }
-    
-    if (!response.ok) {
-      throw new Error('保存任务失败')
+      await api.put(`/maint/daily/${editedTask.value.id}`, taskData)
     }
     
     // 关闭对话框
@@ -364,18 +330,7 @@ const updateTaskStatus = async (task) => {
     }
     
     // 发送请求
-    const response = await fetch(`${API_BASE_URL}/maint/daily/${task.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${userStore.token}`
-      },
-      body: JSON.stringify(updateData)
-    })
-    
-    if (!response.ok) {
-      throw new Error('更新任务状态失败')
-    }
+    await api.put(`/maint/daily/${task.id}`, updateData)
     
     // 重新加载数据以保持同步
     await loadAllData()
@@ -391,22 +346,18 @@ const updateTaskStatus = async (task) => {
 const deleteTask = async (task) => {
   try {
     // 发送请求
-    const response = await fetch(`${API_BASE_URL}/maint/daily/${task.id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${userStore.token}`
-      }
-    })
+    await api.delete(`/maint/daily/${task.id}`)
     
-    if (!response.ok) {
-      throw new Error('删除任务失败')
+    // 移除本地任务
+    const index = maintenanceTasks.value.indexOf(task)
+    if (index > -1) {
+      maintenanceTasks.value.splice(index, 1)
     }
     
-    // 重新加载数据
-    await loadAllData()
+    Message.success('任务已删除')
     
-    // 提示成功
-    Message.success('任务删除成功')
+    // 刷新任务列表
+    await loadTasks()
     
   } catch (error) {
     Message.error('删除任务失败')
@@ -455,19 +406,11 @@ const loadIssues = async () => {
     
     // 确保user_id是整数类型
     const userId = parseInt(userStore.userId);
-    const response = await fetch(`${API_BASE_URL}/maint/weekly?user_id=${userId}`, {
-      headers: {
-        'Authorization': `Bearer ${userStore.token}`
-      }
+    const response = await api.get('/maint/weekly', { 
+      params: { user_id: userId }
     })
     
-    if (!response.ok) {
-      throw new Error('获取问题记录失败')
-    }
-    
-    const data = await response.json()
-    
-    issuesList.value = data.map(item => {
+    issuesList.value = response.data.map(item => {
       // 解析resolved字段 - 简化并提高性能
       const solvedFlag = item.solved_flag !== undefined ? item.solved_flag : 
                         (item.solved !== undefined ? item.solved : 
@@ -493,42 +436,17 @@ const loadIssues = async () => {
 // 切换问题解决状态
 const toggleIssueStatus = async (issue) => {
   try {
-    // 先在本地更新状态以提高响应速度
-    const originalStatus = issue.resolved
-    issue.resolved = !issue.resolved
-    
-    // 准备更新数据 - 包含所有可能的字段名以兼容后端API
     const updateData = {
-      solved_flag: issue.resolved ? 1 : 0,
-      solved: issue.resolved ? 1 : 0,
-      isSolved: issue.resolved ? 1 : 0
+      solved_flag: issue.solved
     }
     
     // 发送请求
-    const response = await fetch(`${API_BASE_URL}/maint/weekly/${issue.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${userStore.token}`
-      },
-      body: JSON.stringify(updateData)
-    })
-    
-    if (!response.ok) {
-      // 如果请求失败，恢复原始状态
-      issue.resolved = originalStatus
-      throw new Error('更新问题状态失败')
-    }
-    
-    // 提示成功
-    Message.success(issue.resolved ? '问题已标记为已解决' : '问题已标记为未解决')
-    
-    // 重新加载数据以确保前端显示与后端一致
-    await loadIssues()
+    await api.put(`/maint/weekly/${issue.id}`, updateData)
     
   } catch (error) {
-    console.error('更新问题状态出错:', error)
-    Message.error('更新问题状态失败')
+    Message.error('更新状态失败')
+    // 恢复原状态
+    issue.solved = !issue.solved
   }
 }
 
@@ -537,44 +455,29 @@ const saveIssue = async () => {
   try {
     savingIssue.value = true
     
-    // 准备保存数据 - 完全匹配后端API期望的字段
+    // 验证表单
+    if (!editedIssue.value.description || !editedIssue.value.date) {
+      Message.warning('请填写所有必填字段')
+      return
+    }
+    
+    // 准备请求数据
     const issueData = {
-      DateTime: editedIssue.value.date || new Date().toISOString().split('T')[0],
-      user_id: parseInt(userStore.userId),
-      title: editedIssue.value.description.substring(0, 30),
-      wheres: '问题记录',
-      content: editedIssue.value.description,
-      degree: editedIssue.value.severity,
-      solved_flag: editedIssue.value.resolved ? 1 : 0,
-      solved: editedIssue.value.resolved ? 1 : 0
+      date: editedIssue.value.date,
+      description: editedIssue.value.description,
+      severity: editedIssue.value.severity,
+      solved_flag: editedIssue.value.resolved,
+      user_id: parseInt(userStore.userId)
     }
     
     let response
     
     if (!editedIssue.value.id) {
       // 创建新问题
-      response = await fetch(`${API_BASE_URL}/maint/weekly`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userStore.token}`
-        },
-        body: JSON.stringify(issueData)
-      })
+      await api.post('/maint/weekly', issueData)
     } else {
       // 更新现有问题
-      response = await fetch(`${API_BASE_URL}/maint/weekly/${editedIssue.value.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userStore.token}`
-        },
-        body: JSON.stringify(issueData)
-      })
-    }
-    
-    if (!response.ok) {
-      throw new Error('保存问题失败')
+      await api.put(`/maint/weekly/${editedIssue.value.id}`, issueData)
     }
     
     // 关闭对话框
@@ -584,11 +487,11 @@ const saveIssue = async () => {
     await loadIssues()
     
     // 提示成功
-    Message.success(editedIssue.value.id ? '问题更新成功' : '问题记录成功')
+    Message.success(editedIssue.value.id ? '问题记录更新成功' : '问题记录创建成功')
     
   } catch (error) {
-    console.error('保存问题出错:', error)
-    Message.error('保存问题失败')
+    console.error('保存问题记录出错:', error)
+    Message.error('保存问题记录失败')
   } finally {
     savingIssue.value = false
   }
@@ -598,26 +501,18 @@ const saveIssue = async () => {
 const deleteIssue = async (issue) => {
   try {
     // 发送请求
-    const response = await fetch(`${API_BASE_URL}/maint/weekly/${issue.id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${userStore.token}`
-      }
-    })
+    await api.delete(`/maint/weekly/${issue.id}`)
     
-    if (!response.ok) {
-      throw new Error('删除问题失败')
+    // 移除本地问题
+    const index = issuesList.value.indexOf(issue)
+    if (index > -1) {
+      issuesList.value.splice(index, 1)
     }
     
-    // 重新加载数据
-    await loadIssues()
-    
-    // 提示成功
-    Message.success('问题删除成功')
+    Message.success('问题记录已删除')
     
   } catch (error) {
-    console.error('删除问题出错:', error)
-    Message.error('删除问题失败')
+    Message.error('删除问题记录失败')
   }
 }
 
@@ -710,8 +605,8 @@ const saveMetric = async () => {
     savingMetric.value = true
     
     // 验证表单
-    if (!editedMetric.value.equipment_type) {
-      Message.warning('请选择设备类型')
+    if (!editedMetric.value.equipment_type || !editedMetric.value.date) {
+      Message.warning('请填写所有必填字段')
       return
     }
     
@@ -720,37 +615,17 @@ const saveMetric = async () => {
       equipment_type: editedMetric.value.equipment_type,
       date: editedMetric.value.date,
       downtime_count: parseInt(editedMetric.value.downtime_count),
-      downtime_minutes: parseFloat(editedMetric.value.downtime_minutes),
+      downtime_minutes: parseInt(editedMetric.value.downtime_minutes),
       parts_produced: parseInt(editedMetric.value.parts_produced),
       user_id: parseInt(userStore.userId)
     }
     
-    let response
-    
     if (editedMetricIndex.value === -1) {
       // 创建新指标
-      response = await fetch(`${API_BASE_URL}/maint/metrics`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userStore.token}`
-        },
-        body: JSON.stringify(metricData)
-      })
+      await api.post('/maint/metrics', metricData)
     } else {
       // 更新现有指标
-      response = await fetch(`${API_BASE_URL}/maint/metrics/${editedMetric.value.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userStore.token}`
-        },
-        body: JSON.stringify(metricData)
-      })
-    }
-    
-    if (!response.ok) {
-      throw new Error('保存维修数据指标失败')
+      await api.put(`/maint/metrics/${editedMetric.value.id}`, metricData)
     }
     
     // 关闭对话框
@@ -760,11 +635,11 @@ const saveMetric = async () => {
     await loadMetrics()
     
     // 提示成功
-    Message.success(editedMetricIndex.value === -1 ? '指标创建成功' : '指标更新成功')
+    Message.success(editedMetricIndex.value === -1 ? '维修指标创建成功' : '维修指标更新成功')
     
   } catch (error) {
-    console.error('保存维修数据指标出错:', error)
-    Message.error('保存维修数据指标失败')
+    console.error('保存维修指标出错:', error)
+    Message.error('保存维修指标失败')
   } finally {
     savingMetric.value = false
   }
@@ -774,26 +649,18 @@ const saveMetric = async () => {
 const deleteMetric = async (metric) => {
   try {
     // 发送请求
-    const response = await fetch(`${API_BASE_URL}/maint/metrics/${metric.id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${userStore.token}`
-      }
-    })
+    await api.delete(`/maint/metrics/${metric.id}`)
     
-    if (!response.ok) {
-      throw new Error('删除维修数据指标失败')
+    // 移除本地指标
+    const index = metricsList.value.indexOf(metric)
+    if (index > -1) {
+      metricsList.value.splice(index, 1)
     }
     
-    // 重新加载数据
-    await loadMetrics()
-    
-    // 提示成功
-    Message.success('维修数据指标删除成功')
+    Message.success('维修指标已删除')
     
   } catch (error) {
-    console.error('删除维修数据指标出错:', error)
-    Message.error('删除维修数据指标失败')
+    Message.error('删除维修指标失败')
   }
 }
 

@@ -1,6 +1,5 @@
 import { createApp } from 'vue'
-import { createPinia } from 'pinia'
-import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+import { pinia } from './stores'
 import App from './App.vue'
 import router from './router'
 import ECharts from 'vue-echarts'
@@ -29,7 +28,7 @@ import PermissionControl from './components/PermissionControl.vue'
 // Echarts核心配置
 import { use } from "echarts/core"
 import { CanvasRenderer } from "echarts/renderers"
-import { LineChart, BarChart } from "echarts/charts"
+import { LineChart, BarChart, RadarChart } from "echarts/charts"
 import {
   GridComponent,
   TooltipComponent,
@@ -41,16 +40,12 @@ use([
   CanvasRenderer,
   LineChart,
   BarChart,
+  RadarChart,
   GridComponent,
   TooltipComponent,
   TitleComponent,
   LegendComponent
 ])
-
-// 创建Pinia状态管理实例
-const pinia = createPinia()
-// 使用持久化插件
-pinia.use(piniaPluginPersistedstate)
 
 // Vuetify
 import 'vuetify/styles'
@@ -75,6 +70,17 @@ app.use(vuetify)
 
 // 注册权限指令
 registerPermissionDirective(app)
+
+// 导入动态路由加载函数
+import { addDynamicRoutes } from './router'
+
+// 尝试加载动态路由
+console.log('应用启动时尝试加载动态路由...')
+addDynamicRoutes().then(routes => {
+  console.log(`应用启动时成功加载 ${routes.length} 个动态路由`);
+}).catch(err => {
+  console.error('应用启动时加载动态路由失败:', err);
+});
 
 // 注册全局组件
 app.component('v-chart', ECharts);
@@ -165,10 +171,6 @@ app.config.globalProperties.$notify = {
     });
   }
 }
-
-// 注册全局通知组件
-app.component('GlobalNotification', GlobalNotification)
-app.component('GlobalSnackbar', GlobalSnackbar)
 
 // 提供全局通知组件
 app.provide('globalNotification', null) // 将在组件挂载后更新

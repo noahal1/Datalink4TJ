@@ -131,17 +131,30 @@
                 ></v-text-field>
               </v-col>
               <v-col cols="12" md="8">
-                <v-text-field
+                <v-select
                   v-model="editedRoute.component"
-                  label="组件路径"
-                  placeholder="例如: @/pages/Dashboard.vue"
+                  :items="availableComponents"
+                  label="组件"
+                  placeholder="选择组件"
                   variant="outlined"
                   density="comfortable"
                   :rules="[routeTypeValue === 'page' ? rules.required : () => true]"
                   :disabled="routeTypeValue === 'parent_menu'"
-                  :hint="routeTypeValue === 'parent_menu' ? '父级菜单不需要组件' : ''"
+                  :hint="routeTypeValue === 'parent_menu' ? '父级菜单不需要组件' : '请选择要用于此路由的组件'"
                   persistent-hint
-                ></v-text-field>
+                  @click="loadAvailableComponents"
+                >
+                  <template v-slot:append>
+                    <v-tooltip location="bottom">
+                      <template v-slot:activator="{ props }">
+                        <v-icon v-bind="props" color="grey">mdi-help-circle-outline</v-icon>
+                      </template>
+                      <div class="pa-2">
+                        组件必须在前端代码中存在。如果您添加了新组件，需要在前端更新组件映射表。
+                      </div>
+                    </v-tooltip>
+                  </template>
+                </v-select>
               </v-col>
               <v-col cols="12" md="4">
                 <v-select
@@ -473,6 +486,10 @@ const hasPermissionChanges = ref(false)
 
 // 路由路径设置相关
 const pathSettingDialog = ref(false);
+
+// 组件列表
+const availableComponents = ref([])
+const loadingComponents = ref(false)
 
 // 计算可作为父路由的选项
 const parentRouteOptions = computed(() => {
@@ -1149,8 +1166,43 @@ const openPathSettingDialog = () => {
   pathSettingDialog.value = true;
 };
 
+// 加载可用组件列表
+const loadAvailableComponents = async () => {
+  if (availableComponents.value.length > 0) return
+  
+  try {
+    loadingComponents.value = true
+    console.log("正在获取组件列表...")
+    const response = await api.get('/routes/components')
+    console.log("组件列表API响应:", response)
+    
+    if (response && response.data && response.data.components) {
+      availableComponents.value = response.data.components
+      console.log("成功获取组件列表:", availableComponents.value)
+      
+      // 如果首次加载并且是编辑路由时，如果组件不在可用组件列表中，自动选择DefaultLayout
+      if (editedRoute.value.component && !availableComponents.value.includes(editedRoute.value.component)) {
+        console.warn(`组件 ${editedRoute.value.component} 不在可用列表中，自动切换到DefaultLayout`)
+        editedRoute.value.component = 'DefaultLayout'
+      }
+    } else {
+      console.warn("API响应格式不符合预期:", response)
+      // 设置默认组件列表
+      availableComponents.value = ['Dashboard', 'DefaultLayout']
+    }
+  } catch (error) {
+    console.error('获取组件列表失败:', error)
+    Message.error('获取组件列表失败: ' + (error.response?.data?.detail || error.message))
+    // 设置默认组件列表，以防API调用失败
+    availableComponents.value = ['Dashboard', 'DefaultLayout']
+  } finally {
+    loadingComponents.value = false
+  }
+}
+
 // 页面加载时获取数据
 onMounted(() => {
   loadRoutes();
+  loadAvailableComponents();
 });
 </script> 

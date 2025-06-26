@@ -8,7 +8,7 @@
           <div class="d-flex align-center">
             <img src="@/assets/logo.png" alt="Logo" class="app-logo">
             <span class="text-h6 font-weight-medium ml-2 app-title d-none d-sm-flex">
-              数据上报系统
+              麦格纳(天津)数据管理系统
             </span>
           </div>
         </v-col>

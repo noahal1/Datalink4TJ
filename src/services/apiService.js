@@ -18,7 +18,21 @@ class BaseApiService {
   async get(endpoint = '', params = {}) {
     const url = this._buildUrl(endpoint)
     try {
-      const response = await api.get(url, { params })
+      // 改进：简单手动构建查询参数，避免axios的复杂序列化逻辑
+      let finalUrl = url;
+      
+      // 只有当有参数时才添加查询字符串
+      if (Object.keys(params).length > 0) {
+        const queryParams = Object.keys(params)
+          .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+          .join('&');
+          
+        finalUrl = `${url}${url.includes('?') ? '&' : '?'}${queryParams}`;
+        console.log('GET请求最终URL:', finalUrl);
+      }
+      
+      // 直接使用构建好的URL发送请求，不传递params参数
+      const response = await api.get(finalUrl);
       return response.data
     } catch (error) {
       this._handleError(error, 'GET', url)
@@ -83,9 +97,22 @@ class BaseApiService {
    * @private
    */
   _buildUrl(endpoint) {
-    if (!endpoint) return this.baseEndpoint
-    if (endpoint.startsWith('/')) endpoint = endpoint.substring(1)
-    return `${this.baseEndpoint}/${endpoint}`
+    // 如果endpoint为空，直接返回基础端点
+    if (!endpoint) return this.baseEndpoint;
+    
+    // 如果endpoint以/开头，则移除开头的斜杠
+    if (endpoint.startsWith('/')) {
+      endpoint = endpoint.substring(1);
+    }
+    
+    // 确保baseEndpoint末尾没有斜杠，如果有则移除
+    let base = this.baseEndpoint;
+    if (base.endsWith('/')) {
+      base = base.slice(0, -1);
+    }
+    
+    // 组合URL，确保中间有一个斜杠
+    return `${base}/${endpoint}`;
   }
 
   /**

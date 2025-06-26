@@ -137,9 +137,9 @@ import { ref, onMounted } from 'vue'
 import UnifiedDataTable from '../../components/UnifiedDataTable.vue'
 import UnifiedForm from '../../components/UnifiedForm.vue'
 import { useNotification } from '../../composables/useNotification'
-import { get } from '../../utils/api'
+import api from '../../utils/api'
 
-const { showError } = useNotification()
+const { showSuccess, showError } = useNotification()
 
 // 表格列定义
 const headers = [
@@ -153,6 +153,7 @@ const headers = [
 
 // 活动记录数据
 const activities = ref([])
+const allActivities = ref([]) // 存储所有活动记录，用于过滤
 const loading = ref(false)
 const search = ref('')
 const filterDrawer = ref(false)
@@ -184,16 +185,18 @@ const fetchActivities = async () => {
     if (filters.value.dateTo) params.date_to = filters.value.dateTo
     
     // 调用API
-    const response = await get('/activities', { params })
+    const response = await api.get('/activities/', { params })
     
     if (response && response.data && Array.isArray(response.data)) {
       activities.value = response.data
+      allActivities.value = [...response.data]
     } else if (response && Array.isArray(response)) {
       activities.value = response
+      allActivities.value = [...response]
     } else {
       console.error('活动数据格式不正确:', response)
       // 使用测试数据
-      activities.value = [
+      const testData = [
         { 
           id: 1, 
           timestamp: '2025-06-09T10:30:00', 
@@ -240,6 +243,8 @@ const fetchActivities = async () => {
           ip: '192.168.1.120'
         }
       ]
+      activities.value = testData
+      allActivities.value = [...testData]
     }
     
     // 提取用户和操作类型以用于过滤
@@ -248,8 +253,9 @@ const fetchActivities = async () => {
     console.error('获取活动记录失败:', error)
     showError('获取活动记录失败')
     
-    // 使用测试数据
+    // 使用空数据
     activities.value = []
+    allActivities.value = []
   } finally {
     loading.value = false
   }
@@ -269,7 +275,53 @@ const extractFilterOptions = () => {
 // 应用过滤器
 const applyFilters = () => {
   filterDrawer.value = false
-  fetchActivities()
+  
+  // 如果有过滤条件，应用过滤，否则重新获取数据
+  if (filters.value.user || filters.value.action || filters.value.status || 
+      filters.value.dateFrom || filters.value.dateTo) {
+    // 本地过滤
+    const filtered = allActivities.value.filter(activity => {
+      let match = true
+      
+      if (filters.value.user && activity.username !== filters.value.user) {
+        match = false
+      }
+      
+      if (filters.value.action && activity.action !== filters.value.action) {
+        match = false
+      }
+      
+      if (filters.value.status && activity.status !== filters.value.status) {
+        match = false
+      }
+      
+      if (filters.value.dateFrom || filters.value.dateTo) {
+        const activityDate = new Date(activity.timestamp)
+        
+        if (filters.value.dateFrom) {
+          const fromDate = new Date(filters.value.dateFrom)
+          if (activityDate < fromDate) {
+            match = false
+          }
+        }
+        
+        if (filters.value.dateTo) {
+          const toDate = new Date(filters.value.dateTo)
+          toDate.setHours(23, 59, 59, 999) // 设置为当天结束时间
+          if (activityDate > toDate) {
+            match = false
+          }
+        }
+      }
+      
+      return match
+    })
+    
+    activities.value = filtered
+  } else {
+    // 无过滤条件，使用所有数据
+    activities.value = [...allActivities.value]
+  }
 }
 
 // 清除过滤器
@@ -282,7 +334,8 @@ const clearFilters = () => {
     dateTo: null
   }
   
-  // 不自动应用，等用户点击应用按钮
+  // 重置为所有活动记录
+  activities.value = [...allActivities.value]
 }
 
 // 格式化日期

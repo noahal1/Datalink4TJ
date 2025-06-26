@@ -201,32 +201,79 @@ export const usePermissionStore = defineStore('permission', {
     canAccessRoute(routePath) {
       const userStore = useUserStore()
       
+      debug(`检查路由权限: ${routePath}`)
+      
       // 超级管理员可以访问所有路由
       if (userStore.roles.includes('超级管理员')) {
+        debug(`超级管理员有权限访问: ${routePath}`)
         return true
       }
       
       // 检查路由是否在可访问列表中
       const routes = this.accessibleRoutes
+      debug(`可访问路由列表:`, routes)
       
       // 找到匹配的路由
-      const matchedRoute = routes.find(route => route.path === routePath)
+      const matchedRoute = routes.find(route => {
+        // 精确匹配
+        if (route.path === routePath) {
+          debug(`找到精确匹配路由: ${route.path}`)
+          return true
+        }
+        
+        // 尝试通配符匹配 (以* 结尾的路径)
+        if (route.path.endsWith('*')) {
+          const baseRoute = route.path.slice(0, -1)
+          if (routePath.startsWith(baseRoute)) {
+            debug(`找到通配符匹配路由: ${route.path} 匹配 ${routePath}`)
+            return true
+          }
+        }
+        
+        // 尝试参数匹配 (包含:的路径)
+        if (route.path.includes(':')) {
+          // 将路由路径转换为正则表达式
+          const regex = new RegExp(
+            '^' + route.path.replace(/:[^/]+/g, '[^/]+') + '$'
+          )
+          if (regex.test(routePath)) {
+            debug(`找到参数匹配路由: ${route.path} 匹配 ${routePath}`)
+            return true
+          }
+        }
+        
+        // 大小写不敏感匹配
+        if (route.path.toLowerCase() === routePath.toLowerCase()) {
+          debug(`找到大小写不敏感匹配路由: ${route.path} 匹配 ${routePath}`)
+          return true;
+        }
+        
+        return false
+      })
+      
       if (!matchedRoute) {
+        debug(`未找到匹配的路由: ${routePath}`)
         return false
       }
       
+      debug(`找到匹配的路由: ${matchedRoute.path}`)
+      
       // 如果路由没有权限代码要求，则可以访问
       if (!matchedRoute.permissionCode) {
+        debug(`路由 ${matchedRoute.path} 无权限要求，允许访问`)
         return true
       }
       
       // 如果是所有人都可访问的权限代码
       if (matchedRoute.permissionCode === '*') {
+        debug(`路由 ${matchedRoute.path} 权限为*，允许所有人访问`)
         return true
       }
       
       // 检查是否有此权限代码
-      return this.hasPermission(matchedRoute.permissionCode)
+      const hasPermission = this.hasPermission(matchedRoute.permissionCode)
+      debug(`检查权限 ${matchedRoute.permissionCode} 结果: ${hasPermission ? '有权限' : '无权限'}`)
+      return hasPermission
     },
     
     // 检查权限代码是否存在

@@ -87,26 +87,55 @@ class RouteService {
   // 获取导航菜单树
   async getNavigationTree() {
     try {
+      console.log('正在获取导航菜单树...')
       // 优先使用专用的导航API端点
       const response = await api.get('/navigation')
+      console.log('导航API响应:', response)
+      
       if (response && response.data) {
-        return this.#processRoutes(response.data)
+        // 确保返回的是数组
+        let routes = Array.isArray(response.data) ? response.data : [];
+        
+        // 如果返回的是空数组，尝试使用其他接口
+        if (routes.length === 0) {
+          console.log('导航API返回空数组，尝试其他接口...');
+          return await this.#fallbackNavigationTree();
+        }
+        
+        // 对路由进行处理
+        routes = this.#processRoutes(routes);
+        console.log('处理后的导航菜单树:', routes);
+        return routes;
+      } else {
+        console.log('导航API返回无效数据，尝试其他接口...');
+        return await this.#fallbackNavigationTree();
       }
     } catch (error) {
       console.error('获取导航菜单失败:', error)
+      // 尝试降级策略
+      return await this.#fallbackNavigationTree();
+    }
+  }
+  
+  // 降级策略 - 当主导航API失败时尝试其他接口
+  async #fallbackNavigationTree() {
+    try {
       // 尝试获取权限路由列表
-      try {
-        const permResponse = await api.get('/permissions/routes')
-        if (permResponse && permResponse.data) {
-          return this.#processRoutes(permResponse.data)
-        }
-      } catch (permError) {
-        console.error('获取权限路由列表失败:', permError)
-        // 降级处理
+      console.log('尝试获取权限路由列表...')
+      const permResponse = await api.get('/permissions/routes')
+      console.log('权限路由API响应:', permResponse)
+      
+      if (permResponse && permResponse.data && Array.isArray(permResponse.data)) {
+        const routes = this.#processRoutes(permResponse.data)
+        console.log('处理后的权限路由:', routes)
+        return routes
       }
+    } catch (permError) {
+      console.error('获取权限路由列表失败:', permError)
     }
     
-    // 降级方案：使用路由列表构建
+    // 最终降级方案：使用路由列表构建
+    console.log('使用路由列表构建导航菜单树...')
     const routes = await this.getRoutes()
     
     // 创建一个映射来存储路由和它们的子路由
@@ -114,7 +143,14 @@ class RouteService {
     const rootRoutes = []
 
     // 第一遍循环初始化所有路由对象
+    console.log('构建路由映射...')
     routes.forEach(route => {
+      // 确保路由有唯一ID
+      if (!route.id) {
+        console.warn('路由缺少ID:', route)
+        return
+      }
+      
       // 复制路由对象并添加children数组
       const routeObj = { ...route, children: [] }
       routeMap[route.id] = routeObj
@@ -126,6 +162,7 @@ class RouteService {
     })
 
     // 第二遍循环建立父子关系
+    console.log('建立父子关系...')
     routes.forEach(route => {
       // 如果有父路由，将此路由添加到父路由的children中
       if (route.parent_id && routeMap[route.parent_id]) {
@@ -153,7 +190,9 @@ class RouteService {
     }
 
     // 返回排序后的路由树
-    return this.#processRoutes(sortRoutes(rootRoutes))
+    const processedRoutes = this.#processRoutes(sortRoutes(rootRoutes))
+    console.log('构建完成的导航菜单树:', processedRoutes)
+    return processedRoutes
   }
 
   // 根据权限过滤路由

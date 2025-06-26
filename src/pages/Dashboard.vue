@@ -196,42 +196,40 @@ const selectedPeriod = ref('month')
 const fetchQualityData = async () => {
   isLoadingQualityData.value = true;
   try {
-    const response = await fetch(`${API_BASE_URL}/qa/?month=${currentMonth}`);
-    if (response.ok) {
-      const fetchedData = await response.json();
-      const daysInMonth = new Date(new Date().getFullYear(), currentMonth, 0).getDate();
-      const generatedData = Array.from({ length: daysInMonth }, (_, i) => ({
-        date: (i + 1).toString(),
-        swi: 0,
-        rwh: 0,
-        w01: 0,
-        hf: 0,
-        lc: 0,
-        scrapswi: 0,
-        scraprwh: 0,
-        scrapw01: 0,
-        scraphf: 0,
-        scraplc: 0,
-        welding: 0,
-        stamping: 0
-      }));
+    const response = await api.get('/qa/', { params: { month: currentMonth.toString() } });
+    
+    // 获取响应数据
+    const fetchedData = response.data || [];
+    
+    const daysInMonth = new Date(new Date().getFullYear(), currentMonth, 0).getDate();
+    const generatedData = Array.from({ length: daysInMonth }, (_, i) => ({
+      date: (i + 1).toString(),
+      swi: 0,
+      rwh: 0,
+      w01: 0,
+      hf: 0,
+      lc: 0,
+      scrapswi: 0,
+      scraprwh: 0,
+      scrapw01: 0,
+      scraphf: 0,
+      scraplc: 0,
+      welding: 0,
+      stamping: 0
+    }));
 
-      fetchedData.forEach(item => {
-        const day = generatedData.find(d => d.date === item.day);
-        if (day) {
-          const line = item.line.toLowerCase();
-          day[item.scrapflag ? `scrap${line}` : line] = parseInt(item.value, 10);
-          // 更新welding和stamping字段
-          day.welding = day.swi + day.rwh + day.w01;
-          day.stamping = day.hf + day.lc;
-        }
-      });
-      
-      qualityData.value = generatedData;
-    } else {
-      console.error('获取质量数据失败');
-      Message.error('获取质量数据失败');
-    }
+    fetchedData.forEach(item => {
+      const day = generatedData.find(d => d.date === item.day);
+      if (day) {
+        const line = item.line.toLowerCase();
+        day[item.scrapflag ? `scrap${line}` : line] = parseInt(item.value, 10);
+        // 更新welding和stamping字段
+        day.welding = day.swi + day.rwh + day.w01;
+        day.stamping = day.hf + day.lc;
+      }
+    });
+    
+    qualityData.value = generatedData;
   } catch (error) {
     console.error('获取质量数据错误:', error);
     Message.error('获取质量数据失败: ' + (error.message || '未知错误'));

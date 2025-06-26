@@ -2,8 +2,9 @@ import { defineStore } from 'pinia'
 import axios from 'axios'
 import { useUserStore } from './user'
 import { format, parseISO, isToday, isBefore, differenceInDays } from 'date-fns'
+import api from '../utils/api'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'
 
 export const useEventStore = defineStore('event', {
   state: () => ({
@@ -45,11 +46,10 @@ export const useEventStore = defineStore('event', {
       try {
         const userStore = useUserStore();
         // 调用API获取事件数据
-        const response = await axios.get(`${API_BASE_URL}/events/`, {
+        const response = await api.get('/events/', {
           headers: {
             Authorization: `Bearer ${userStore.token}`
-          }
-        });
+          }});
         
         if (response.data && Array.isArray(response.data)) {
           this.events = response.data;
@@ -73,8 +73,7 @@ export const useEventStore = defineStore('event', {
       try {
         const userStore = useUserStore();
         // 调用API获取即将开始的事件
-        // 注意：使用events端点并添加upcoming参数
-        const response = await axios.get(`${API_BASE_URL}/events/`, {
+        const response = await api.get('/events/', {
           params: { 
             limit,
             upcoming: true  // 这是关键参数，告诉后端我们要获取即将开始的事件
@@ -124,7 +123,7 @@ export const useEventStore = defineStore('event', {
       try {
         const userStore = useUserStore();
         // 调用API获取事件详情
-        const response = await axios.get(`${API_BASE_URL}/events/${id}/`, {
+        const response = await api.get(`/events/${id}/`, {
           headers: {
             Authorization: `Bearer ${userStore.token}`
           }
@@ -149,7 +148,7 @@ export const useEventStore = defineStore('event', {
       try {
         const userStore = useUserStore();
         // 调用API创建事件
-        const response = await axios.post(`${API_BASE_URL}/events/`, eventData, {
+        const response = await api.post('/events/', eventData, {
           headers: {
             Authorization: `Bearer ${userStore.token}`
           }
@@ -181,7 +180,7 @@ export const useEventStore = defineStore('event', {
       try {
         const userStore = useUserStore();
         // 调用API更新事件
-        const response = await axios.put(`${API_BASE_URL}/events/${id}/`, eventData, {
+        const response = await api.put(`/events/${id}/`, eventData, {
           headers: {
             Authorization: `Bearer ${userStore.token}`
           }
@@ -227,7 +226,7 @@ export const useEventStore = defineStore('event', {
       try {
         const userStore = useUserStore();
         // 调用API删除事件
-        await axios.delete(`${API_BASE_URL}/events/${id}/`, {
+        await api.delete(`/events/${id}/`, {
           headers: {
             Authorization: `Bearer ${userStore.token}`
           }

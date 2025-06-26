@@ -206,17 +206,24 @@ class PermissionService extends BaseApiService {
   }
 
   /**
-   * 获取用户可访问的路由列表
-   * @returns {Promise} - 路由列表
+   * 获取当前用户可访问的路由
+   * @returns {Promise<Array>} - 用户可访问的路由列表
    */
   async getUserRoutes() {
     try {
-      // 使用正确的API端点
-      return this.get('/user-routes');
+      console.log('获取用户可访问路由...')
+      // 尝试调用导航接口
+      const response = await this.get('/navigation')
+      console.log('获取用户路由响应:', response)
+      
+      if (response && Array.isArray(response)) {
+        return response
+      }
+      
+      return []
     } catch (error) {
-      console.error('获取路由列表失败:', error);
-      // 返回空数组作为默认值
-      return [];
+      console.error('获取用户路由失败:', error)
+      return []
     }
   }
 }

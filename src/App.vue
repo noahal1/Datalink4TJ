@@ -25,14 +25,7 @@
           :show-search="true"
           v-model:drawer="drawer"
         >
-          <template v-slot:bottom-actions>
-            <v-list-item @click="toggleHelp" class="help-item" rounded="lg">
-              <template v-slot:prepend>
-                <v-icon>mdi-help-circle</v-icon>
-              </template>
-              <v-list-item-title>帮助与支持</v-list-item-title>
-            </v-list-item>
-            
+          <template v-slot:bottom-actions>        
             <v-list-item @click="forceRefresh" class="refresh-item" rounded="lg">
               <template v-slot:prepend>
                 <v-icon>mdi-refresh</v-icon>

@@ -15,7 +15,7 @@
       <slot name="pre-table"></slot>
       
       <v-data-table
-        :headers="headers"
+        :headers="safeHeaders"
         :items="safeItems"
         :loading="loading"
         :items-per-page="itemsPerPage"
@@ -139,6 +139,11 @@ watch(() => props.items, (newItems) => {
 // 计算内容区的样式类
 const contentClass = computed(() => {
   return props.noPadding ? 'pa-0' : '';
+});
+
+// 确保headers和items是数组的计算属性
+const safeHeaders = computed(() => {
+  return Array.isArray(props.headers) ? props.headers : [];
 });
 
 // 确保items是数组的计算属性

@@ -7,9 +7,9 @@
     <v-row>
       <v-col cols="12">
         <v-card>
-          <v-card-title>物流管理模块开发中</v-card-title>
+          <v-card-title>开发中</v-card-title>
           <v-card-text>
-            <p>这个页面正在开发中，即将包含物流数据的追踪和管理功能。</p>
+            <p>这个页面正在开发中</p>
             <v-alert
               type="info"
               border="start"

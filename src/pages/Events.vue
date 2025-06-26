@@ -196,10 +196,9 @@ import { ref, computed, onMounted, getCurrentInstance } from 'vue'
 import { format, isValid, parseISO, isAfter, isBefore, isToday } from 'date-fns'
 import { useUserStore } from '../stores/user'
 import Message from '../utils/notification'
+import api from '../utils/api'
 
 const userStore = useUserStore()
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
-
 const showDialog = ref(false)
 const dialogTitle = ref('添加事件')
 const dialogColor = computed(() => eventForm.value.id ? 'primary' : 'success')
@@ -268,16 +267,9 @@ const fetchEvents = async () => {
       return;
     }
 
-    const response = await fetch(`${API_BASE_URL}/events`, {
-      headers: {
-        'Authorization': `Bearer ${userStore.token}`
-      }
-    })
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data = await response.json()
-    events.value = data.map(event => ({
+    const response = await api.get('/events')
+    
+    events.value = response.data.map(event => ({
       ...event,
       start_time: event.start_time.split('T')[0],  // 只保留日期部分
       end_time: event.end_time ? event.end_time.split('T')[0] : null,  // 只保留日期部分
@@ -331,8 +323,6 @@ const submitEvent = async () => {
       return;
     }
 
-    const method = eventForm.value.id ? 'PUT' : 'POST'
-    const url = eventForm.value.id ? `${API_BASE_URL}/events/${eventForm.value.id}` : `${API_BASE_URL}/events`
     const payload = {
       name: eventForm.value.name,
       department: eventForm.value.department,
@@ -340,18 +330,15 @@ const submitEvent = async () => {
       end_time: eventForm.value.end_time || null,
       importance: eventForm.value.importance
     }
+
+    let response;
     
-    const response = await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${userStore.token}`
-      },
-      body: JSON.stringify(payload)
-    })
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+    if (eventForm.value.id) {
+      // 更新事件
+      response = await api.put(`/events/${eventForm.value.id}`, payload);
+    } else {
+      // 创建事件
+      response = await api.post('/events', payload);
     }
     
     Message.success(eventForm.value.id ? '事件更新成功' : '事件添加成功');
@@ -383,16 +370,7 @@ const executeDelete = async () => {
       return;
     }
 
-    const response = await fetch(`${API_BASE_URL}/events/${eventToDelete.value.id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${userStore.token}`
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    await api.delete(`/events/${eventToDelete.value.id}`);
     
     Message.success('事件删除成功');
     

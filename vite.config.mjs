@@ -10,7 +10,6 @@ import { VueRouterAutoImports } from 'unplugin-vue-router'
 // Utilities
 import { defineConfig, loadEnv } from 'vite'
 import { fileURLToPath, URL } from 'node:url'
-import { splitVendorChunkPlugin } from 'vite'
 import { compression } from 'vite-plugin-compression2'
 
 // https://vitejs.dev/config/
@@ -66,9 +65,6 @@ export default defineConfig(({ mode }) => {
         dirs: ['src/stores/**', 'src/composables/**', 'src/utils/**'],
       }),
       
-      // 分割代码块
-      splitVendorChunkPlugin(),
-      
       // 生产环境压缩
       compression({
         algorithm: 'gzip',
@@ -94,8 +90,10 @@ export default defineConfig(({ mode }) => {
     css: {
       preprocessorOptions: {
         scss: {
-          api: "modern",
-          silenceDeprecations: ['legacy-js-api']
+          sassOptions: {
+            api: "new",
+            quietDeps: true
+          }
         }
       }
     },
@@ -108,7 +106,12 @@ export default defineConfig(({ mode }) => {
         '/api': {
           target: env.VITE_API_URL || 'http://localhost:8000',
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
+          secure: false,
+          rewrite: (path) => {
+            const newPath = path.replace(/^\/api/, '/api/v1');
+            console.log(`代理请求: ${path} -> ${newPath}`);
+            return newPath;
+          },
         },
       },
     },
@@ -120,13 +123,40 @@ export default defineConfig(({ mode }) => {
       // 将大的依赖模块拆分
       rollupOptions: {
         output: {
-          manualChunks: {
-            'vue-vendor': ['vue', 'vue-router', 'pinia', '@vueuse/core'],
-            'ui-vendor': ['vuetify'],
-            'chart-vendor': ['echarts', 'd3'],
-            'date-vendor': ['date-fns', 'v-calendar', '@vuepic/vue-datepicker'],
+          manualChunks: (id) => {
+            // Vue相关依赖
+            if (id.includes('node_modules/vue') || 
+                id.includes('node_modules/vue-router') || 
+                id.includes('node_modules/pinia') || 
+                id.includes('node_modules/@vueuse/core')) {
+              return 'vue-vendor';
+            }
+            
+            // UI框架
+            if (id.includes('node_modules/vuetify')) {
+              return 'ui-vendor';
+            }
+            
+            // 图表相关
+            if (id.includes('node_modules/echarts') || 
+                id.includes('node_modules/d3')) {
+              return 'chart-vendor';
+            }
+            
+            // 日期处理
+            if (id.includes('node_modules/date-fns') || 
+                id.includes('node_modules/v-calendar') || 
+                id.includes('node_modules/@vuepic/vue-datepicker')) {
+              return 'date-vendor';
+            }
+            
+            // 其他node_modules依赖
+            if (id.includes('node_modules')) {
+              return 'vendors';
+            }
+            
+            return null; // 对于非node_modules的代码不进行分块处理
           },
-          // 使用内容哈希使文件名永远不会重复
           entryFileNames: 'assets/[name].[hash].js',
           chunkFileNames: 'assets/[name].[hash].js',
           assetFileNames: 'assets/[name].[hash].[ext]'
@@ -138,7 +168,6 @@ export default defineConfig(({ mode }) => {
       minify: 'terser',
       terserOptions: {
         compress: {
-          // 生产环境去除console
           drop_console: mode === 'production',
           drop_debugger: true,
           pure_funcs: mode === 'production' ? ['console.log', 'console.info'] : [],
@@ -159,7 +188,6 @@ export default defineConfig(({ mode }) => {
         'echarts',
         '@vueuse/core'
       ],
-      // 排除不需要预构建的依赖
       exclude: ['@vueuse/motion'],
     },
     
