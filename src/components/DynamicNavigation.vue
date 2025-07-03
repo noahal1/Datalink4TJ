@@ -1,23 +1,8 @@
 <template>
   <div class="dynamic-nav">
-    <!-- 搜索框区域 -->
-    <div v-if="showSearch" class="nav-search pa-3">
-      <v-text-field
-        v-model="searchQuery"
-        density="compact"
-        variant="solo"
-        prepend-inner-icon="mdi-magnify"
-        placeholder="搜索菜单..."
-        hide-details
-        clearable
-        @click:clear="clearSearch"
-        class="search-field"
-        bg-color="grey-lighten-4"
-      ></v-text-field>
-    </div>
-    
     <!-- 主导航区域 -->
-    <v-list class="nav-list" density="compact">
+    <div class="nav-content">
+      <v-list class="nav-list" density="compact">
       <!-- 加载状态显示 -->
       <div v-if="loading" class="pa-4 d-flex justify-center align-center">
         <v-progress-circular indeterminate color="primary" size="24"></v-progress-circular>
@@ -118,26 +103,12 @@
             </v-expand-transition>
           </div>
         </template>
-        
-        <!-- 分组间分隔线 -->
         <v-divider v-if="groupIndex < filteredNavigationGroups.length - 1" class="my-2"></v-divider>
       </template>
       
-      <!-- 底部固定菜单项 -->
-      <template v-if="showBottomActions && !loading && !loadError">
-        <v-divider class="my-2"></v-divider>
-        
-        <!-- 添加重新加载路由按钮 -->
-        <v-list-item @click="forceReloadRoutes" class="reload-routes-item" rounded="lg">
-          <template v-slot:prepend>
-            <v-icon>mdi-refresh-circle</v-icon>
-          </template>
-          <v-list-item-title>刷新路由表</v-list-item-title>
-        </v-list-item>
-        
-        <slot name="bottom-actions"></slot>
-      </template>
-    </v-list>
+
+      </v-list>
+    </div>
   </div>
 </template>
 
@@ -155,11 +126,20 @@ const props = defineProps({
     default: () => [
       { id: 'main', title: '主菜单', filter: route => !route.meta?.group || route.meta.group === 'main' },
       { id: 'qa', title: '质量', filter: route => route.meta?.group === 'qa' },
+      { id: 'production', title: '生产', filter: route => route.meta?.group === 'production' },
+      { id: 'logistics', title: '物流', filter: route => route.meta?.group === 'logistics' },
+      { id: 'maintenance', title: '维修', filter: route => route.meta?.group === 'maintenance' },
+      { id: 'ehs', title: 'EHS', filter: route => route.meta?.group === 'ehs' },
+      { id: 'eng', title: '工程', filter: route => route.meta?.group === 'eng' },
       { id: 'assy', title: '生产', filter: route => route.meta?.group === 'assy' },
       { id: 'mat', title: '维修', filter: route => route.meta?.group === 'mat' },
       { id: 'pcl', title: '物流', filter: route => route.meta?.group === 'pcl' },
-      { id: 'ehs', title: 'EHS', filter: route => route.meta?.group === 'ehs' },
-      { id: 'admin', title: '系统管理', filter: route => route.meta?.group === 'admin' }
+      { id: 'gmo',title: 'GMO', filter: route => route.meta?.group === 'gmo' },
+      { id: 'fin', title: '财务', filter: route => route.meta?.group === 'fin' },
+      { id: 'prs', title: 'PRS', filter: route => route.meta?.group === 'prs' },
+      { id: 'hr',title: '人事', filter: route => route.meta?.group === 'hr' },
+      { id: 'admin', title: '系统管理', filter: route => route.meta?.group === 'admin' },
+      { id: 'other', title: '其他', filter: route => !route.meta?.group || route.meta.group === 'other' }
     ]
   },
   // 是否显示底部操作区
@@ -208,16 +188,13 @@ const isActiveRoute = (path) => {
          (path !== '/' && activeRoute.value.startsWith(`${path}/`))
 }
 
-// 检查分组路由是否激活
 const isActiveGroupRoute = (routeObj) => {
   if (!routeObj) return false
   
-  // 检查当前路径是否以分组路径开头
   if (routeObj.path && routeObj.path !== '/' && activeRoute.value.startsWith(routeObj.path)) {
     return true
   }
   
-  // 检查子路由是否激活
   if (routeObj.children && routeObj.children.length > 0) {
     return routeObj.children.some(child => {
       if (!child.path) return false
@@ -235,14 +212,8 @@ const toggleGroup = (groupId) => {
     // 如果已经打开，则关闭
     openGroups.value.splice(index, 1)
   } else {
-    // 否则关闭所有其他菜单，只打开当前菜单
     openGroups.value = [groupId]
   }
-}
-
-// 清除搜索
-const clearSearch = () => {
-  searchQuery.value = ''
 }
 
 // 添加到最近使用
@@ -374,70 +345,201 @@ const retryLoadRoutes = () => {
 const loadRoutes = async () => {
   loading.value = true
   loadError.value = false
-  
+
   try {
-    // 确保权限已初始化
-    if (!permissionStore.roles.length) {
-      await permissionStore.initialize()
+    console.log('DynamicNavigation: 开始加载路由...')
+
+    // 确保用户已登录
+    if (!userStore.isLogin) {
+      console.log('DynamicNavigation: 用户未登录，跳过路由加载')
+      navRoutes.value = []
+      return
     }
 
-    // 强制重新加载导航菜单，不使用缓存
-    const routes = await routeService.reloadRoutes()
-    const navigationMenu = await routeService.getNavigationMenu()
-    
-    // 确保所有路由都有有效的path属性
-    const validateRoutes = (routeList) => {
-      return routeList.map(route => {
-        // 确保路由有有效的path
-        if (!route.path) {
-          route.path = route.name ? `/${route.name.toLowerCase().replace(/\s+/g, '-')}` : null
-        }
-        
-        // 递归处理子路由
-        if (route.children && route.children.length > 0) {
-          route.children = validateRoutes(route.children)
-        }
-        
-        return route
-      }).filter(route => route.path) // 过滤掉没有path的路由
+    // 确保权限已初始化
+    if (!permissionStore.isInitialized) {
+      console.log('DynamicNavigation: 初始化权限...')
+      await permissionStore.initPermissions()
     }
-    
-    navRoutes.value = validateRoutes(navigationMenu)
+
+    // 使用多种方式获取路由
+    let navigationMenu = []
+
+    try {
+      // 方式1: 优先使用权限存储中的路由列表
+      if (permissionStore.accessibleRoutesList && permissionStore.accessibleRoutesList.length > 0) {
+        console.log('DynamicNavigation: 使用权限存储中的路由列表')
+        navigationMenu = permissionStore.accessibleRoutesList
+        console.log('DynamicNavigation: 权限路由获取成功:', navigationMenu.length, '个')
+      } else {
+        // 方式2: 使用权限服务获取用户路由
+        console.log('DynamicNavigation: 尝试获取用户权限路由...')
+        const permissionService = (await import('../services')).permissionService
+        navigationMenu = await permissionService.getUserRoutes()
+        console.log('DynamicNavigation: 权限路由获取成功:', navigationMenu.length, '个')
+      }
+    } catch (permError) {
+      console.warn('DynamicNavigation: 权限路由获取失败，尝试其他方式:', permError)
+
+      try {
+        // 方式3: 使用路由服务获取导航菜单
+        console.log('DynamicNavigation: 尝试获取导航菜单...')
+        navigationMenu = await routeService.getNavigationMenu()
+        console.log('DynamicNavigation: 导航菜单获取成功:', navigationMenu.length, '个')
+      } catch (routeError) {
+        console.warn('DynamicNavigation: 导航菜单获取失败，使用默认路由:', routeError)
+
+        // 方式4: 使用默认路由
+        navigationMenu = getDefaultRoutes()
+      }
+    }
+
+    // 验证和处理路由
+    const processedRoutes = validateAndProcessRoutes(navigationMenu)
+    navRoutes.value = processedRoutes
+
+    console.log('DynamicNavigation: 最终路由数量:', processedRoutes.length)
     resetRetryCount()
-    
+
     // 加载最近使用的路由
     loadRecentlyUsed()
-    
+
     // 加载完路由后，自动展开当前活动路由所在的组
     updateActiveGroups()
+
   } catch (error) {
+    console.error('DynamicNavigation: 加载路由失败:', error)
     loadError.value = true
-    
+
     // 失败后尝试再次加载，最多重试3次
     if (!window._navRetryCount) {
       window._navRetryCount = 1;
     } else if (window._navRetryCount < 3) {
       window._navRetryCount++;
     } else {
+      console.error('DynamicNavigation: 重试次数已达上限，停止重试')
+      // 使用默认路由作为最后的备用方案
+      navRoutes.value = getDefaultRoutes()
       return;
     }
-    
+
+    console.log(`DynamicNavigation: ${window._navRetryCount} 秒后重试...`)
     setTimeout(() => loadRoutes(), 1000 * window._navRetryCount);
   } finally {
     loading.value = false
   }
 }
 
+// 验证和处理路由
+const validateAndProcessRoutes = (routeList) => {
+  if (!Array.isArray(routeList)) {
+    console.warn('DynamicNavigation: 路由列表不是数组，返回空数组')
+    return []
+  }
+
+  const processRoute = (route) => {
+    // 确保路由有基本属性
+    if (!route || typeof route !== 'object') {
+      return null
+    }
+
+    // 确保路由有有效的path
+    if (!route.path) {
+      if (route.name) {
+        route.path = `/${route.name.toLowerCase().replace(/\s+/g, '-')}`
+      } else {
+        console.warn('DynamicNavigation: 路由缺少path和name:', route)
+        return null
+      }
+    }
+
+    // 确保meta存在
+    if (!route.meta) {
+      route.meta = {}
+    }
+
+    // 确保title存在
+    if (!route.meta.title) {
+      route.meta.title = route.name || route.path
+    }
+
+    // 确保icon存在
+    if (!route.meta.icon) {
+      route.meta.icon = 'mdi-link'
+    }
+
+    // 递归处理子路由
+    if (route.children && Array.isArray(route.children)) {
+      route.children = route.children
+        .map(processRoute)
+        .filter(child => child !== null)
+    }
+
+    return route
+  }
+
+  return routeList
+    .map(processRoute)
+    .filter(route => route !== null)
+}
+
+// 获取默认路由（当所有其他方式都失败时使用）
+const getDefaultRoutes = () => {
+  console.log('DynamicNavigation: 使用默认路由')
+
+  const defaultRoutes = [
+    {
+      id: 'dashboard',
+      path: '/dashboard',
+      name: 'Dashboard',
+      meta: {
+        title: '仪表板',
+        icon: 'mdi-view-dashboard',
+        requiresAuth: true
+      }
+    }
+  ]
+
+  // 根据用户角色添加更多默认路由
+  if (permissionStore.isSuperUser || permissionStore.hasRole('管理员') || permissionStore.hasRole('超级管理员')) {
+    defaultRoutes.push({
+      id: 'admin',
+      path: '/admin',
+      name: 'Admin',
+      meta: {
+        title: '系统管理',
+        icon: 'mdi-cog',
+        requiresAuth: true
+      }
+    })
+  }
+
+  return defaultRoutes
+}
+
 // 监听路由变化，更新活动分组和最近使用记录
-watch(() => route.path, (newPath) => {
+watch(() => route.path, (newPath, oldPath) => {
+  console.log('DynamicNavigation: 路由变化', { from: oldPath, to: newPath })
+
   updateActiveGroups()
   addToRecentlyUsed(newPath)
-  
+
   // 确保侧边栏在非移动设备上保持可见
   if (window.innerWidth >= 1264 && !props.drawer) {
     emit('update:drawer', true)
   }
-})
+
+  // 检查路由是否存在，如果不存在则尝试重新加载
+  const registeredRoutes = router.getRoutes()
+  const routeExists = registeredRoutes.some(r => r.path === newPath)
+
+  if (!routeExists && newPath !== '/' && !newPath.startsWith('/login')) {
+    console.warn('DynamicNavigation: 路由不存在，尝试重新加载路由表', newPath)
+    setTimeout(() => {
+      forceReloadRoutes()
+    }, 100)
+  }
+}, { immediate: true })
 
 // 监听搜索查询变化
 watch(() => searchQuery.value, () => {
@@ -465,6 +567,24 @@ watch(() => permissionStore.roles.length, (newLength) => {
   }
 })
 
+// 监听权限初始化状态
+watch(() => permissionStore.isInitialized, (isInitialized) => {
+  if (userStore.isLogin && isInitialized) {
+    // 权限初始化完成后，重新加载路由
+    console.log('DynamicNavigation: 权限初始化完成，重新加载路由')
+    loadRoutes()
+  }
+})
+
+// 监听可访问路由列表变化
+watch(() => permissionStore.accessibleRoutesList.length, (newLength) => {
+  if (userStore.isLogin && newLength > 0) {
+    // 可访问路由列表更新后，重新加载路由
+    console.log('DynamicNavigation: 可访问路由列表更新，重新加载路由')
+    loadRoutes()
+  }
+})
+
 // 确保侧边栏显示方法（可从父组件调用）
 const ensureDrawerVisible = () => {
   if (!props.drawer && window.innerWidth >= 1264) {
@@ -480,7 +600,7 @@ onMounted(() => {
   ensureDrawerVisible()
 })
 
-// 在组件的<script setup>部分添加此方法
+// 处理菜单项点击
 const logRouteClick = (route) => {
   console.log('菜单项点击:', {
     路径: route.path,
@@ -490,12 +610,12 @@ const logRouteClick = (route) => {
     是否激活: isActiveRoute(route.path),
     路由已注册: !!router.hasRoute(route.name)
   })
-  
+
   // 检查路由是否存在于路由表中
   const registeredRoutes = router.getRoutes()
   const matchedRoute = registeredRoutes.find(r => r.path === route.path)
-  
-  console.log(`路由${matchedRoute ? '已' : '未'}在路由表中找到:`, 
+
+  console.log(`路由${matchedRoute ? '已' : '未'}在路由表中找到:`,
     matchedRoute ? {
       路径: matchedRoute.path,
       名称: matchedRoute.name,
@@ -503,16 +623,33 @@ const logRouteClick = (route) => {
       元数据: matchedRoute.meta
     } : '未找到'
   )
-  
-  // 尝试提前加载动态路由
+
+  // 如果路由不存在，尝试重新加载路由表
   if (!matchedRoute) {
-    console.log('尝试加载动态路由...')
-    import('../services').then(({ routeService }) => {
-      routeService.getNavigationTree().then(() => {
+    console.log('路由不存在，尝试重新加载路由表...')
+
+    // 先尝试动态加载路由
+    import('../services').then(async ({ routeService }) => {
+      try {
+        await routeService.getNavigationTree()
         console.log('动态路由重新加载完成')
-      })
+
+        // 重新检查路由是否存在
+        const updatedRoutes = router.getRoutes()
+        const newMatchedRoute = updatedRoutes.find(r => r.path === route.path)
+
+        if (newMatchedRoute) {
+          console.log('路由现在可用，导航到:', route.path)
+          router.push(route.path)
+        } else {
+          console.warn('路由仍然不可用:', route.path)
+          // 可以显示错误提示或导航到默认页面
+        }
+      } catch (err) {
+        console.error('重新加载动态路由失败:', err)
+      }
     }).catch(err => {
-      console.error('加载动态路由失败:', err)
+      console.error('导入路由服务失败:', err)
     })
   }
 }
@@ -527,7 +664,7 @@ const forceReloadRoutes = async () => {
     sessionStorage.removeItem('accessibleRoutes')
     
     // 重新初始化权限存储
-    await permissionStore.initialize()
+    await permissionStore.initPermissions()
     
     // 重新加载导航菜单
     await loadRoutes()
@@ -569,12 +706,46 @@ const forceReloadRoutes = async () => {
   height: 100%;
   display: flex;
   flex-direction: column;
+  max-height: 100vh;
 }
 
-.nav-list {
+.nav-content {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  min-height: 0; /* 确保flex子项可以收缩 */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--v-theme-primary), 0.3) transparent;
+}
+
+/* Webkit浏览器滚动条样式 */
+.nav-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.nav-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.nav-content::-webkit-scrollbar-thumb {
+  background-color: rgba(var(--v-theme-primary), 0.3);
+  border-radius: 3px;
+  transition: background-color 0.3s ease;
+}
+
+.nav-content::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(var(--v-theme-primary), 0.5);
+}
+
+.nav-list {
+  padding-bottom: 8px;
+}
+
+.nav-bottom-actions {
+  flex-shrink: 0;
+  background-color: var(--v-surface-variant);
+  padding: 8px;
+  border-top: 1px solid rgba(var(--v-border-color), 0.12);
 }
 
 .nav-search {
@@ -690,5 +861,28 @@ const forceReloadRoutes = async () => {
 
 .transition-icon {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 响应式优化 */
+@media (max-height: 600px) {
+  .nav-search {
+    padding: 8px 12px;
+  }
+
+  .nav-list-item {
+    margin: 2px 8px;
+  }
+
+  .nav-group-title {
+    margin-top: 4px;
+    font-size: 0.75rem;
+  }
+}
+
+/* 确保在小屏幕上也能正常滚动 */
+@media (max-width: 600px) {
+  .dynamic-nav {
+    max-height: calc(100vh - 64px); /* 减去顶部导航栏高度 */
+  }
 }
 </style>

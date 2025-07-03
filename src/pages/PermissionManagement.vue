@@ -1,12 +1,13 @@
 <template>
-  <unified-page-template 
-    title="权限管理"
+  <unified-page-template
+    title="权限角色管理"
     icon="mdi-shield-account"
     color="primary"
   >
     <v-tabs v-model="activeTab" bg-color="primary">
       <v-tab value="roles">角色管理</v-tab>
-      <v-tab value="permissions">权限管理</v-tab>
+      <v-tab value="route-permissions">路由权限矩阵</v-tab>
+      <v-tab value="permission-codes">权限代码</v-tab>
     </v-tabs>
     
     <v-window v-model="activeTab" class="mt-4">
@@ -22,27 +23,36 @@
                 @add-role="openRoleDialog()"
                 @edit-role="editRole"
                 @delete-role="confirmDeleteRole"
-                @manage-permissions="openRolePermissionsDialog"
+                @manage-routes="openRoleRoutesDialog"
                 @load-items="loadRoles"
               />
             </v-col>
           </v-row>
         </v-container>
       </v-window-item>
-      
-      <!-- 权限管理标签页 -->
-      <v-window-item value="permissions">
+
+      <!-- 路由权限矩阵标签页 -->
+      <v-window-item value="route-permissions">
         <v-container>
           <v-row>
             <v-col cols="12">
-              <permission-list
-                :permissions="permissionsList"
-                :total-permissions="totalPermissions"
-                :loading="loadingPermissions"
-                @add-permission="openPermissionDialog()"
-                @edit-permission="editPermission"
-                @delete-permission="confirmDeletePermission"
-                @load-items="loadPermissions"
+              <RoutePermissionMatrix
+                :loading="loadingMatrix"
+                @refresh="loadRoutesMatrix"
+              />
+            </v-col>
+          </v-row>
+        </v-container>
+      </v-window-item>
+
+      <!-- 权限代码标签页 -->
+      <v-window-item value="permission-codes">
+        <v-container>
+          <v-row>
+            <v-col cols="12">
+              <permission-codes-manager
+                :loading="loadingPermissionCodes"
+                @refresh="loadPermissionCodes"
               />
             </v-col>
           </v-row>
@@ -59,24 +69,15 @@
       @save="saveRole"
       @close="closeRoleDialog"
     />
-    
-    <!-- 权限编辑对话框 -->
-    <permission-dialog
-      v-model="permissionDialog"
-      v-model:permission="editedPermission"
-      :is-new="editedPermissionIndex === -1"
-      :loading="savingPermission"
-      @save="savePermission"
-      @close="closePermissionDialog"
-    />
-    
-    <!-- 角色权限管理对话框 -->
-    <role-permission-dialog
-      v-model="rolePermissionsDialog"
+
+    <!-- 角色路由权限管理对话框 -->
+    <role-routes-dialog
+      v-model="roleRoutesDialog"
       :role="selectedRole"
-      :loading="loadingRolePermissions"
-      @save="updateRolePermissions"
-      @close="closeRolePermissionsDialog"
+      :routes="routesList"
+      :loading="loadingRoleRoutes"
+      @save="updateRoleRoutes"
+      @close="closeRoleRoutesDialog"
     />
     
     <!-- 确认删除对话框 -->
@@ -91,14 +92,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { usePermissionStore } from '../stores/permission'
 import UnifiedPageTemplate from '../components/UnifiedPageTemplate.vue'
 import RoleList from '../components/permissions/RoleList.vue'
-import PermissionList from '../components/permissions/PermissionList.vue'
 import RoleDialog from '../components/permissions/RoleDialog.vue'
-import PermissionDialog from '../components/permissions/PermissionDialog.vue'
-import RolePermissionDialog from '../components/permissions/RolePermissionDialog.vue'
+import RoleRoutesDialog from '../components/permissions/RoleRoutesDialog.vue'
+import RoutePermissionMatrix from '../components/permissions/RoutePermissionMatrix.vue'
+import PermissionCodesManager from '../components/permissions/PermissionCodesManager.vue'
 import ConfirmDialog from '../components/ConfirmDialog.vue'
 import api from '../utils/api'
 import Message from '../utils/notification'
@@ -108,6 +109,13 @@ const activeTab = ref('roles')
 
 // 权限Store
 const permissionStore = usePermissionStore()
+
+// ==== 路由权限矩阵相关 ====
+const routesList = ref([])
+const loadingMatrix = ref(false)
+
+// ==== 权限代码相关 ====
+const loadingPermissionCodes = ref(false)
 
 // ==== 角色管理相关 ====
 const rolesList = ref([])
@@ -121,6 +129,11 @@ const editedRole = ref({
   name: '',
   description: ''
 })
+
+// ==== 角色路由权限管理相关 ====
+const roleRoutesDialog = ref(false)
+const selectedRole = ref(null)
+const loadingRoleRoutes = ref(false)
 
 // 加载角色列表
 const loadRoles = async (options = {}) => {
@@ -244,242 +257,131 @@ const closeRoleDialog = () => {
   }, 300)
 }
 
-// ==== 权限管理相关 ====
-const permissionsList = ref([])
-const totalPermissions = ref(0)
-const loadingPermissions = ref(false)
-const savingPermission = ref(false)
-const permissionDialog = ref(false)
-const editedPermissionIndex = ref(-1)
-const editedPermission = ref({
-  id: null,
-  permission_code: '',
-  description: '',
-  route_id: null,
-  role_id: null
-})
-
-// 加载权限列表
-const loadPermissions = async (options = {}) => {
-  try {
-    loadingPermissions.value = true
-    
-    // 构建查询参数
-    const params = {
-      skip: options.page ? (options.page - 1) * options.itemsPerPage : 0,
-      limit: options.itemsPerPage || 10
-    }
-    
-    if (options.sortBy && options.sortBy.length > 0) {
-      params.order_by = options.sortBy[0].key
-      params.order_desc = options.sortBy[0].order === 'desc'
-    }
-    
-    const response = await api.get('/route-permissions', { params })
-    if (response && response.data) {
-      permissionsList.value = response.data
-      totalPermissions.value = response.headers['x-total-count'] || permissionsList.value.length
-    }
-  } catch (error) {
-    console.error('加载路由权限列表失败:', error)
-    Message.error('加载路由权限列表失败')
-  } finally {
-    loadingPermissions.value = false
-  }
-}
-
-// 打开权限对话框
-const openPermissionDialog = (permission = null) => {
-  if (permission) {
-    editedPermissionIndex.value = permissionsList.value.findIndex(p => p.id === permission.id)
-    editedPermission.value = { ...permission }
-  } else {
-    editedPermissionIndex.value = -1
-    editedPermission.value = {
-      id: null,
-      permission_code: '',
-      description: '',
-      route_id: null,
-      role_id: null
-    }
-  }
-  permissionDialog.value = true
-}
-
-// 编辑权限
-const editPermission = (permission) => {
-  openPermissionDialog(permission)
-}
-
-// 保存权限
-const savePermission = async () => {
-  try {
-    savingPermission.value = true
-    
-    if (editedPermissionIndex.value === -1) {
-      // 创建新权限
-      const response = await api.post('/route-permissions', editedPermission.value)
-      Message.success('路由权限创建成功')
-      
-      // 刷新权限列表
-      await loadPermissions()
-    } else {
-      // 更新现有权限
-      await api.put(`/route-permissions/${editedPermission.value.id}`, editedPermission.value)
-      Message.success('路由权限更新成功')
-      
-      // 更新本地数据
-      permissionsList.value[editedPermissionIndex.value] = { ...editedPermission.value }
-    }
-    
-    closePermissionDialog()
-    
-    // 重新初始化权限存储
-    await permissionStore.initialize()
-  } catch (error) {
-    console.error('保存路由权限失败:', error)
-    Message.error('保存路由权限失败: ' + (error.response?.data?.detail || error.message))
-  } finally {
-    savingPermission.value = false
-  }
-}
-
-// 关闭权限对话框
-const closePermissionDialog = () => {
-  permissionDialog.value = false
-  setTimeout(() => {
-    editedPermission.value = {
-      id: null,
-      permission_code: '',
-      description: '',
-      route_id: null,
-      role_id: null
-    }
-  }, 300)
-}
-
-// ==== 角色权限管理相关 ====
-const rolePermissionsDialog = ref(false)
-const selectedRole = ref(null)
-const loadingRolePermissions = ref(false)
-
-// 打开角色权限管理对话框
-const openRolePermissionsDialog = (role) => {
+// ==== 角色路由权限管理方法 ====
+// 打开角色路由权限对话框
+const openRoleRoutesDialog = (role) => {
   selectedRole.value = role
-  rolePermissionsDialog.value = true
+  roleRoutesDialog.value = true
 }
 
-// 更新角色权限
-const updateRolePermissions = (updatedRole) => {
-  // 找到角色在列表中的索引
-  const index = rolesList.value.findIndex(r => r.id === updatedRole.id)
-  if (index !== -1) {
-    // 更新角色数据
-    rolesList.value[index] = updatedRole
+// 关闭角色路由权限对话框
+const closeRoleRoutesDialog = () => {
+  roleRoutesDialog.value = false
+  selectedRole.value = null
+}
+
+// 更新角色路由权限
+const updateRoleRoutes = async (roleId, routeIds) => {
+  try {
+    loadingRoleRoutes.value = true
+
+    // 调用后端API更新角色路由权限
+    const response = await api.put(`/permissions/roles/${roleId}/routes`, {
+      route_ids: routeIds
+    })
+
+    Message.success('角色路由权限更新成功')
+
+    // 刷新路由权限矩阵
+    await loadRoutesMatrix()
+
+    closeRoleRoutesDialog()
+  } catch (error) {
+    console.error('更新角色路由权限失败:', error)
+    Message.error('更新角色路由权限失败: ' + (error.response?.data?.detail || error.message))
+  } finally {
+    loadingRoleRoutes.value = false
   }
-  
-  Message.success('角色权限更新成功')
-  closeRolePermissionsDialog()
 }
 
-// 关闭角色权限管理对话框
-const closeRolePermissionsDialog = () => {
-  rolePermissionsDialog.value = false
-  setTimeout(() => {
-    selectedRole.value = null
-  }, 300)
+// ==== 路由权限矩阵方法 ====
+// 加载路由权限矩阵
+const loadRoutesMatrix = async () => {
+  try {
+    loadingMatrix.value = true
+
+    // 加载路由列表
+    const routesResponse = await api.get('/routes')
+    if (routesResponse && routesResponse.data) {
+      routesList.value = routesResponse.data
+    }
+
+    Message.success('路由权限矩阵加载成功')
+  } catch (error) {
+    console.error('加载路由权限矩阵失败:', error)
+    Message.error('加载路由权限矩阵失败: ' + (error.response?.data?.detail || error.message))
+  } finally {
+    loadingMatrix.value = false
+  }
 }
 
-// ==== 删除确认相关 ====
+// ==== 权限代码方法 ====
+// 加载权限代码
+const loadPermissionCodes = async () => {
+  try {
+    loadingPermissionCodes.value = true
+
+    // 这里可以调用获取权限代码的API
+    // 目前权限代码是基于角色硬编码的，所以这个方法主要用于刷新
+
+    Message.success('权限代码加载成功')
+  } catch (error) {
+    console.error('加载权限代码失败:', error)
+    Message.error('加载权限代码失败: ' + (error.response?.data?.detail || error.message))
+  } finally {
+    loadingPermissionCodes.value = false
+  }
+}
+
+// ==== 确认删除相关 ====
 const confirmDialog = ref(false)
 const confirmDialogTitle = ref('')
 const confirmDialogMessage = ref('')
 const confirmDialogLoading = ref(false)
-const deleteCallback = ref(null)
-const deleteData = ref(null)
+const deleteTarget = ref(null)
+const deleteType = ref('')
 
 // 确认删除角色
 const confirmDeleteRole = (role) => {
-  confirmDialogTitle.value = '删除角色'
-  confirmDialogMessage.value = `确定要删除角色 "${role.name}" 吗？此操作不可恢复。`
-  deleteCallback.value = deleteRole
-  deleteData.value = role
-  confirmDialog.value = true
-}
-
-// 确认删除权限
-const confirmDeletePermission = (permission) => {
-  confirmDialogTitle.value = '删除路由权限'
-  confirmDialogMessage.value = `确定要删除权限代码 "${permission.permission_code}" 吗？此操作不可恢复。`
-  deleteCallback.value = deletePermission
-  deleteData.value = permission
+  deleteTarget.value = role
+  deleteType.value = 'role'
+  confirmDialogTitle.value = '确认删除角色'
+  confirmDialogMessage.value = `确定要删除角色 "${role.name}" 吗？此操作不可撤销。`
   confirmDialog.value = true
 }
 
 // 处理确认删除
 const handleConfirmDelete = async () => {
-  if (deleteCallback.value && deleteData.value) {
-    await deleteCallback.value(deleteData.value)
-  }
-}
-
-// 删除角色
-const deleteRole = async (role) => {
   try {
     confirmDialogLoading.value = true
-    
-    await api.delete(`/roles/${role.id}`)
-    
-    // 从列表中移除
-    const index = rolesList.value.findIndex(r => r.id === role.id)
-    if (index !== -1) {
-      rolesList.value.splice(index, 1)
-    }
-    
-    Message.success('角色删除成功')
-    confirmDialog.value = false
-  } catch (error) {
-    console.error('删除角色失败:', error)
-    Message.error('删除角色失败: ' + (error.response?.data?.detail || error.message))
-  } finally {
-    confirmDialogLoading.value = false
-  }
-}
 
-// 删除权限
-const deletePermission = async (permission) => {
-  try {
-    confirmDialogLoading.value = true
-    
-    await api.delete(`/route-permissions/${permission.id}`)
-    
-    // 从列表中移除
-    const index = permissionsList.value.findIndex(p => p.id === permission.id)
-    if (index !== -1) {
-      permissionsList.value.splice(index, 1)
+    if (deleteType.value === 'role') {
+      await api.delete(`/roles/${deleteTarget.value.id}`)
+      Message.success('角色删除成功')
+      await loadRoles()
     }
-    
-    Message.success('路由权限删除成功')
+
     confirmDialog.value = false
-    
-    // 重新初始化权限存储
-    await permissionStore.initialize()
   } catch (error) {
-    console.error('删除路由权限失败:', error)
-    Message.error('删除路由权限失败: ' + (error.response?.data?.detail || error.message))
+    console.error('删除失败:', error)
+    Message.error('删除失败: ' + (error.response?.data?.detail || error.message))
   } finally {
     confirmDialogLoading.value = false
+    deleteTarget.value = null
+    deleteType.value = ''
   }
 }
 
 // 初始化
 onMounted(async () => {
-  // 加载角色和权限数据
+  // 加载角色数据
   await loadRoles()
-  await loadPermissions()
-  
+
+  // 加载路由权限矩阵
+  await loadRoutesMatrix()
+
   // 刷新权限存储
-  await permissionStore.initialize()
+  await permissionStore.initPermissions()
 })
 </script>
 

@@ -768,13 +768,13 @@ const loadDowntimeRecords = async () => {
               shift = determineShift(item.start_time);
             }
           }
-          
+
           // 如果没有shift_code值，根据shift计算
           let shift_code = item.shift_code;
           if (!shift_code) {
             shift_code = shift === "白班" ? 1 : 2;
           }
-          
+
           return {
             ...item,
             shift: shift,
@@ -1131,22 +1131,45 @@ const formatDateTime = (dateTimeStr) => {
 // 计算持续时间
 const calculateDuration = (startTime, endTime) => {
   if (!startTime || !endTime) return '-'
-  
-  const start = new Date(startTime)
-  const end = new Date(endTime)
-  
-  const diffMs = end - start
-  if (diffMs < 0) return '-'
-  
-  const diffMins = Math.floor(diffMs / 60000)
-  
-  if (diffMins < 60) {
-    return `${diffMins}分钟`
+
+  try {
+    // 处理不同的时间格式
+    let start, end
+
+    if (typeof startTime === 'string') {
+      start = new Date(startTime)
+    } else {
+      start = new Date(startTime)
+    }
+
+    if (typeof endTime === 'string') {
+      end = new Date(endTime)
+    } else {
+      end = new Date(endTime)
+    }
+
+    // 检查日期对象是否有效
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      console.warn('时间格式无效:', { startTime, endTime, start, end })
+      return '-'
+    }
+
+    const diffMs = end - start
+    if (diffMs < 0) return '-'
+
+    const diffMins = Math.floor(diffMs / 60000)
+
+    if (diffMins < 60) {
+      return `${diffMins}分钟`
+    }
+
+    const hours = Math.floor(diffMins / 60)
+    const mins = diffMins % 60
+    return `${hours}小时${mins > 0 ? ` ${mins}分钟` : ''}`
+  } catch (error) {
+    console.error('时间计算错误:', error, { startTime, endTime })
+    return '-'
   }
-  
-  const hours = Math.floor(diffMins / 60)
-  const mins = diffMins % 60
-  return `${hours}小时${mins > 0 ? ` ${mins}分钟` : ''}`
 }
 
 // 获取线体颜色
@@ -1287,22 +1310,59 @@ const batchDeleteDowntimeRecords = async () => {
 // 计算总停机时间
 const calculateTotalDowntime = () => {
   if (downtimeRecords.value.length === 0) return '0分钟'
-  
+
   let totalMinutes = 0
-  
-  downtimeRecords.value.forEach(record => {
-    const start = new Date(record.start_time)
-    const end = new Date(record.end_time)
-    const diffMs = end - start
-    if (diffMs > 0) {
-      totalMinutes += Math.floor(diffMs / 60000)
+
+  downtimeRecords.value.forEach((record, index) => {
+    if (!record.start_time || !record.end_time) {
+      console.warn(`记录 ${index + 1} 缺少时间信息:`, record)
+      return
+    }
+
+    // 处理不同的时间格式
+    let start, end
+
+    try {
+      // 如果是字符串，直接解析
+      if (typeof record.start_time === 'string') {
+        start = new Date(record.start_time)
+      } else {
+        start = new Date(record.start_time)
+      }
+
+      if (typeof record.end_time === 'string') {
+        end = new Date(record.end_time)
+      } else {
+        end = new Date(record.end_time)
+      }
+
+      // 检查日期对象是否有效
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        console.warn(`记录 ${index + 1} 时间格式无效:`, {
+          start_time: record.start_time,
+          end_time: record.end_time,
+          start_parsed: start,
+          end_parsed: end
+        })
+        return
+      }
+
+      const diffMs = end - start
+      if (diffMs > 0) {
+        const minutes = Math.floor(diffMs / 60000)
+        totalMinutes += minutes
+      } else {
+        console.warn(`记录 ${index + 1} 时间差异无效: ${diffMs}ms，开始时间: ${start}，结束时间: ${end}`)
+      }
+    } catch (error) {
+      console.error(`记录 ${index + 1} 时间解析错误:`, error, record)
     }
   })
-  
+
   if (totalMinutes < 60) {
     return `${totalMinutes}分钟`
   }
-  
+
   const hours = Math.floor(totalMinutes / 60)
   const mins = totalMinutes % 60
   return `${hours}小时${mins > 0 ? ` ${mins}分钟` : ''}`
@@ -1311,28 +1371,52 @@ const calculateTotalDowntime = () => {
 // 计算平均停机时间
 const calculateAverageDowntime = () => {
   if (downtimeRecords.value.length === 0) return '0分钟'
-  
+
   let totalMinutes = 0
   let validRecords = 0
-  
+
   downtimeRecords.value.forEach(record => {
-    const start = new Date(record.start_time)
-    const end = new Date(record.end_time)
-    const diffMs = end - start
-    if (diffMs > 0) {
-      totalMinutes += Math.floor(diffMs / 60000)
-      validRecords++
+    if (!record.start_time || !record.end_time) return
+
+    try {
+      // 处理不同的时间格式
+      let start, end
+
+      if (typeof record.start_time === 'string') {
+        start = new Date(record.start_time)
+      } else {
+        start = new Date(record.start_time)
+      }
+
+      if (typeof record.end_time === 'string') {
+        end = new Date(record.end_time)
+      } else {
+        end = new Date(record.end_time)
+      }
+
+      // 检查日期对象是否有效
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        return
+      }
+
+      const diffMs = end - start
+      if (diffMs > 0) {
+        totalMinutes += Math.floor(diffMs / 60000)
+        validRecords++
+      }
+    } catch (error) {
+      console.error('平均时间计算错误:', error, record)
     }
   })
-  
+
   if (validRecords === 0) return '0分钟'
-  
+
   const avgMinutes = Math.round(totalMinutes / validRecords)
-  
+
   if (avgMinutes < 60) {
     return `${avgMinutes}分钟`
   }
-  
+
   const hours = Math.floor(avgMinutes / 60)
   const mins = avgMinutes % 60
   return `${hours}小时${mins > 0 ? ` ${mins}分钟` : ''}`

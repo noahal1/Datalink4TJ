@@ -88,15 +88,29 @@ router.beforeEach(async (to, from, next) => {
     
     // 2. 确保权限已加载
     if (userStore.isAuthenticated && !permissionStore.isInitialized) {
-      console.log('权限未初始化，加载权限')
-      await permissionStore.initialize()
+      console.log('权限未初始化，开始加载权限')
+      await permissionStore.initPermissions()
+      console.log('权限加载完成')
     }
-    
-    // 3. 检查是否有权限访问
-    const permissionCode = to.meta.permission_code
-    if (requiresAuth && permissionCode && permissionCode !== '*') {
-      if (!permissionStore.hasPermission(permissionCode)) {
-        console.log(`用户无权限: ${permissionCode}，拒绝访问`)
+
+    // 3. 等待权限加载完成
+    if (userStore.isAuthenticated && permissionStore.loading) {
+      console.log('权限正在加载中，等待完成...')
+      // 等待权限加载完成
+      let attempts = 0
+      while (permissionStore.loading && attempts < 50) { // 最多等待5秒
+        await new Promise(resolve => setTimeout(resolve, 100))
+        attempts++
+      }
+      console.log('权限加载等待完成')
+    }
+
+    // 4. 检查路由访问权限
+    if (requiresAuth && to.path !== '/dashboard') {
+      // 检查用户是否可以访问该路由
+      const hasAccess = permissionStore.canAccessRoute(to.path)
+      if (!hasAccess && !permissionStore.isSuperUser) {
+        console.log(`用户无权限访问路由: ${to.path}，拒绝访问`)
         Message.error('没有访问权限')
         next({ path: '/dashboard' })
         return
@@ -115,14 +129,11 @@ router.beforeEach(async (to, from, next) => {
 
 // 路由解析后的处理
 router.afterEach((to) => {
-  // 更新页面标题
   if (to.meta.title) {
     document.title = `${to.meta.title} - Datalink4TJ`
   } else {
     document.title = 'Datalink4TJ'
   }
-  
-  // 其他路由完成后的操作...
 })
 
 export default router

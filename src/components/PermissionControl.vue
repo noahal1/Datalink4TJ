@@ -54,8 +54,7 @@
 
 <script>
 import { defineComponent, computed } from 'vue'
-import { usePermissionStore } from '../stores/permission'
-import { PermissionHelper } from '../utils/permissionConstants'
+import { usePermissionStore, checkPermission } from '../stores/permission'
 
 export default defineComponent({
   name: 'PermissionControl',
@@ -117,24 +116,24 @@ export default defineComponent({
         return true
       }
       
-      // 单一权限模式
+      // 单一权限模式（简化版本）
       if (props.module && props.level) {
-        return permissionStore.hasPermission(props.module, props.level, props.departmentId)
+        const permissionCode = `${props.module}_${props.level}`.toLowerCase()
+        return checkPermission(permissionCode)
       }
-      
+
       // 多权限模式
       if (props.permissions && props.permissions.length > 0) {
         const checkMethod = props.logic.toLowerCase() === 'and' ? 'every' : 'some'
-        
+
         return props.permissions[checkMethod]((permission) => {
-          return permissionStore.hasPermissionByString(permission)
+          return checkPermission(permission)
         })
       }
-      
+
       // 角色模式
       if (props.roles && props.roles.length > 0) {
-        const userRoles = permissionStore.userRoles
-        return props.roles.some(role => userRoles.includes(role))
+        return props.roles.some(role => permissionStore.hasRole(role))
       }
       
       // 如果没有设置任何权限检查条件，默认不显示

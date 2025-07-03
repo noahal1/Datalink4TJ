@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { useUserStore } from './user'
-import { permissionService } from '../services'
+import api from '../utils/api'
 
 // 调试模式 - 开发环境打印详细日志
 const isDebugMode = true
@@ -12,296 +12,217 @@ const debug = (...args) => {
 
 export const usePermissionStore = defineStore('permission', {
   state: () => ({
-    // 权限缓存
-    permissionCache: {},
-    // 角色列表
+    // 简化的权限状态，只保留必要信息
     roles: [],
-    // 权限代码列表
-    permissionCodes: [],
-    // 当前用户的权限信息
-    currentUserPermissions: {
-      roles: []
-    },
-    // 可访问路由列表
-    routePermissions: [],
+    // 用户可访问的路由（从后端获取）
+    accessibleRoutesList: [],
     // 加载状态
-    loading: false
+    loading: false,
+    // 初始化状态
+    isInitialized: false,
+    // 权限加载完成状态
+    permissionsLoaded: false
   }),
-  
+
   getters: {
-    // 检查是否有特定权限代码
-    hasPermission: (state) => (permissionCode) => {
+    // 检查是否有指定角色
+    hasRole: () => (roleName) => {
       const userStore = useUserStore()
-      
-      // 如果用户未登录，返回false
+
       if (!userStore.isLogin) {
+        debug('用户未登录，无角色权限')
         return false
       }
-      
-      // 检查是否有超级管理员角色
-      if (userStore.roles.includes('超级管理员')) {
-        return true
-      }
-      
-      // 构建缓存键
-      const cacheKey = `perm:${permissionCode}`
-      
-      // 如果缓存中有结果，直接返回
-      if (state.permissionCache[cacheKey] !== undefined) {
-        return state.permissionCache[cacheKey]
-      }
 
-      // 检查特殊权限：所有人都可访问的页面
-      if (permissionCode === '*') {
-        return true
-      }
-      
-      // 检查是否在权限代码列表中
-      const result = state.permissionCodes.includes(permissionCode)
-      
-      // 缓存结果
-      state.permissionCache[cacheKey] = result
-      
-      return result
-    },
-    
-    // 获取用户角色名称列表
-    userRoles: (state) => {
-      return state.currentUserPermissions.roles || []
+      const hasRole = userStore.roles.includes(roleName)
+      debug(`检查角色权限: ${roleName} = ${hasRole}`)
+      return hasRole
     },
     
     // 检查是否是超级管理员
-    isSuperUser: (state) => {
+    isSuperUser: () => {
       const userStore = useUserStore()
-      return userStore.roles.includes('超级管理员')
+      return userStore.roles.includes('超级管理员') || userStore.roles.includes('管理员')
     },
     
     // 获取用户可访问的路由列表
     accessibleRoutes: (state) => {
-      // 从本地存储获取路由列表
-      const routesStr = localStorage.getItem('accessibleRoutes')
-      if (routesStr) {
-        try {
-          return JSON.parse(routesStr)
-        } catch (e) {
-          console.error('解析可访问路由列表失败:', e)
-        }
+      return state.accessibleRoutesList || []
+    },
+
+    // 检查用户是否可以访问指定路由
+    canAccessRoute: (state) => (routePath) => {
+      const userStore = useUserStore()
+
+      // 超级管理员和管理员可以访问所有路由
+      if (userStore.roles.includes('超级管理员') || userStore.roles.includes('管理员')) {
+        return true
       }
-      
-      // 默认可访问的基本路由
-      return [
-        { path: '/dashboard', name: '首页' }
-      ]
+
+      // 如果权限还在加载中，暂时拒绝访问（避免首次登录时显示未授权路由）
+      if (state.loading || !state.permissionsLoaded) {
+        debug(`权限加载中，暂时拒绝访问路由: ${routePath}`)
+        return false
+      }
+
+      // 检查路由是否在可访问列表中
+      if (state.accessibleRoutesList && state.accessibleRoutesList.length > 0) {
+        const hasAccess = state.accessibleRoutesList.some(route => route.path === routePath)
+        debug(`路由权限检查: ${routePath} = ${hasAccess}`)
+        return hasAccess
+      }
+
+      // 如果权限已加载但列表为空，默认拒绝访问
+      debug(`权限已加载但无可访问路由，拒绝访问: ${routePath}`)
+      return false
     }
   },
-  
+
   actions: {
     // 初始化权限信息
-    async initialize() {
+    async initPermissions() {
+      if (this.isInitialized) {
+        debug('权限已初始化，跳过')
+        return
+      }
+
       try {
         this.loading = true
-        debug('初始化权限信息')
-        
+        this.permissionsLoaded = false
+        debug('开始初始化权限信息')
+
         const userStore = useUserStore()
-        
-        // 确保用户已登录
         if (!userStore.isLogin) {
           debug('用户未登录，跳过权限初始化')
+          this.loading = false
           return
         }
-        
-        // 获取用户权限信息
-        try {
-          debug('获取用户权限信息...')
-          const userPermissions = await permissionService.getUserPermissions()
-          
-          if (userPermissions) {
-            // 更新当前用户权限信息
-            this.currentUserPermissions = userPermissions
-            
-            // 更新角色列表
-            if (userPermissions.roles && Array.isArray(userPermissions.roles)) {
-              this.roles = userPermissions.roles
-              
-              // 同步到userStore
-              userStore.setRoles(userPermissions.roles.map(role => role.name))
-            }
-            
-            // 更新权限代码列表
-            if (userPermissions.permission_codes && Array.isArray(userPermissions.permission_codes)) {
-              this.permissionCodes = userPermissions.permission_codes
-              debug('权限代码列表已更新:', this.permissionCodes)
-            }
-            
-            debug('用户权限信息已更新:', this.currentUserPermissions)
-          } else {
-            debug('未获取到用户权限信息')
-          }
-        } catch (error) {
-          console.error('获取用户权限信息失败:', error)
-        }
-        
-        // 清除权限缓存
-        this.permissionCache = {}
-        
-        // 获取用户可访问的路由列表
-        try {
-          debug('获取用户可访问路由...')
-          const routes = await permissionService.getUserRoutes()
-          
-          if (routes && Array.isArray(routes)) {
-            debug('获取到用户可访问的路由列表:', routes.length, '个路由')
-            
-            // 提取路由列表并保存到本地存储
-            const routesList = routes.map(route => {
-              // 保留路由的元数据，用于后续权限检查
-              return {
-                path: route.path,
-                name: route.name || route.meta?.title || route.path,
-                permissionCode: route.meta?.permission || null
-              }
-            })
-            
-            // 添加管理页面
-            if (userStore.roles.includes('管理员') || userStore.roles.includes('超级管理员')) {
-              if (!routesList.some(r => r.path === '/admin')) {
-                routesList.push({ path: '/admin', name: '管理' })
-              }
-            }
-            
-            localStorage.setItem('accessibleRoutes', JSON.stringify(routesList))
-            debug('保存可访问路由列表到本地存储:', routesList.length, '个路由')
-          }
-        } catch (error) {
-          console.error('获取用户可访问路由列表失败:', error)
-          
-          // 确保至少有基本路由
-          const basicRoutes = [
-            { path: '/dashboard', name: '首页' }
-          ]
-          
-          // 添加管理页面
-          if (userStore.roles.includes('管理员') || userStore.roles.includes('超级管理员')) {
-            basicRoutes.push({ path: '/admin', name: '管理' })
-          }
-          
-          localStorage.setItem('accessibleRoutes', JSON.stringify(basicRoutes))
-          debug('保存基本路由列表到本地存储')
-        }
-        
+
+        // 获取用户可访问的路由
+        await this.fetchUserRoutes()
+
+        this.isInitialized = true
+        this.permissionsLoaded = true
         debug('权限初始化完成')
+
       } catch (error) {
-        console.error('初始化权限信息出错:', error)
+        console.error('初始化权限失败:', error)
+        this.permissionsLoaded = false
       } finally {
         this.loading = false
       }
     },
-    
-    // 检查路由权限
-    canAccessRoute(routePath) {
-      const userStore = useUserStore()
-      
-      debug(`检查路由权限: ${routePath}`)
-      
-      // 超级管理员可以访问所有路由
-      if (userStore.roles.includes('超级管理员')) {
-        debug(`超级管理员有权限访问: ${routePath}`)
-        return true
+
+    // 获取用户可访问的路由
+    async fetchUserRoutes() {
+      try {
+        debug('获取用户可访问路由')
+
+        const response = await api.get('/user-routes')
+        this.accessibleRoutesList = response.data || []
+
+        debug(`获取到 ${this.accessibleRoutesList.length} 个可访问路由:`, this.accessibleRoutesList.map(r => r.path))
+
+        // 保存到本地存储
+        localStorage.setItem('accessibleRoutes', JSON.stringify(this.accessibleRoutesList))
+
+        // 标记权限加载完成
+        this.permissionsLoaded = true
+
+      } catch (error) {
+        console.error('获取用户路由失败:', error)
+
+        // 尝试从本地存储恢复
+        const cached = localStorage.getItem('accessibleRoutes')
+        if (cached) {
+          try {
+            this.accessibleRoutesList = JSON.parse(cached)
+            this.permissionsLoaded = true
+            debug('从本地存储恢复路由信息')
+          } catch (e) {
+            console.error('解析本地存储的路由信息失败:', e)
+            this.accessibleRoutesList = []
+            this.permissionsLoaded = false
+          }
+        } else {
+          this.accessibleRoutesList = []
+          this.permissionsLoaded = false
+        }
+
+        // 重新抛出错误，让调用者知道获取失败
+        throw error
       }
-      
-      // 检查路由是否在可访问列表中
-      const routes = this.accessibleRoutes
-      debug(`可访问路由列表:`, routes)
-      
-      // 找到匹配的路由
-      const matchedRoute = routes.find(route => {
-        // 精确匹配
-        if (route.path === routePath) {
-          debug(`找到精确匹配路由: ${route.path}`)
-          return true
-        }
+    },
+
+    // 检查路由访问权限
+    async checkRouteAccess(routePath) {
+      try {
+        const response = await api.post('/permissions/check-route-access', null, {
+          params: { route_path: routePath }
+        })
         
-        // 尝试通配符匹配 (以* 结尾的路径)
-        if (route.path.endsWith('*')) {
-          const baseRoute = route.path.slice(0, -1)
-          if (routePath.startsWith(baseRoute)) {
-            debug(`找到通配符匹配路由: ${route.path} 匹配 ${routePath}`)
-            return true
-          }
-        }
-        
-        // 尝试参数匹配 (包含:的路径)
-        if (route.path.includes(':')) {
-          // 将路由路径转换为正则表达式
-          const regex = new RegExp(
-            '^' + route.path.replace(/:[^/]+/g, '[^/]+') + '$'
-          )
-          if (regex.test(routePath)) {
-            debug(`找到参数匹配路由: ${route.path} 匹配 ${routePath}`)
-            return true
-          }
-        }
-        
-        // 大小写不敏感匹配
-        if (route.path.toLowerCase() === routePath.toLowerCase()) {
-          debug(`找到大小写不敏感匹配路由: ${route.path} 匹配 ${routePath}`)
-          return true;
-        }
-        
-        return false
-      })
-      
-      if (!matchedRoute) {
-        debug(`未找到匹配的路由: ${routePath}`)
+        return response.data.has_access || false
+      } catch (error) {
+        console.error('检查路由访问权限失败:', error)
         return false
       }
-      
-      debug(`找到匹配的路由: ${matchedRoute.path}`)
-      
-      // 如果路由没有权限代码要求，则可以访问
-      if (!matchedRoute.permissionCode) {
-        debug(`路由 ${matchedRoute.path} 无权限要求，允许访问`)
-        return true
-      }
-      
-      // 如果是所有人都可访问的权限代码
-      if (matchedRoute.permissionCode === '*') {
-        debug(`路由 ${matchedRoute.path} 权限为*，允许所有人访问`)
-        return true
-      }
-      
-      // 检查是否有此权限代码
-      const hasPermission = this.hasPermission(matchedRoute.permissionCode)
-      debug(`检查权限 ${matchedRoute.permissionCode} 结果: ${hasPermission ? '有权限' : '无权限'}`)
-      return hasPermission
     },
-    
-    // 检查权限代码是否存在
-    hasPermissionCode(code) {
-      return this.permissionCodes.includes(code)
-    },
-    
-    // 重置权限状态
-    reset() {
-      this.permissionCache = {}
+
+    // 清除权限信息
+    clearPermissions() {
+      debug('清除权限信息')
       this.roles = []
-      this.permissionCodes = []
-      this.currentUserPermissions = {
-        roles: []
-      }
-      
-      // 清除路由权限
+      this.accessibleRoutesList = []
+      this.isInitialized = false
+      this.permissionsLoaded = false
+
+      // 清除本地存储
       localStorage.removeItem('accessibleRoutes')
+    },
+
+    // 刷新权限信息
+    async refreshPermissions() {
+      debug('刷新权限信息')
+      this.isInitialized = false
+      this.permissionsLoaded = false
+      await this.initPermissions()
     }
-  },
-  
-  persist: {
-    enabled: true,
-    strategies: [
-      {
-        key: 'permission_store',
-        storage: localStorage
-      }
-    ]
   }
-}) 
+})
+
+// 权限检查工具函数
+export const checkPermission = (permissionCode) => {
+  const permissionStore = usePermissionStore()
+  const userStore = useUserStore()
+  
+  // 超级管理员拥有所有权限
+  if (userStore.roles.includes('超级管理员') || userStore.roles.includes('管理员')) {
+    return true
+  }
+  
+  // 基于角色的简单权限检查
+  const rolePermissions = {
+    '普通用户': ['dashboard_view'],
+    '质量部门负责人': ['dashboard_view', 'quality_view', 'quality_manage'],
+    '质量班组负责人': ['dashboard_view', 'quality_view', 'quality_manage'],
+    '维修班组负责人': ['dashboard_view', 'maintenance_view', 'maintenance_manage'],
+    '安全负责人': ['dashboard_view', 'safety_view', 'safety_manage']
+  }
+  
+  for (const role of userStore.roles) {
+    const permissions = rolePermissions[role] || []
+    if (permissions.includes(permissionCode)) {
+      return true
+    }
+  }
+  
+  return false
+}
+
+// 路由权限检查工具函数
+export const checkRoutePermission = (routePath) => {
+  const permissionStore = usePermissionStore()
+  return permissionStore.canAccessRoute(routePath)
+}
+
+export default usePermissionStore

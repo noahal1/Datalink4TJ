@@ -35,6 +35,10 @@
             <v-icon start>mdi-shield-account</v-icon>
             权限管理
           </v-tab>
+          <v-tab :to="'/admin/permission-test'" value="permission-test">
+            <v-icon start>mdi-shield-check</v-icon>
+            权限测试
+          </v-tab>
         </v-tabs>
         
         <!-- 子路由视图 -->

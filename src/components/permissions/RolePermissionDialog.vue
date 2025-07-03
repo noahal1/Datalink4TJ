@@ -335,12 +335,24 @@ const loadAllPermissions = async () => {
 const saveRolePermissions = async () => {
   try {
     savingPermissions.value = true
-    
+
     // 获取所有选中权限的ID，并确保它们是整数类型
-    const permissionIds = selectedPermissions.value.map(p => Number(p.id))
-    
+    const permissionIds = selectedPermissions.value.map(p => {
+      const id = Number(p.id)
+      if (isNaN(id) || id <= 0) {
+        throw new Error(`无效的权限ID: ${p.id}`)
+      }
+      return id
+    })
+
+    // 确保角色ID也是整数
+    const roleId = Number(props.role.id)
+    if (isNaN(roleId) || roleId <= 0) {
+      throw new Error(`无效的角色ID: ${props.role.id}`)
+    }
+
     // 更新角色权限
-    await api.post(`/roles/${props.role.id}/permissions`, {
+    await api.post(`/roles/${roleId}/permissions`, {
       permission_ids: permissionIds
     })
     

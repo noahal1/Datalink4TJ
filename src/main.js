@@ -74,6 +74,9 @@ registerPermissionDirective(app)
 // 导入动态路由加载函数
 import { addDynamicRoutes } from './router'
 
+// 导入组件映射验证器（仅在开发环境中运行）
+import './utils/componentMappingValidator'
+
 // 尝试加载动态路由
 console.log('应用启动时尝试加载动态路由...')
 addDynamicRoutes().then(routes => {

@@ -5,13 +5,22 @@ const EHS = () => import('../pages/EHS.vue')
 const Assy = () => import('../pages/Assy.vue')
 const Quality = () => import('../pages/Quality.vue')
 const Pcl = () => import('../pages/Pcl.vue')
-const Admin = () => import('../pages/Admin.vue')
 const Gmo = () => import('../pages/Gmo.vue')
 const Maintenance = () => import('../pages/Maintenance.vue')
 const MaintenanceMetrics = () => import('../pages/MaintenanceMetrics.vue')
 const DowntimeRecords = () => import('../pages/DowntimeRecords.vue')  
 const Events = () => import('../pages/Events.vue')
-const Qa_others = () => import('../pages/Qa_others.vue')
+const QualityKpi = () => import('../pages/QualityKpi.vue')
+const EhsKpi = () => import('../pages/EhsKpi.vue')
+const MaintenanceKpi = () => import('../pages/MaintenanceKpi.vue')
+const ProductionKpi = () => import('../pages/ProductionKpi.vue')
+const GmoKpi = () => import('../pages/GmoKpi.vue')
+const EngKpi = () => import('../pages/EngKpi.vue')
+const FinKpi = () => import('../pages/FinKpi.vue')
+const PrsKpi = () => import('../pages/PrsKpi.vue')
+const HrKpi = () => import('../pages/HrKpi.vue')
+const UserManagement = () => import('../pages/admin/Users.vue')
+
 
 // 功能模块路由配置
 export const moduleRoutes = [
@@ -62,10 +71,83 @@ export const moduleRoutes = [
     } 
   },
   {
-    path: '/qakpi',
-    component: Qa_others,
-    meta: { 
-      title: '质量管理',
+    path: '/quality-kpi',
+    component: QualityKpi,
+    meta: {
+      title: '质量KPI',
+      permission_code: 'view_quality_kpi',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/ehs-kpi',
+    component: EhsKpi,
+    meta: {
+      title: 'EHS KPI',
+      permission_code: 'view_ehs_kpi',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/maintenance-kpi',
+    component: MaintenanceKpi,
+    meta: {
+      title: '维修KPI',
+      permission_code: 'view_maintenance_kpi',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/production-kpi',
+    component: ProductionKpi,
+    meta: {
+      title: '生产KPI',
+      permission_code: 'view_production_kpi',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/gmo-kpi',
+    component: GmoKpi,
+    meta: {
+      title: 'GMO KPI',
+      permission_code: 'view_gmo_kpi',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/eng-kpi',
+    component: EngKpi,
+    meta: {
+      title: '工程KPI',
+      permission_code: 'view_eng_kpi',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/fin-kpi',
+    component: FinKpi,
+    meta: {
+      title: '财务KPI',
+      permission_code: 'view_fin_kpi',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/prs-kpi',
+    component: PrsKpi,
+    meta: {
+      title: '冲压KPI',
+      permission_code: 'view_prs_kpi',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/hr-kpi',
+    component: HrKpi,
+    meta: {
+      title: '人力资源KPI',
+      permission_code: 'view_hr_kpi',
       requiresAuth: true
     }
   },
@@ -73,7 +155,7 @@ export const moduleRoutes = [
     path: '/maintenance', 
     component: Maintenance,
     meta: { 
-      title: '维护',
+      title: '维修',
       permission_code: 'access_maintenance', 
       requiresAuth: true
     } 
@@ -82,7 +164,7 @@ export const moduleRoutes = [
     path: '/maintenance-metrics', 
     component: MaintenanceMetrics,
     meta: { 
-      title: '维护指标',
+      title: '维修指标',
       permission_code: 'view_maintenance_metrics', 
       requiresAuth: true
     } 
@@ -102,6 +184,15 @@ export const moduleRoutes = [
     meta: { 
       title: '事件',
       permission_code: 'view_events', 
+      requiresAuth: true
+    } 
+  },
+  { 
+    path: '/user', 
+    component: UserManagement,
+    meta: { 
+      title: '用户管理',
+      permission_code: 'view_users', 
       requiresAuth: true
     } 
   }

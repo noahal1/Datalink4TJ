@@ -18,6 +18,7 @@
         :width="260"
         elevation="4"
         class="navigation-drawer"
+        :height="'100vh'"
       >
         <!-- 使用动态导航组件 -->
         <dynamic-navigation 
@@ -229,7 +230,14 @@ const handleResize = () => {
 
 .navigation-drawer {
   border-right: none !important;
-  padding: 8px;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
+}
+
+.navigation-drawer .v-navigation-drawer__content {
+  height: 100% !important;
+  overflow: hidden !important;
 }
 
 .help-item, .refresh-item {

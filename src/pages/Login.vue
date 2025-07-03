@@ -119,7 +119,7 @@ const login = async () => {
       console.log('登录成功，初始化权限...')
       
       // 初始化权限系统
-      await permissionStore.initialize()
+      await permissionStore.initPermissions()
       
       // 保存记住的密码
       if (rememberPassword.value) {

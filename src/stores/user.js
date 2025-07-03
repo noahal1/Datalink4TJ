@@ -65,7 +65,7 @@ export const useUserStore = defineStore('user', {
           
           // 确保权限信息已加载
           const permissionStore = usePermissionStore()
-          await permissionStore.initialize()
+          await permissionStore.initPermissions()
           
           debug('令牌验证成功，更新用户信息')
           debug('刷新token有效期')
@@ -114,15 +114,20 @@ export const useUserStore = defineStore('user', {
         
         // 登录成功后获取用户详细信息
         await this.getCurrentUser()
-        
+
         debug('登录成功，用户信息已更新')
-        
+
+        // 立即初始化权限信息
+        const permissionStore = usePermissionStore()
+        await permissionStore.initPermissions()
+        debug('权限信息初始化完成')
+
         // 更新token过期时间
         this.updateTokenExpiry()
-        
+
         // 保存到本地存储
         this.saveToStorage()
-        
+
         return true
       } catch (error) {
         const errorMessage = error.response?.data?.detail || error.message || '登录失败';
@@ -163,8 +168,13 @@ export const useUserStore = defineStore('user', {
     // 用户登出
     async logout() {
       debug('用户登出')
+
+      // 清除权限信息
+      const permissionStore = usePermissionStore()
+      permissionStore.clearPermissions()
+
       this.clearUserState()
-      
+
       // 如果当前不在登录页面，重定向到登录页
       if (router.currentRoute.value.path !== '/login') {
         debug('重定向到登录页面')

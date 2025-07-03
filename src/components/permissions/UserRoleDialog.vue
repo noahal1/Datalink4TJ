@@ -259,15 +259,30 @@ const saveUserRoles = async () => {
     errorMessage.value = '无效的用户信息'
     return
   }
-  
+
   saving.value = true
   errorMessage.value = ''
-  
+
   try {
+    // 确保用户ID是整数
+    const userId = Number(props.user.id)
+    if (isNaN(userId) || userId <= 0) {
+      throw new Error(`无效的用户ID: ${props.user.id}`)
+    }
+
+    // 确保角色ID都是整数
+    const roleIds = selectedRoleIds.value.map(id => {
+      const roleId = Number(id)
+      if (isNaN(roleId) || roleId <= 0) {
+        throw new Error(`无效的角色ID: ${id}`)
+      }
+      return roleId
+    })
+
     // 调用API保存用户角色
-    await api.post(`/users/${props.user.id}/roles`, {
-      user_id: props.user.id,
-      role_ids: selectedRoleIds.value
+    await api.post(`/users/${userId}/roles`, {
+      user_id: userId,
+      role_ids: roleIds
     })
     
     Message.success('角色分配成功')

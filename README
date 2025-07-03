@@ -13,14 +13,29 @@
 
     git clone https://github.com/noahall/datalink4tj-backend.git
 
+    # 安装依赖（推荐使用pnpm）
     pnpm install
 
+    # 开发模式启动
+    pnpm run dev
+
+    # 生产构建
     pnpm run build
 
-    上传 dist 文件夹至服务器
+    # 上传 dist 文件夹至服务器
 
     后端启动：
+    # 使用Poetry（推荐）
+    poetry install
+    poetry run dev
+
+    # 或使用pip
     pip install -r requirements.txt
     python main.py
-    可以采用Dockerfile进行快速部署
+
+    # 快速启动（推荐）
+    从项目根目录运行: .\quick-start.ps1
+
+    # Docker部署
+    docker-compose up --build
 本网站源码仅由作者noahall所有,上传至公共仓库仅供参考学习。如若商用请联系作者授权。

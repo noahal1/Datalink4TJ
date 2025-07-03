@@ -178,6 +178,7 @@ class PermissionService extends BaseApiService {
    */
   async getUserPermissionCodes() {
     try {
+      // 使用 permission.py 中的权限代码端点
       return this.get('/user-permission-codes')
     } catch (error) {
       console.error('获取用户权限代码失败:', error)
@@ -186,13 +187,14 @@ class PermissionService extends BaseApiService {
   }
 
   /**
-   * 获取当前用户的权限信息
+   * 获取当前用户的权限信息（包含权限代码和角色）
    * @returns {Promise} - 用户权限信息
    */
   async getUserPermissions() {
     try {
-      // 使用正确的API端点
-      return this.get('/users/permissions');
+      // 使用正确的权限API端点 - 使用 user.py 中的端点
+      const response = await this.get('/users/permissions');
+      return response;
     } catch (error) {
       console.error('获取用户权限信息失败:', error);
       // 返回默认的空权限
@@ -206,21 +208,73 @@ class PermissionService extends BaseApiService {
   }
 
   /**
+   * 检查用户是否有特定权限代码
+   * @param {string} permissionCode - 权限代码
+   * @returns {Promise<boolean>} - 是否有权限
+   */
+  async hasPermissionCode(permissionCode) {
+    try {
+      const permissions = await this.getUserPermissions();
+      return permissions.permission_codes && permissions.permission_codes.includes(permissionCode);
+    } catch (error) {
+      console.error('检查权限代码失败:', error);
+      return false;
+    }
+  }
+
+  /**
+   * 检查用户是否有指定角色
+   * @param {string} roleName - 角色名称
+   * @returns {Promise<boolean>} - 是否有角色
+   */
+  async hasRole(roleName) {
+    try {
+      const permissions = await this.getUserPermissions();
+      return permissions.roles && permissions.roles.some(role => role.name === roleName);
+    } catch (error) {
+      console.error('检查角色失败:', error);
+      return false;
+    }
+  }
+
+  /**
+   * 获取用户角色列表
+   * @returns {Promise<Array>} - 角色列表
+   */
+  async getUserRoles() {
+    try {
+      const permissions = await this.getUserPermissions();
+      return permissions.roles || [];
+    } catch (error) {
+      console.error('获取用户角色失败:', error);
+      return [];
+    }
+  }
+
+  /**
    * 获取当前用户可访问的路由
    * @returns {Promise<Array>} - 用户可访问的路由列表
    */
   async getUserRoutes() {
     try {
       console.log('获取用户可访问路由...')
-      // 尝试调用导航接口
-      const response = await this.get('/navigation')
+      // 尝试调用权限路由接口 - 修正API路径
+      const response = await this.get('/user-routes')
       console.log('获取用户路由响应:', response)
-      
+
       if (response && Array.isArray(response)) {
         return response
       }
-      
-      return []
+
+      // 如果权限路由接口失败，尝试导航接口
+      try {
+        const navResponse = await this.get('/navigation')
+        console.log('导航接口响应:', navResponse)
+        return navResponse && Array.isArray(navResponse) ? navResponse : []
+      } catch (navError) {
+        console.error('导航接口也失败:', navError)
+        return []
+      }
     } catch (error) {
       console.error('获取用户路由失败:', error)
       return []

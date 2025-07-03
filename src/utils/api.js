@@ -5,6 +5,7 @@ import axios from 'axios'
 import { useUserStore } from '../stores/user'
 import Message from './notification'
 import router from '../router'
+import { convertApiRequest } from './idConverter'
 
 // API 基础URL
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'
@@ -96,7 +97,16 @@ api.interceptors.request.use(
   config => {
     // 使用函数而不是直接导入，避免循环依赖
     const userStore = useUserStore()
-    
+
+    // 转换请求中的ID参数
+    try {
+      config = convertApiRequest(config)
+      debug('ID参数转换完成:', config.url)
+    } catch (error) {
+      console.error('ID参数转换失败:', error)
+      // 不阻止请求，但记录错误
+    }
+
     // 确保Content-Type设置正确
     if (!config.headers['Content-Type']) {
       config.headers['Content-Type'] = 'application/json';

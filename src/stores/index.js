@@ -21,7 +21,7 @@ export { useAppStore } from './app'
 // 导出新的模块化store
 export { useAuthStore } from './modules/auth'
 export { useUserStore as useModularUserStore } from './modules/user'
-export { usePermissionStore as useModularPermissionStore } from './modules/permission'
+// 权限模块已简化，不再使用模块化权限存储
 
 // 默认导出pinia实例
 export default pinia

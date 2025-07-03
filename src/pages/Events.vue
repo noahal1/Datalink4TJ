@@ -25,7 +25,6 @@
       </v-btn>
     </template>
     
-    <!-- 加载指示器 -->
     <loading-overlay :loading="isLoading" message="加载数据中..." />
     
     <!-- 数据表格 -->
