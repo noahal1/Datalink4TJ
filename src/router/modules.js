@@ -146,7 +146,7 @@ export const moduleRoutes = [
     path: '/hr-kpi',
     component: HrKpi,
     meta: {
-      title: '人力资源KPI',
+      title: 'HR-KPI',
       permission_code: 'view_hr_kpi',
       requiresAuth: true
     }
