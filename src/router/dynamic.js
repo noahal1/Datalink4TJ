@@ -17,16 +17,15 @@ export const componentMap = {
   'Events': () => import('../pages/Events.vue'),
   'RouteManagement': () => import('../pages/RouteManagement.vue'),
   'PermissionManagement': () => import('../pages/PermissionManagement.vue'),
-  'PermissionTest': () => import('../pages/PermissionTest.vue'),
   'SimplePermissionManagement': () => import('../pages/PermissionManagement.vue'),
   'AdminDepartments': () => import('../pages/admin/Departments.vue'),
   'AdminActivities': () => import('../pages/admin/Activities.vue'),
   'AdminUsers': () => import('../pages/admin/Users.vue'),
   'Login': () => import('../pages/Login.vue'),
-  'ComponentMappingDebug': () => import('../pages/ComponentMappingDebug.vue'),
   'Eng-kpi': () => import('../pages/EngKpi.vue'),
   'PrsKpi': () => import('../pages/PrsKpi.vue'),
   'HrKpi': () => import('../pages/HrKpi.vue'),
+  'LogisticsKpi': () => import('../pages/LogisticsKpi.vue'),
 }
 
 /**

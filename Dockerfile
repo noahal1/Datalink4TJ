@@ -3,17 +3,20 @@ FROM node:20-slim AS build-stage
 
 WORKDIR /app
 
-# 复制package.json和package-lock.json
-COPY package*.json ./
+# 安装pnpm
+RUN npm install -g pnpm
+
+# 复制package.json和pnpm-lock.yaml
+COPY package.json pnpm-lock.yaml ./
 
 # 安装依赖
-RUN npm install
+RUN pnpm install --frozen-lockfile
 
 # 复制源代码
 COPY . .
 
 # 构建应用
-RUN npm run build
+RUN pnpm run build
 
 # 生产阶段
 FROM nginx:stable-alpine AS production-stage

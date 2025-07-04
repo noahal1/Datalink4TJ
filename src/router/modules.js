@@ -19,6 +19,8 @@ const EngKpi = () => import('../pages/EngKpi.vue')
 const FinKpi = () => import('../pages/FinKpi.vue')
 const PrsKpi = () => import('../pages/PrsKpi.vue')
 const HrKpi = () => import('../pages/HrKpi.vue')
+const LogisticsKpi = () => import('../pages/LogisticsKpi.vue')
+const DohDaily = () => import('../pages/DohDaily.vue')
 const UserManagement = () => import('../pages/admin/Users.vue')
 
 
@@ -149,6 +151,25 @@ export const moduleRoutes = [
       title: 'HR-KPI',
       permission_code: 'view_hr_kpi',
       requiresAuth: true
+    }
+  },
+  {
+    path: '/logistics-kpi',
+    component: LogisticsKpi,
+    meta: {
+      title: '物流KPI',
+      permission_code: 'view_logistics_kpi',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/doh-daily',
+    component: DohDaily,
+    meta: {
+      title: 'DOH每日填报',
+      permission_code: 'view_doh_daily',
+      requiresAuth: true,
+      group: 'logistics'
     }
   },
   { 

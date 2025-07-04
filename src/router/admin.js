@@ -6,7 +6,6 @@ const PermissionManagement = () => import('../pages/PermissionManagement.vue')
 const AdminDepartments = () => import('../pages/admin/Departments.vue')
 const AdminActivities = () => import('../pages/admin/Activities.vue')
 const AdminUsers = () => import('../pages/admin/Users.vue')
-const PermissionTest = () => import('../pages/PermissionTest.vue')
 const SimplePermissionManagement = () => import('../pages/PermissionManagement.vue')
 
 export const adminRoutes = [
@@ -57,16 +56,6 @@ export const adminRoutes = [
     meta: {
       title: '操作记录',
       icon: 'mdi-history',
-      requiresAuth: true,
-      permission_code: 'admin_access'
-    }
-  },
-  {
-    path: '/admin/permission-test',
-    component: PermissionTest,
-    meta: {
-      title: '权限测试',
-      icon: 'mdi-shield-check',
       requiresAuth: true,
       permission_code: 'admin_access'
     }
