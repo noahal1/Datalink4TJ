@@ -10,7 +10,7 @@
       </v-card-title>
       
       <v-card-text>
-        <v-form ref="form">
+        <v-form ref="formRef">
           <v-text-field
             v-model="localTask.title"
             label="任务标题"
@@ -95,7 +95,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'update:task', 'save', 'close'])
 
-const form = ref(null)
+const formRef = ref(null)
 
 // 本地任务对象，用于双向绑定
 const localTask = computed({
@@ -115,8 +115,8 @@ const taskTypes = [
 // 保存任务
 const saveTask = async () => {
   // 表单验证
-  const isValid = await form.value?.validate()
-  
+  const isValid = await formRef.value?.validate()
+
   if (isValid?.valid) {
     emit('save')
   }
@@ -126,7 +126,7 @@ const saveTask = async () => {
 watch(() => props.modelValue, (newVal) => {
   if (newVal) {
     setTimeout(() => {
-      form.value?.resetValidation()
+      formRef.value?.resetValidation()
     }, 50)
   }
 })

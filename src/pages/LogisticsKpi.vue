@@ -5,76 +5,91 @@
     color="info"
   >
     <!-- 顶部控制栏 -->
-    <v-row class="mb-4 align-center">
-      <!-- 左侧：月份和年份选择器 -->
-      <v-col cols="12" md="6">
-        <v-row>
-          <v-col cols="6" md="4">
-            <v-select
-              v-model="selectedMonth"
-              :items="monthOptions"
-              label="选择月份"
-              variant="outlined"
-              density="compact"
-              @update:model-value="loadData"
-            ></v-select>
-          </v-col>
-          <v-col cols="6" md="4">
-            <v-select
-              v-model="selectedYear"
-              :items="yearOptions"
-              label="选择年份"
-              variant="outlined"
-              density="compact"
-              @update:model-value="loadData"
-            ></v-select>
-          </v-col>
-        </v-row>
-      </v-col>
+    <div class="controls-bar mb-6">
+      <v-row class="align-center">
+        <!-- 左侧：月份和年份选择器 -->
+        <v-col cols="12" md="6">
+          <v-row>
+            <v-col cols="6" md="4">
+              <v-select
+                v-model="selectedMonth"
+                :items="monthOptions"
+                label="选择月份"
+                variant="outlined"
+                density="compact"
+                @update:model-value="loadData"
+                hide-details
+                class="control-select"
+              ></v-select>
+            </v-col>
+            <v-col cols="6" md="4">
+              <v-select
+                v-model="selectedYear"
+                :items="yearOptions"
+                label="选择年份"
+                variant="outlined"
+                density="compact"
+                @update:model-value="loadData"
+                hide-details
+                class="control-select"
+              ></v-select>
+            </v-col>
+          </v-row>
+        </v-col>
 
-      <!-- 右侧：操作按钮 -->
-      <v-col cols="12" md="6" class="text-right">
-        <v-btn
-          color="info"
-          @click="openTargetDialog"
-          prepend-icon="mdi-target"
-          variant="outlined"
-          class="mr-2"
-        >
-          设置目标值
-        </v-btn>
-        <v-btn
-          color="secondary"
-          @click="resetData"
-          :disabled="!isDataChanged"
-          prepend-icon="mdi-refresh"
-          variant="outlined"
-          class="mr-2"
-        >
-          重置
-        </v-btn>
-        <v-btn
-          color="success"
-          prepend-icon="mdi-content-save"
-          :loading="submitting"
-          :disabled="!isDataChanged"
-          @click="saveData"
-        >
-          保存数据
-        </v-btn>
-      </v-col>
-    </v-row>
+        <v-spacer></v-spacer>
+
+        <!-- 右侧：操作按钮 -->
+        <v-col cols="auto">
+          <v-btn
+            color="info"
+            @click="openTargetDialog"
+            prepend-icon="mdi-target"
+            variant="outlined"
+            class="mr-2 action-btn"
+          >
+            设置目标值
+          </v-btn>
+          <v-btn
+            color="secondary"
+            @click="resetData"
+            :disabled="!isDataChanged"
+            prepend-icon="mdi-refresh"
+            variant="outlined"
+            class="mr-2 action-btn"
+          >
+            重置
+          </v-btn>
+          <v-btn
+            color="primary"
+            prepend-icon="mdi-content-save"
+            :loading="submitting"
+            :disabled="!isDataChanged"
+            @click="saveData"
+            variant="elevated"
+            class="action-btn"
+          >
+            保存数据
+          </v-btn>
+        </v-col>
+      </v-row>
+    </div>
+
+    <!-- 加载指示器 -->
+    <loading-overlay :loading="loading" message="加载数据中..." />
 
     <!-- KPI数据表格 -->
-    <unified-data-table
-      :headers="headers"
-      :items="kpiData"
-      :loading="loading"
-      density="comfortable"
-      class="mb-6"
-      hide-default-footer=""
-      :items-per-page="-1"
-    >
+    <div class="table-container">
+      <unified-data-table
+        :headers="headers"
+        :items="kpiData"
+        :loading="loading"
+        density="comfortable"
+        class="logistics-kpi-table"
+        hide-default-footer=""
+        :items-per-page="-1"
+        hover
+      >
       <template v-slot:item.description="{ item }">
         <div class="font-weight-medium">
           {{ item.description }}
@@ -153,7 +168,7 @@
         <span v-else class="text-grey">-</span>
       </template>
     </unified-data-table>
-
+    </div>
     <!-- 目标值管理对话框 -->
     <v-dialog v-model="targetDialog" max-width="1200px" persistent>
       <v-card>
@@ -229,6 +244,7 @@ import Message from '@/utils/notification'
 import UnifiedPageTemplate from '@/components/UnifiedPageTemplate.vue'
 import UnifiedDataTable from '@/components/UnifiedDataTable.vue'
 import KpiRemarkDialog from '@/components/KpiRemarkDialog.vue'
+import LoadingOverlay from '@/components/LoadingOverlay.vue'
 
 // 响应式数据
 const loading = ref(false)
@@ -563,6 +579,31 @@ watch([selectedMonth, selectedYear], () => {
 </script>
 
 <style scoped>
+/* 导入通用KPI样式 */
+@import '@/styles/kpi-page-enhancement.css';
+
+/* 物流KPI特殊样式 - 紫色主题 */
+.logistics-kpi-table :deep(tbody tr:hover) {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.03) 0%, rgba(196, 181, 253, 0.03) 100%);
+}
+
+.logistics-kpi-table .text-field-small :deep(.v-field) {
+  background: rgba(168, 85, 247, 0.02);
+  border: 1px solid rgba(168, 85, 247, 0.1);
+}
+
+.logistics-kpi-table .text-field-small :deep(.v-field:hover) {
+  border-color: rgba(168, 85, 247, 0.3);
+  background: rgba(168, 85, 247, 0.05);
+}
+
+.logistics-kpi-table .text-field-small :deep(.v-field--focused) {
+  border-color: #a855f7;
+  background: rgba(168, 85, 247, 0.08);
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+}
+
+/* 字体样式 */
 .text-field-small {
   max-width: 120px;
 }

@@ -134,8 +134,8 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { PermissionHelper, PermissionDescriptions, PermissionPrefixes } from '../../utils/permissionConstants'
-import api from '../../utils/api'
+import { PermissionHelper, PermissionDescriptions, PermissionPrefixes } from '../../../../utils/permissionConstants'
+import api from '../../../../utils/api'
 
 const props = defineProps({
   modelValue: {

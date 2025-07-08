@@ -159,35 +159,6 @@ const scrapRate = computed(() => {
   return rate.toFixed(2);
 });
 
-// 快速链接
-const quickLinks = computed(() => {
-  const links = [
-    { title: '仪表盘', to: '/dashboard', icon: 'mdi-view-dashboard' },
-    { title: '重要事件', to: '/events', icon: 'mdi-calendar-text' },
-  ]
-  
-  // 根据用户部门添加相关链接
-  const department = userStore.department
-  
-  if (department === 'QA' || department === 'ADMIN') {
-    links.push({ title: '质量', to: '/quality', icon: 'mdi-checkbox-multiple-marked-circle-outline' })
-  }
-  
-  if (department === 'ASSY' || department === 'ADMIN') {
-    links.push({ title: '生产', to: '/assy', icon: 'mdi-hammer-wrench' })
-  }
-  
-  if (department === 'EHS' || department === 'ADMIN') {
-    links.push({ title: 'EHS', to: '/ehs', icon: 'mdi-security' })
-  }
-  
-  if (department === 'ADMIN') {
-    links.push({ title: '管理', to: '/admin', icon: 'mdi-shield-account' })
-  }
-  
-  return links
-})
-
 // 是否正在加载
 const isLoading = ref(false)
 const selectedPeriod = ref('month')
@@ -305,26 +276,33 @@ onMounted(async () => {
 </script>
 
 <template>
-  <unified-page-template 
+  <unified-page-template
     title="仪表盘"
     icon="mdi-view-dashboard"
     color="primary"
     :show-breadcrumbs="false"
+    class="dashboard-template"
   >
     <template #header-actions>
-      <v-btn 
+      <!-- 刷新按钮 -->
+      <v-btn
         prepend-icon="mdi-refresh"
-        variant="text"
+        variant="outlined"
         @click="refreshAllData"
         :disabled="isLoading"
-        class="mr-2"
+        :loading="isLoading"
+        class="mr-2 refresh-btn"
+        color="primary"
       >
         刷新数据
       </v-btn>
+
+      <!-- 今日数据按钮 -->
       <v-btn
-        prepend-icon="mdi-calendar"
+        prepend-icon="mdi-calendar-today"
         color="primary"
         variant="elevated"
+        class="today-btn"
       >
         今日数据
       </v-btn>
@@ -338,7 +316,7 @@ onMounted(async () => {
       <v-col cols="12" md="8" order="4" order-md="1" class="d-flex flex-column">
         <!-- 统计卡片 -->
         <v-row class="match-height">
-          <v-col cols="12" sm="6" lg="6" v-for="card in statsCards" :key="card.title">
+          <v-col cols="12" sm="4" lg="3" v-for="card in statsCards" :key="card.title">
             <unified-stats-card
               :title="card.title"
               :value="card.value"
@@ -367,7 +345,6 @@ onMounted(async () => {
                   density="comfortable"
                   variant="outlined"
                   rounded="lg"
-                  color="primary"
                   class="pt-1"
                   @update:model-value="handlePeriodChange"
                 >
@@ -394,7 +371,6 @@ onMounted(async () => {
               content-class="data-overview"
             >
               <template #actions>
-                <v-chip class="ml-2" color="primary" size="small">本月</v-chip>
                 <v-spacer></v-spacer>
                 <v-btn
                   variant="text"
@@ -467,36 +443,11 @@ onMounted(async () => {
       </v-col>
       
       <!-- 右侧面板 -->
-      <v-col cols="12" md="4" order="1" order-md="2" class="d-flex flex-column">
+      <v-col cols="12" md="4" lg="4" order="1" order-md="2" class="d-flex flex-column">
         <!-- 即将开始的重要事件 -->
-        <div class="flex-grow-1 mb-4">
+        <div class="mb-4">
           <dashboard-upcoming-events :limit="5" />
         </div>
-        
-        <!-- 快速链接区域 -->
-        <unified-data-table
-          title="快速访问"
-          icon="mdi-link"
-          class="mb-4"
-          :headers="[]"
-          :items="quickLinks"
-          hide-default-footer
-          :loading="false"
-          hide-no-data
-        >
-          <template #pre-table>
-            <v-list v-if="quickLinks.length > 0">
-              <v-list-item v-for="link in quickLinks" :key="link.to" :to="link.to" link class="quick-link-item">
-                <template v-slot:prepend>
-                  <v-avatar color="grey-lighten-3" size="38">
-                    <v-icon :icon="link.icon" color="primary"></v-icon>
-                  </v-avatar>
-                </template>
-                <v-list-item-title>{{ link.title }}</v-list-item-title>
-              </v-list-item>
-            </v-list>
-          </template>
-        </unified-data-table>
         
         <!-- 系统公告 -->
         <unified-data-table
@@ -539,13 +490,43 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+
+@keyframes backgroundFloat {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(-20px, -10px) rotate(1deg); }
+  66% { transform: translate(20px, 10px) rotate(-1deg); }
+}
+
 .fill-height {
   flex: 1;
   min-height: 0;
 }
 
 .chart {
-  height: 350px;
+  height: 400px;
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(248, 250, 252, 0.9) 100%
+  );
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    0 4px 16px rgba(59, 130, 246, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chart:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.12),
+    0 8px 24px rgba(59, 130, 246, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .h-100 {
@@ -555,26 +536,123 @@ onMounted(async () => {
 .match-height {
   display: flex;
   flex-wrap: wrap;
+  margin-bottom: 12px;
 }
 
+.match-height .v-col {
+  display: flex;
+  animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: bottom;
+}
+
+.match-height .v-col:nth-child(1) {
+  animation-delay: 0.1s;
+  animation-name: fadeInUpScale;
+}
+.match-height .v-col:nth-child(2) {
+  animation-delay: 0.2s;
+  animation-name: fadeInUpScale;
+}
+.match-height .v-col:nth-child(3) {
+  animation-delay: 0.3s;
+  animation-name: fadeInUpScale;
+}
+.match-height .v-col:nth-child(4) {
+  animation-delay: 0.4s;
+  animation-name: fadeInUpScale;
+}
+
+/* 列表项美化 - 增强版 */
 :deep(.v-list-item) {
-  min-height: 56px;
-  border-radius: 8px;
-  margin: 4px 0;
+  min-height: 60px;
+  border-radius: 16px;
+  margin: 8px 0;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.8) 0%,
+    rgba(248, 250, 252, 0.7) 100%
+  );
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+:deep(.v-list-item)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(59, 130, 246, 0.1) 50%,
+    transparent 100%
+  );
+  transition: left 0.6s ease;
+}
+
+:deep(.v-list-item:hover) {
+  transform: translateX(12px) translateY(-2px);
+  background: linear-gradient(135deg,
+    rgba(59, 130, 246, 0.12) 0%,
+    rgba(147, 197, 253, 0.08) 100%
+  );
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.12),
+    0 4px 12px rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+:deep(.v-list-item:hover)::before {
+  left: 100%;
 }
 
 .quick-link-item {
-  transition: background-color 0.2s;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 }
 
 .quick-link-item:hover {
-  background-color: rgba(var(--v-theme-primary), 0.05);
+  background: linear-gradient(135deg,
+    rgba(var(--v-theme-primary), 0.12) 0%,
+    rgba(var(--v-theme-primary), 0.06) 100%
+  );
 }
 
-/* 质量数据总览样式 */
+
 .quality-overview-wrapper {
   width: 100%;
   overflow: hidden;
+  padding: 24px;
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(248, 250, 252, 0.95) 50%,
+    rgba(236, 254, 255, 0.9) 100%
+  );
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  position: relative;
+}
+
+.quality-overview-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    var(--primary-500) 0%,
+    var(--secondary-500) 50%,
+    var(--primary-500) 100%
+  );
+  border-radius: 20px 20px 0 0;
 }
 
 .quality-stats-row {
@@ -582,24 +660,449 @@ onMounted(async () => {
   width: 100%;
 }
 
-:deep(.data-overview .v-card-text) {
-  padding: 0;
+:deep(.unified-data-table) {
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(248, 250, 252, 0.95) 100%
+  );
+  backdrop-filter: blur(25px);
+  border-radius: 20px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    0 4px 16px rgba(59, 130, 246, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
   overflow: hidden;
 }
 
+:deep(.unified-data-table:not(.doh-table):not(.master-data-table):hover) {
+  transform: translateY(-4px);
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.12),
+    0 8px 24px rgba(59, 130, 246, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* 只对非表格的统一数据表格应用光泽效果 */
+:deep(.unified-data-table:not(.table-container))::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(59, 130, 246, 0.03) 50%,
+    transparent 100%
+  );
+  transition: left 0.8s ease;
+  z-index: 0;
+}
+
+:deep(.unified-data-table:not(.table-container):hover)::before {
+  left: 100%;
+}
+
+:deep(.data-overview .v-card-text) {
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+/* 按钮组美化 - 增强版 */
+:deep(.v-btn-toggle) {
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(248, 250, 252, 0.8) 100%
+  );
+  backdrop-filter: blur(15px);
+  border-radius: 16px;
+  padding: 6px;
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+:deep(.v-btn-toggle .v-btn) {
+  border-radius: 12px;
+  margin: 0 3px;
+  font-weight: 600;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+:deep(.v-btn-toggle .v-btn)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  transition: left 0.6s ease;
+}
+
+:deep(.v-btn-toggle .v-btn:hover)::before {
+  left: 100%;
+}
+
+:deep(.v-btn-toggle .v-btn--active) {
+  background: linear-gradient(135deg,
+    var(--primary-500) 0%,
+    var(--primary-600) 50%,
+    var(--primary-700) 100%
+  );
+  color: white;
+  box-shadow:
+    0 4px 16px rgba(59, 130, 246, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+/* 头部操作按钮美化 - 增强版 */
+:deep(.unified-page-header .v-btn) {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+:deep(.unified-page-header .v-btn)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  transition: left 0.6s ease;
+}
+
+:deep(.unified-page-header .v-btn:hover) {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.15),
+    0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+:deep(.unified-page-header .v-btn:hover)::before {
+  left: 100%;
+}
+
+/* 芯片美化 - 增强版 */
+:deep(.v-chip) {
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 12px;
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+:deep(.v-chip)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  transition: left 0.5s ease;
+}
+
+:deep(.v-chip:hover) {
+  transform: scale(1.08) translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+:deep(.v-chip:hover)::before {
+  left: 100%;
+}
+
+/* 统计卡片增强 - 增强版 */
+:deep(.unified-stats-card) {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 20px;
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(248, 250, 252, 0.95) 100%
+  );
+  backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+:deep(.unified-stats-card)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg,
+    var(--primary-500) 0%,
+    var(--secondary-500) 50%,
+    var(--primary-500) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+:deep(.unified-stats-card:hover) {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.15),
+    0 8px 24px rgba(59, 130, 246, 0.2);
+}
+
+:deep(.unified-stats-card:hover)::before {
+  opacity: 1;
+}
+
+/* 动画效果 - 增强版 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUpScale {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+/* 新增元素样式 */
+.dashboard-template {
+  position: relative;
+}
+
+.status-chip {
+  animation: pulse 2s ease-in-out infinite;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.refresh-btn {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-width: 2px;
+}
+
+.refresh-btn:hover {
+  transform: rotate(180deg) scale(1.05);
+  border-color: var(--primary-600);
+  background: rgba(var(--v-theme-primary), 0.08);
+}
+
+.today-btn {
+  background: linear-gradient(135deg,
+    var(--primary-500) 0%,
+    var(--primary-600) 50%,
+    var(--primary-700) 100%
+  );
+  box-shadow:
+    0 4px 16px rgba(59, 130, 246, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.today-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    0 8px 24px rgba(59, 130, 246, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+@media (max-width: 1200px) {
+  .match-height {
+    gap: 12px;
+  }
+
+  .quality-overview-wrapper {
+    padding: 20px;
+  }
+
+  .quality-stats-row {
+    gap: 16px;
+  }
+}
+
 @media (max-width: 960px) {
+  :deep(.unified-page-content)::before {
+    animation-duration: 30s;
+  }
+
   .chart {
-    height: 300px;
+    height: 320px;
+    border-radius: 16px;
+  }
+
+  .quality-overview-wrapper {
+    padding: 18px;
+    border-radius: 16px;
+  }
+
+  :deep(.unified-data-table) {
+    border-radius: 16px;
+  }
+
+  :deep(.unified-stats-card) {
+    border-radius: 16px;
+  }
+
+  .match-height .v-col {
+    animation-duration: 0.6s;
+  }
+}
+
+@media (max-width: 768px) {
+  .match-height {
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .quality-overview-wrapper {
+    padding: 16px;
+  }
+
+  .quality-stats-row {
+    gap: 12px;
+  }
+
+  :deep(.v-list-item) {
+    min-height: 52px;
+    border-radius: 12px;
   }
 }
 
 @media (max-width: 600px) {
-  .chart {
-    height: 250px;
+  :deep(.unified-page-content) {
+    background: linear-gradient(135deg,
+      rgba(59, 130, 246, 0.02) 0%,
+      rgba(255, 255, 255, 0.98) 50%,
+      rgba(248, 250, 252, 0.95) 100%
+    );
   }
-  
+
+  .chart {
+    height: 280px;
+    border-radius: 12px;
+  }
+
+  .quality-overview-wrapper {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
   :deep(.v-btn-toggle) {
     margin-top: 8px;
+    border-radius: 12px;
+    padding: 4px;
+  }
+
+  :deep(.unified-data-table) {
+    border-radius: 12px;
+  }
+
+  :deep(.unified-stats-card) {
+    border-radius: 12px;
+  }
+
+  :deep(.v-list-item) {
+    border-radius: 10px;
+    min-height: 48px;
+  }
+
+  .match-height .v-col {
+    animation-duration: 0.5s;
+  }
+
+  :deep(.v-list-item:hover) {
+    transform: translateX(8px) translateY(-1px);
+  }
+}
+
+@media (max-width: 480px) {
+  .chart {
+    height: 240px;
+    border-radius: 8px;
+  }
+
+  .quality-overview-wrapper {
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  .quality-stats-row {
+    gap: 8px;
+  }
+
+  :deep(.unified-data-table) {
+    border-radius: 8px;
+  }
+
+  :deep(.unified-stats-card) {
+    border-radius: 8px;
+  }
+
+  :deep(.v-list-item) {
+    border-radius: 8px;
+    min-height: 44px;
+  }
+
+  :deep(.v-btn-toggle) {
+    border-radius: 8px;
+  }
+
+  .match-height {
+    gap: 6px;
   }
 }
 </style>

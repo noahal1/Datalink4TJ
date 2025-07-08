@@ -3,74 +3,91 @@
     title="生产KPI数据管理"
     icon="mdi-factory"
     color="primary">
-    <v-row class="mb-4 align-center">
-      <v-col cols="12" md="6">
-        <v-row>
-          <v-col cols="6" md="4">
-            <v-select
-              v-model="selectedMonth"
-              :items="monthOptions"
-              label="选择月份"
-              variant="outlined"
-              density="compact"
-              @update:model-value="loadData"
-            ></v-select>
-          </v-col>
-          <v-col cols="6" md="4">
-            <v-select
-              v-model="selectedYear"
-              :items="yearOptions"
-              label="选择年份"
-              variant="outlined"
-              density="compact"
-              @update:model-value="loadData"
-            ></v-select>
-          </v-col>
-        </v-row>
-      </v-col>
+    <!-- 顶部控制栏 -->
+    <div class="controls-bar mb-6">
+      <v-row class="align-center">
+        <v-col cols="12" md="6">
+          <v-row>
+            <v-col cols="6" md="4">
+              <v-select
+                v-model="selectedMonth"
+                :items="monthOptions"
+                label="选择月份"
+                variant="outlined"
+                density="compact"
+                @update:model-value="loadData"
+                hide-details
+                class="control-select"
+              ></v-select>
+            </v-col>
+            <v-col cols="6" md="4">
+              <v-select
+                v-model="selectedYear"
+                :items="yearOptions"
+                label="选择年份"
+                variant="outlined"
+                density="compact"
+                @update:model-value="loadData"
+                hide-details
+                class="control-select"
+              ></v-select>
+            </v-col>
+          </v-row>
+        </v-col>
 
-      <v-col cols="12" md="6" class="text-right">
-        <v-btn
-          color="info"
-          @click="openTargetDialog"
-          prepend-icon="mdi-target"
-          variant="outlined"
-          class="mr-2"
-        >
-          设置目标值
-        </v-btn>
-        <v-btn
-          color="secondary"
-          @click="resetData"
-          :disabled="!isDataChanged"
-          prepend-icon="mdi-refresh"
-          variant="outlined"
-          class="mr-2"
-        >
-          重置
-        </v-btn>
-        <v-btn
-          color="primary"
-          @click="saveData"
-          :loading="submitting"
-          :disabled="!isDataChanged"
-          prepend-icon="mdi-content-save"
-          variant="elevated"
-        >
-          保存数据
-        </v-btn>
-      </v-col>
-    </v-row>
+        <v-spacer></v-spacer>
 
-    <unified-data-table
-      :headers="headers"
-      :items="kpiData"
-      :loading="loading"
-      density="comfortable"
-      class="mb-6"
-      hide-default-footer=""
-      :items-per-page= "-1"
-    >
+        <!-- 右侧：工具栏 -->
+        <v-col cols="auto">
+          <v-btn
+            color="info"
+            @click="openTargetDialog"
+            prepend-icon="mdi-target"
+            variant="outlined"
+            class="mr-2 action-btn"
+          >
+            设置目标值
+          </v-btn>
+          <v-btn
+            color="secondary"
+            @click="resetData"
+            :disabled="!isDataChanged"
+            prepend-icon="mdi-refresh"
+            variant="outlined"
+            class="mr-2 action-btn"
+          >
+            重置
+          </v-btn>
+          <v-btn
+            color="primary"
+            @click="saveData"
+            :loading="submitting"
+            :disabled="!isDataChanged"
+            prepend-icon="mdi-content-save"
+            variant="elevated"
+            class="action-btn"
+          >
+            保存数据
+          </v-btn>
+        </v-col>
+      </v-row>
+    </div>
+
+    <!-- 加载指示器 -->
+    <loading-overlay :loading="loading" message="加载数据中..." />
+
+    <!-- 数据表格容器 -->
+    <div class="table-container">
+      <unified-data-table
+        :headers="headers"
+        :items="kpiData"
+        :loading="loading"
+        density="comfortable"
+        class="production-kpi-table"
+        hide-default-footer=""
+        :items-per-page="-1"
+        hover
+      >
       <template v-slot:item.description="{ item }">
         <div class="font-weight-medium">
           {{ item.description }}
@@ -242,7 +259,7 @@ import Message from '@/utils/notification'
 import UnifiedPageTemplate from '@/components/UnifiedPageTemplate.vue'
 import UnifiedDataTable from '@/components/UnifiedDataTable.vue'
 import KpiRemarkDialog from '@/components/KpiRemarkDialog.vue'
-import { all } from 'axios'
+import LoadingOverlay from '@/components/LoadingOverlay.vue'
 
 // 响应式数据
 const loading = ref(false)
@@ -614,11 +631,175 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 控制栏美化 */
+.controls-bar {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
+  border-radius: 16px;
+  padding: 20px;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.controls-bar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* 控制组件美化 */
+.control-select :deep(.v-field) {
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.control-select :deep(.v-field:hover) {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* 操作按钮美化 */
+.action-btn {
+  transition: all 0.3s ease;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 表格容器美化 */
+.table-container {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  margin-bottom: 24px;
+}
+
+.table-container:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+/* 表格样式优化 */
+.production-kpi-table {
+  background: transparent;
+}
+
+.production-kpi-table :deep(.v-data-table__wrapper) {
+  border-radius: 16px;
+}
+
+.production-kpi-table :deep(thead tr th) {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 16px 12px;
+}
+
+.production-kpi-table :deep(tbody tr) {
+  transition: all 0.2s ease;
+}
+
+.production-kpi-table :deep(tbody tr:hover) {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.03) 0%, rgba(134, 239, 172, 0.03) 100%);
+  transform: scale(1.001);
+}
+
+.production-kpi-table :deep(tbody tr td) {
+  padding: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* 文本字段美化 */
 .text-field-small {
   max-width: 120px;
 }
 
+.text-field-small :deep(.v-field) {
+  border-radius: 8px;
+  background: rgba(34, 197, 94, 0.02);
+  border: 1px solid rgba(34, 197, 94, 0.1);
+  transition: all 0.3s ease;
+}
+
+.text-field-small :deep(.v-field:hover) {
+  border-color: rgba(34, 197, 94, 0.3);
+  background: rgba(34, 197, 94, 0.05);
+  transform: scale(1.02);
+}
+
+.text-field-small :deep(.v-field--focused) {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.08);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+/* 字体样式 */
 .font-weight-medium {
   font-weight: 500;
+}
+
+/* 芯片美化 */
+:deep(.v-chip) {
+  font-weight: 500;
+  letter-spacing: 0.025em;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+}
+
+:deep(.v-chip:hover) {
+  transform: scale(1.05);
+}
+
+/* 对话框美化 */
+:deep(.v-dialog .v-card) {
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+:deep(.v-dialog .v-card-title) {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #e2e8f0;
+  padding: 20px 24px;
+  font-weight: 600;
+}
+
+/* 响应式优化 */
+@media (max-width: 960px) {
+  .controls-bar {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .table-container {
+    border-radius: 12px;
+  }
+
+  .production-kpi-table :deep(thead tr th) {
+    padding: 12px 8px;
+    font-size: 0.875rem;
+  }
+
+  .production-kpi-table :deep(tbody tr td) {
+    padding: 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  .controls-bar {
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  .text-field-small {
+    max-width: 100px;
+  }
 }
 </style>

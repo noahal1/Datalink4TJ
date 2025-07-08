@@ -187,8 +187,8 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useNotification } from '../../composables/useNotification'
-import api from '../../utils/api'
+import { useNotification } from '../../../../composables/useNotification'
+import api from '../../../../utils/api'
 
 const { showSuccess, showError } = useNotification()
 

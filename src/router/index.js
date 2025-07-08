@@ -5,15 +5,11 @@ import Message from '../utils/notification'
 
 // 导入路由模块
 import { baseRoutes } from './base'
-import { moduleRoutes } from './modules'
-import { adminRoutes } from './admin'
 import { componentMap, fetchDynamicRoutes, processRoute } from './dynamic'
 
-// 合并所有静态路由
+// 只使用基础路由，其他路由将动态加载
 const routes = [
-  ...baseRoutes,
-  ...moduleRoutes,
-  ...adminRoutes
+  ...baseRoutes
 ]
 
 const router = createRouter({
@@ -28,28 +24,71 @@ const router = createRouter({
   }
 })
 
+// 添加路由调试信息
+console.log('🔧 初始静态路由数量:', router.getRoutes().length)
+console.log('📋 静态路由列表:', router.getRoutes().map(r => ({ path: r.path, name: r.name })))
+
+// 动态路由加载状态
+let dynamicRoutesLoaded = false
+let dynamicRoutesLoading = false
+
 // 添加动态路由的函数
 export async function addDynamicRoutes() {
+  // 防止重复加载
+  if (dynamicRoutesLoaded || dynamicRoutesLoading) {
+    console.log('🔄 动态路由已加载或正在加载中，跳过重复加载')
+    return []
+  }
+
+  dynamicRoutesLoading = true
+
   try {
+    console.log('🚀 开始加载动态路由...')
+
     // 在函数内部导入 routeService 以避免循环依赖
     const { routeService } = await import('../services')
-    
+
     // 获取并处理动态路由
     const dynamicRoutes = await fetchDynamicRoutes(routeService)
-    console.log(`处理完成，共有 ${dynamicRoutes.length} 个动态路由`)
-    
+    console.log(`📋 处理完成，共有 ${dynamicRoutes.length} 个动态路由`)
+
+    let addedCount = 0
+    let skippedCount = 0
+
     // 将动态路由添加到路由器
     dynamicRoutes.forEach(route => {
+      // 检查是否与静态路由冲突
+      const existingRoute = router.getRoutes().find(r => r.path === route.path)
+      if (existingRoute) {
+        console.warn(`⚠️ 跳过动态路由 ${route.path}，因为静态路由已存在`)
+        skippedCount++
+        return
+      }
+
       if (!router.hasRoute(route.name)) {
-          router.addRoute(route)
-        console.log(`添加动态路由: ${route.path} (${route.name})`)
+        router.addRoute(route)
+        console.log(`✅ 添加动态路由: ${route.path} (${route.name})`)
+        addedCount++
+      } else {
+        console.warn(`⚠️ 跳过重复路由: ${route.name}`)
+        skippedCount++
       }
     })
-    
+
+    dynamicRoutesLoaded = true
+    console.log(`🎉 动态路由加载完成: 添加 ${addedCount} 个，跳过 ${skippedCount} 个`)
+    console.log(`📊 当前总路由数: ${router.getRoutes().length}`)
+
     return dynamicRoutes
   } catch (error) {
-    console.error('添加动态路由失败:', error)
+    console.error('❌ 添加动态路由失败:', error)
+    // 显示用户友好的错误信息
+    if (typeof Message !== 'undefined') {
+      Message.error('动态路由加载失败，请刷新页面重试')
+    }
     return []
+  } finally {
+    dynamicRoutesLoading = false
   }
 }
 
@@ -133,6 +172,73 @@ router.afterEach((to) => {
     document.title = `${to.meta.title} - Datalink4TJ`
   } else {
     document.title = 'Datalink4TJ'
+  }
+})
+
+// 路由守卫：处理动态路由加载
+router.beforeEach(async (to, from, next) => {
+  console.log(`🧭 路由导航: ${from.path} -> ${to.path}`)
+
+  // 如果动态路由还没有加载，先加载动态路由
+  if (!dynamicRoutesLoaded && !dynamicRoutesLoading) {
+    console.log('🔄 检测到未加载动态路由，开始加载...')
+    try {
+      await addDynamicRoutes()
+
+      // 重新检查目标路由是否存在
+      const targetRoute = router.resolve(to.path)
+      if (targetRoute.matched.length > 0) {
+        console.log(`✅ 动态路由加载后找到目标路由: ${to.path}`)
+        next(to.path) // 重新导航到目标路由
+        return
+      }
+    } catch (error) {
+      console.error('❌ 路由守卫中加载动态路由失败:', error)
+    }
+  }
+
+  // 检查路由是否存在
+  if (to.matched.length === 0) {
+    console.warn(`⚠️ 路由不存在: ${to.path}`)
+    // 如果是根路径，重定向到仪表板
+    if (to.path === '/') {
+      next('/dashboard')
+      return
+    }
+    // 其他情况重定向到仪表板
+    next('/dashboard')
+    return
+  }
+
+  next()
+})
+
+// 路由错误处理
+router.onError((error) => {
+  console.error('🚨 路由错误:', error)
+  console.error('🔍 错误详情:', {
+    message: error.message,
+    stack: error.stack,
+    name: error.name
+  })
+
+  if (error.message.includes('Failed to fetch dynamically imported module')) {
+    console.error('💥 动态导入失败，可能是组件文件不存在或网络问题')
+    console.error('🔄 尝试重新加载动态路由...')
+
+    // 尝试重新加载动态路由
+    setTimeout(async () => {
+      try {
+        await addDynamicRoutes()
+        console.log('✅ 动态路由重新加载完成')
+      } catch (reloadError) {
+        console.error('❌ 动态路由重新加载失败:', reloadError)
+      }
+    }, 1000)
+
+    if (typeof Message !== 'undefined') {
+      Message.error('页面加载失败，正在尝试重新加载...')
+    }
   }
 })
 

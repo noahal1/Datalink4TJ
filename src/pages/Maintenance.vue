@@ -1,36 +1,38 @@
 <template>
-  <v-container fluid>
-    <!-- 操作栏 -->
-    <v-row class="mb-3">
-      <v-col cols="12">
-        <v-card>
-          <v-card-text class="d-flex justify-space-between align-center py-2">
-            <div>
-              <span class="text-h6">维修管理</span>
-            </div>
-            <div>
-              <v-btn
-                color="primary"
-                variant="outlined"
-                prepend-icon="mdi-chart-line"
-                class="me-2"
-                to="/maintenance/metrics"
-              >
-                查看维修指标
-              </v-btn>
-              <v-btn
-                color="primary"
-                prepend-icon="mdi-plus"
-                @click="openTaskDialog"
-                v-permission="'MAINT:WRITE'"
-              >
-                添加任务
-              </v-btn>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
+  <unified-page-template
+    title="维修管理"
+    icon="mdi-wrench"
+    color="primary"
+  >
+    <template #header-actions>
+      <v-btn
+        color="info"
+        variant="outlined"
+        prepend-icon="mdi-file-document-multiple"
+        class="me-2"
+        to="/pr-management"
+        v-permission="'MAINT:READ'"
+      >
+        PR管理
+      </v-btn>
+      <v-btn
+        color="primary"
+        variant="outlined"
+        prepend-icon="mdi-chart-line"
+        class="me-2"
+        to="/maintenance/metrics"
+      >
+        查看维修指标
+      </v-btn>
+      <v-btn
+        color="primary"
+        prepend-icon="mdi-plus"
+        @click="openTaskDialog"
+        v-permission="'MAINT:WRITE'"
+      >
+        添加任务
+      </v-btn>
+    </template>
 
     <v-row>
       <!-- 日历组件 -->
@@ -105,7 +107,7 @@
       @save="saveMetric"
       @close="closeMetricDialog"
     />
-  </v-container>
+  </unified-page-template>
 </template>
 
 <script setup>
@@ -121,6 +123,7 @@ import TaskDialog from '../components/maintenance/TaskDialog.vue'
 import IssueDialog from '../components/maintenance/IssueDialog.vue'
 import MetricsList from '../components/maintenance/MetricsList.vue'
 import MetricsDialog from '../components/maintenance/MetricsDialog.vue'
+import UnifiedPageTemplate from '../components/UnifiedPageTemplate.vue'
 
 const userStore = useUserStore()
 

@@ -13,7 +13,7 @@
       <v-card-text>
         <v-container>
           <v-form
-            ref="form"
+            ref="formRef"
             v-model="formValid"
             lazy-validation
           >
@@ -110,8 +110,8 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { PermissionDescriptions } from '../../utils/permissionConstants'
-import api from '../../utils/api'
+import { PermissionDescriptions } from '../../../../utils/permissionConstants'
+import api from '../../../../utils/api'
 
 const props = defineProps({
   modelValue: {
@@ -144,7 +144,7 @@ const emit = defineEmits(['update:modelValue', 'update:permission', 'save', 'clo
 const localDialog = ref(props.modelValue)
 const localPermission = ref({...props.permission})
 const formValid = ref(false)
-const form = ref(null)
+const formRef = ref(null)
 const routes = ref([])
 const roles = ref([])
 
@@ -225,8 +225,8 @@ const closeDialog = () => {
 
 // 保存权限
 const savePermission = () => {
-  if (!form.value.validate()) return
-  
+  if (!formRef.value?.validate()) return
+
   emit('update:permission', localPermission.value)
   emit('save')
 }

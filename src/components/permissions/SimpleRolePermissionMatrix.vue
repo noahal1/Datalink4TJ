@@ -61,8 +61,8 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import api from '../../utils/api'
-import Message from '../../utils/notification'
+import api from '../../../../utils/api'
+import Message from '../../../../utils/notification'
 
 // Props
 const props = defineProps({

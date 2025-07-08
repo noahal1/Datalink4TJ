@@ -104,7 +104,7 @@
         <v-btn value="scrap" prepend-icon="mdi-delete">报废数</v-btn>
       </v-btn-toggle>
       
-      <v-btn 
+      <v-btn
         prepend-icon="mdi-refresh"
         variant="text"
         class="ml-2"
@@ -175,6 +175,7 @@ import { ref, computed, onMounted, getCurrentInstance } from 'vue'
 import { useUserStore } from '../stores/user'
 import api from '../utils/api'
 import Message from '../utils/notification'
+import { validateQaData, formatQaData } from '../utils/debugApi'
 
 const userStore = useUserStore()
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
@@ -435,6 +436,8 @@ const fetchData = async (month = selectedMonth.value) => {
   }
 };
 
+
+
 // 确认修改
 const confirmChanges = async () => {
   try {
@@ -460,11 +463,11 @@ const confirmChanges = async () => {
           
           // 转换为后端期望的格式
           apiData.push({
-            line: field,
-            day: row.date,
-            month: selectedMonth.value,
-            year: new Date().getFullYear().toString(),
-            value: row[field].toString(),
+            line: String(field),
+            day: String(row.date),
+            month: String(selectedMonth.value),
+            year: String(new Date().getFullYear()),
+            value: String(row[field] || 0),
             scrapflag: false
           });
         }
@@ -482,11 +485,11 @@ const confirmChanges = async () => {
           
           // 转换为后端期望的格式
           apiData.push({
-            line: lineField,
-            day: row.date,
-            month: selectedMonth.value,
-            year: new Date().getFullYear().toString(),
-            value: row[field].toString(),
+            line: String(lineField),
+            day: String(row.date),
+            month: String(selectedMonth.value),
+            year: String(new Date().getFullYear()),
+            value: String(row[field] || 0),
             scrapflag: true
           });
         }
@@ -505,9 +508,40 @@ const confirmChanges = async () => {
       Message.info('没有数据变更');
       return;
     }
-    
+
+    // 数据验证
+    console.log('QA数据准备发送:', apiData.length, '条记录');
+
+    if (!Array.isArray(apiData)) {
+      console.error('数据格式错误：不是数组格式');
+      Message.error('数据格式错误：不是数组格式');
+      return;
+    }
+
+    // 验证数据格式
+    const validationIssues = validateQaData(apiData);
+
+    if (validationIssues.length > 0) {
+      console.error('❌ 数据验证失败:', validationIssues);
+      console.groupEnd();
+      Message.error('数据格式错误: ' + validationIssues.join(', '));
+      return;
+    }
+
+    // 格式化数据确保类型正确
+    const formattedData = formatQaData(apiData);
+
+    if (!Array.isArray(formattedData)) {
+      console.error('数据格式化失败');
+      Message.error('数据格式化失败');
+      return;
+    }
+
+    // 创建纯数组副本，避免响应式影响
+    const finalData = JSON.parse(JSON.stringify(formattedData));
+
     // 发送转换后的数据格式到服务器
-    const response = await api.put('/qa', apiData);
+    const response = await api.put('/qa', finalData);
     
     // 正确处理Axios响应格式
     if (response && response.data) {

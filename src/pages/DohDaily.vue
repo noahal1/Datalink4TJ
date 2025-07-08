@@ -58,30 +58,13 @@
     <!-- 加载指示器 -->
     <loading-overlay :loading="isLoading" message="加载数据中..." />
     
-    <!-- 分类汇总卡片 -->
-    <div class="summary-cards mb-4" v-if="summaryData.length > 0">
-      <v-row>
-        <v-col cols="12" sm="6" md="3" v-for="summary in summaryData" :key="summary.category">
-          <unified-stats-card
-            :title="summary.category"
-            :value="summary.avg_doh.toFixed(1) + ' 天'"
-            :subtitle="`${summary.product_count}/${summary.total_products} 产品已填报`"
-            :icon="getCategoryIcon(summary.category)"
-            :color="getCategoryColor(summary.category)"
-            show-progress
-            :progress="(summary.product_count / summary.total_products) * 100"
-          />
-        </v-col>
-      </v-row>
-    </div>
-    
     <!-- 数据表格容器 -->
     <div class="table-container">
       <unified-data-table
         :headers="tableHeaders"
         :items="filteredTableData"
         :loading="isLoading"
-        class="mt-4 doh-table"
+        class="mt-4 doh-table doh-data-table"
         hover
       >
         
@@ -222,7 +205,7 @@
             density="compact"
           >
             <small>
-              设置后将作为库存预警的参考标准。当前库存天数低于最小值时显示为"偏低"，高于最大值时显示为"偏高"。
+              库存预警的参考标准。当前库存天数低于最小时显示为偏低，高于最大时显示为偏高，此更改只对本产品有效。
             </small>
           </v-alert>
         </v-card-text>
@@ -371,7 +354,7 @@ const fetchData = async (date = selectedDate.value) => {
   isLoading.value = true
   try {
     const params = { target_date: date }
-    const response = await get('/doh/v2/daily/', { params })
+    const response = await get('/doh/v2/daily', { params })
 
     tableData.value = response.data || []
     originalData.value = JSON.parse(JSON.stringify(tableData.value))
@@ -393,7 +376,7 @@ const fetchData = async (date = selectedDate.value) => {
 const fetchSummaryData = async (date = selectedDate.value) => {
   try {
     const params = { target_date: date }
-    const response = await get('/doh/summary/', { params })
+    const response = await get('/doh/v2/summary', { params })
     summaryData.value = response.data || []
   } catch (error) {
     console.error('获取汇总数据错误:', error)
@@ -413,7 +396,7 @@ const saveData = async () => {
       }))
     }
 
-    const response = await put('/doh/v2/daily/', dataToSend)
+    const response = await put('/doh/v2/daily', dataToSend)
 
     if (response && response.data) {
       Message.success('DOH数据保存成功')
@@ -466,7 +449,7 @@ const saveSafetyStock = async () => {
       max_safety_days: parseFloat(safetyStockForm.value.max_safety_days) || 0
     }
 
-    const response = await put(`/doh/v2/master-data/${selectedProduct.value.id}/safety-stock/`, dataToSend)
+    const response = await put(`/doh/v2/master-data/${selectedProduct.value.id}/safety-stock`, dataToSend)
 
     if (response && response.data) {
       Message.success('安全库存设置保存成功')
@@ -515,44 +498,225 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 控制栏美化 */
 .controls-bar {
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 8px;
-  padding: 16px;
-  backdrop-filter: blur(10px);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
+  border-radius: 16px;
+  padding: 20px;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
 }
 
+.controls-bar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* 汇总卡片区域 */
 .summary-cards {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
+/* 表格容器美化 */
 .table-container {
   background: white;
-  border-radius: 8px;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
 }
 
+/* 禁用table-container的悬停效果，避免与表格行悬停冲突 */
+
+/* 表格样式优化 */
 .doh-table {
   background: transparent;
 }
 
-.editable-cell {
-  padding: 4px !important;
+.doh-table :deep(.v-data-table__wrapper) {
+  border-radius: 16px;
 }
 
+.doh-table :deep(thead tr th) {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 16px 12px;
+}
+
+.doh-table :deep(tbody tr) {
+  transition: all 0.2s ease;
+}
+
+/* DOH表格专用悬停样式 - 避免闪烁 */
+.doh-data-table :deep(.v-data-table__tr:hover) {
+  background: rgba(59, 130, 246, 0.04) !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.doh-data-table :deep(.v-data-table tbody tr:hover) {
+  background: rgba(59, 130, 246, 0.04) !important;
+  transition: background-color 0.15s ease !important;
+}
+
+/* 禁用其他可能的悬停效果 */
+.doh-data-table:hover {
+  transform: none !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08) !important;
+}
+
+.doh-table :deep(tbody tr td) {
+  padding: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* 可编辑单元格美化 */
+.editable-cell {
+  padding: 8px !important;
+}
+
+.editable-cell .v-text-field {
+  transition: all 0.3s ease;
+}
+
+.editable-cell .v-text-field:hover {
+  transform: scale(1.02);
+}
+
+.editable-cell .v-text-field :deep(.v-field) {
+  border-radius: 8px;
+  background: rgba(59, 130, 246, 0.02);
+  border: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+.editable-cell .v-text-field :deep(.v-field:hover) {
+  border-color: rgba(59, 130, 246, 0.3);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.editable-cell .v-text-field :deep(.v-field--focused) {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 分组头部样式 */
 .group-header {
-  background-color: #f5f5f5 !important;
-  font-weight: bold;
-  padding: 12px 16px !important;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+  font-weight: 600;
+  padding: 16px !important;
+  color: #475569;
 }
 
 .group-header td {
-  border-bottom: 2px solid #e0e0e0 !important;
+  border-bottom: 3px solid #e2e8f0 !important;
 }
 
+/* 安全库存范围美化 */
 .safety-range {
   font-size: 0.875rem;
-  line-height: 1.2;
+  line-height: 1.3;
+  padding: 4px 8px;
+  background: rgba(156, 163, 175, 0.1);
+  border-radius: 6px;
+  display: inline-block;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* 状态芯片美化 */
+:deep(.v-chip) {
+  font-weight: 500;
+  letter-spacing: 0.025em;
+  transition: all 0.2s ease;
+}
+
+:deep(.v-chip:hover) {
+  transform: scale(1.05);
+}
+
+/* 分类芯片特殊样式 */
+:deep(.v-chip--variant-tonal) {
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+/* 按钮美化 */
+:deep(.v-btn) {
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+:deep(.v-btn:hover) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+:deep(.v-btn-toggle .v-btn) {
+  border-radius: 8px;
+  margin: 0 2px;
+}
+
+/* 对话框美化 */
+:deep(.v-dialog .v-card) {
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+:deep(.v-dialog .v-card-title) {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #e2e8f0;
+  padding: 20px 24px;
+}
+
+/* 响应式优化 */
+@media (max-width: 960px) {
+  .controls-bar {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .table-container {
+    border-radius: 12px;
+  }
+
+  .doh-table :deep(thead tr th) {
+    padding: 12px 8px;
+    font-size: 0.875rem;
+  }
+
+  .doh-table :deep(tbody tr td) {
+    padding: 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  .controls-bar {
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  .editable-cell {
+    padding: 4px !important;
+  }
+
+  .safety-range {
+    font-size: 0.75rem;
+    padding: 2px 6px;
+  }
+}
+
+/* 加载动画美化 */
+:deep(.v-progress-circular) {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* Snackbar美化 */
+:deep(.v-snackbar) {
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
 }
 </style>

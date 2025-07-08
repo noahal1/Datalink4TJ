@@ -5,80 +5,110 @@
     color="success"
   >
     <!-- 顶部控制栏 -->
-    <v-row class="mb-4 align-center">
-      <!-- 左侧：月份和年份选择器 -->
-      <v-col cols="12" md="6">
-        <v-row>
-          <v-col cols="6" md="4">
-            <v-select
-              v-model="selectedMonth"
-              :items="monthOptions"
-              label="选择月份"
-              variant="outlined"
-              density="compact"
-              @update:model-value="loadData"
-            ></v-select>
-          </v-col>
-          <v-col cols="6" md="4">
-            <v-select
-              v-model="selectedYear"
-              :items="yearOptions"
-              label="选择年份"
-              variant="outlined"
-              density="compact"
-              @update:model-value="loadData"
-            ></v-select>
-          </v-col>
-        </v-row>
-      </v-col>
+    <div class="controls-bar mb-6">
+      <v-row class="align-center">
+        <!-- 左侧：月份和年份选择器 -->
+        <v-col cols="12" md="6">
+          <v-row>
+            <v-col cols="6" md="4">
+              <v-select
+                v-model="selectedMonth"
+                :items="monthOptions"
+                label="选择月份"
+                variant="outlined"
+                density="compact"
+                @update:model-value="loadData"
+                hide-details
+                class="control-select"
+              ></v-select>
+            </v-col>
+            <v-col cols="6" md="4">
+              <v-select
+                v-model="selectedYear"
+                :items="yearOptions"
+                label="选择年份"
+                variant="outlined"
+                density="compact"
+                @update:model-value="loadData"
+                hide-details
+                class="control-select"
+              ></v-select>
+            </v-col>
+          </v-row>
+        </v-col>
 
-      <!-- 右侧：操作按钮 -->
-      <v-col cols="12" md="6" class="text-right">
-        <v-btn
-          color="primary"
-          variant="outlined"
-          prepend-icon="mdi-target"
-          class="mr-2"
-          @click="openTargetDialog"
-        >
-          目标值管理
-        </v-btn>
-        
-        <v-btn
-          color="success"
-          prepend-icon="mdi-content-save"
-          :loading="submitting"
-          :disabled="!isDataChanged"
-          @click="saveData"
-        >
-          保存数据
-        </v-btn>
-      </v-col>
-    </v-row>
+        <v-spacer></v-spacer>
+
+        <!-- 右侧：操作按钮 -->
+        <v-col cols="auto">
+          <v-btn
+            color="info"
+            variant="outlined"
+            prepend-icon="mdi-target"
+            class="mr-2 action-btn"
+            @click="openTargetDialog"
+          >
+            目标值管理
+          </v-btn>
+
+          <v-btn
+            color="success"
+            prepend-icon="mdi-content-save"
+            :loading="submitting"
+            :disabled="!isDataChanged"
+            @click="saveData"
+            class="action-btn"
+            variant="elevated"
+          >
+            保存数据
+          </v-btn>
+        </v-col>
+      </v-row>
+    </div>
+
+    <!-- 加载指示器 -->
+    <loading-overlay :loading="loading" message="加载数据中..." />
 
     <!-- 数据变更提醒 -->
-    <v-alert
-      v-if="showChangeAlert"
-      type="warning"
-      variant="tonal"
-      closable
-      class="mb-4"
-      @click:close="showChangeAlert = false"
+    <v-snackbar
+      v-model="showChangeAlert"
+      :timeout="0"
+      color="warning"
+      location="bottom"
+      multi-line
+      class="change-alert"
     >
-      <template v-slot:title>
-        数据已修改
+      <v-icon icon="mdi-alert" class="mr-2" />
+      数据已修改，请记得保存！
+      <template v-slot:actions>
+        <v-btn
+          color="white"
+          variant="text"
+          @click="saveData"
+          :loading="submitting"
+        >
+          保存
+        </v-btn>
+        <v-btn
+          color="white"
+          variant="text"
+          @click="showChangeAlert = false"
+        >
+          关闭
+        </v-btn>
       </template>
-      您有未保存的数据修改，请及时保存以免丢失。
-    </v-alert>
+    </v-snackbar>
 
     <!-- KPI 数据表格 -->
-    <unified-data-table
-      :headers="headers"
-      :items="kpiData"
-      :loading="loading"
-      density="comfortable"
-      class="mb-6"
-    >
+    <div class="table-container">
+      <unified-data-table
+        :headers="headers"
+        :items="kpiData"
+        :loading="loading"
+        density="comfortable"
+        class="ehs-kpi-table"
+        hover
+      >
       <!-- KPI描述列 -->
       <template v-slot:item.description="{ item }">
         <div class="font-weight-medium">
@@ -189,6 +219,7 @@
         <span v-else class="text-grey">-</span>
       </template>
     </unified-data-table>
+  </div>
 
     <!-- 目标值管理对话框 -->
     <v-dialog v-model="targetDialog" max-width="1200px" persistent>
@@ -270,6 +301,7 @@ import Message from '@/utils/notification'
 import UnifiedPageTemplate from '@/components/UnifiedPageTemplate.vue'
 import UnifiedDataTable from '@/components/UnifiedDataTable.vue'
 import KpiRemarkDialog from '@/components/KpiRemarkDialog.vue'
+import LoadingOverlay from '@/components/LoadingOverlay.vue'
 
 // 响应式数据
 const loading = ref(false)
@@ -648,6 +680,48 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 导入通用KPI样式 */
+@import '@/styles/kpi-page-enhancement.css';
+
+/* EHS KPI特殊样式 */
+.ehs-kpi-table :deep(tbody tr:hover) {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.03) 0%, rgba(252, 165, 165, 0.03) 100%);
+}
+
+.ehs-kpi-table .text-field-small :deep(.v-field) {
+  background: rgba(239, 68, 68, 0.02);
+  border: 1px solid rgba(239, 68, 68, 0.1);
+}
+
+.ehs-kpi-table .text-field-small :deep(.v-field:hover) {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.ehs-kpi-table .text-field-small :deep(.v-field--focused) {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* Environmental Performance 选择框特殊样式 */
+.environmental-select :deep(.v-field) {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.02) 0%, rgba(134, 239, 172, 0.02) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.1);
+}
+
+.environmental-select :deep(.v-field:hover) {
+  border-color: rgba(34, 197, 94, 0.3);
+  background: rgba(34, 197, 94, 0.05);
+}
+
+.environmental-select :deep(.v-field--focused) {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.08);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+/* 字体样式 */
 .text-field-small {
   max-width: 120px;
 }

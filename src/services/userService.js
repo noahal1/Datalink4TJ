@@ -123,7 +123,19 @@ class UserService extends BaseApiService {
    * @returns {Promise} - 刷新结果
    */
   async refreshToken() {
-    return this.post('/token/refresh')
+    try {
+      const response = await this.post('/token/refresh')
+      return {
+        token: response.access_token,
+        access_token: response.access_token,
+        token_type: response.token_type,
+        user_id: response.user_id,
+        user_name: response.user_name
+      }
+    } catch (error) {
+      console.error('刷新token失败:', error)
+      throw error
+    }
   }
 
   /**

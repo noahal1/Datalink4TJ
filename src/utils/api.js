@@ -6,6 +6,9 @@ import { useUserStore } from '../stores/user'
 import Message from './notification'
 import router from '../router'
 import { convertApiRequest } from './idConverter'
+import { shouldRefreshToken, isTokenExpired } from './tokenManager'
+import { enableApiDebug } from './debugApi'
+import { prepareApiData, hasCircularReference } from './reactiveUtils'
 
 // API 基础URL
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'
@@ -122,15 +125,14 @@ api.interceptors.request.use(
       config.headers['Authorization'] = `Bearer ${token}`;
       debug(`请求添加认证头: ${config.method.toUpperCase()} ${config.url}`);
       
-      // 检查Token是否即将过期（少于1小时）
-      if (userStore.isTokenExpiringSoon()) {
-        debug('Token即将过期，尝试在后台刷新...');
-        // 不阻塞当前请求，在后台尝试刷新Token
-        setTimeout(() => {
-          userStore.refreshToken().catch(err => {
-            console.error('自动刷新Token失败:', err);
-          });
-        }, 100);
+      // 临时禁用自动token刷新以避免卡顿问题
+      // TODO: 重新启用token刷新功能
+
+      // 检查Token是否过期
+      if (isTokenExpired(token)) {
+        debug('Token已过期，清除用户状态');
+        // 不自动登出，让用户手动刷新页面
+        console.warn('Token已过期，请刷新页面重新登录');
       }
     } else if (!isPublicApi) {
       // 如果是需要认证的API，且用户未登录，则拒绝请求
@@ -239,35 +241,17 @@ api.interceptors.response.use(
     // 处理特定错误码
     switch (status) {
       case 401:
-        // 避免在登录请求本身上触发登出逻辑
-        if (config.url.includes('/users/token')) {
+        // 简化401错误处理，避免无限循环
+        if (config.url.includes('/users/token') && !config.url.includes('/token/refresh')) {
           Message.error('用户名或密码错误')
         } else {
-          console.warn('认证失败，需要重新登录')
-          
+          console.warn('认证失败，请重新登录')
+
           // 检查是否是GET请求，尝试使用缓存
           if (config.method.toLowerCase() === 'get') {
             const cachedData = getCachedResponse(config.url);
             if (cachedData) {
               console.warn('认证失败，使用缓存数据');
-              // 在后台尝试刷新登录，但不阻塞当前请求
-              setTimeout(() => {
-                const userStore = useUserStore()
-                userStore.initialize().catch(() => {
-                  Message.error('登录已过期，请重新登录')
-                  // 清除用户信息
-                  userStore.logout()
-                  
-                  // 保存当前路径，登录后重定向回来
-                  const currentPath = router.currentRoute.value.path
-                  if (currentPath !== '/login') {
-                    sessionStorage.setItem('redirectPath', currentPath)
-                    // 重定向到登录页面
-                    router.push('/login')
-                  }
-                });
-              }, 100);
-              
               return Promise.resolve({
                 data: cachedData,
                 status: 200,
@@ -276,6 +260,11 @@ api.interceptors.response.use(
                 fromCache: true
               });
             }
+          }
+
+          // 显示友好的错误提示，但不自动登出
+          if (!config.url.includes('/token/refresh')) {
+            Message.error('登录状态已过期，请刷新页面重新登录')
           }
           
           Message.error('登录已过期，请重新登录')
@@ -373,7 +362,17 @@ export function get(endpoint, options = {}) {
  * @returns {Promise} - 请求Promise
  */
 export function post(endpoint, data = {}) {
-  return api.post(endpoint, data)
+  // 自动处理响应式对象，避免循环引用
+  const processedData = prepareApiData(data)
+
+  // 在开发环境中检查循环引用
+  if (import.meta.env.DEV && hasCircularReference(data)) {
+    console.warn('⚠️ 检测到循环引用，已自动处理:', endpoint)
+    console.log('原始数据:', data)
+    console.log('处理后数据:', processedData)
+  }
+
+  return api.post(endpoint, processedData)
 }
 
 /**
@@ -383,7 +382,37 @@ export function post(endpoint, data = {}) {
  * @returns {Promise} - 请求Promise
  */
 export function put(endpoint, data = {}) {
-  return api.put(endpoint, data)
+  // 自动处理响应式对象，避免循环引用
+  const processedData = prepareApiData(data)
+
+  // 在开发环境中检查循环引用
+  if (import.meta.env.DEV && hasCircularReference(data)) {
+    console.warn('⚠️ 检测到循环引用，已自动处理:', endpoint)
+    console.log('原始数据:', data)
+    console.log('处理后数据:', processedData)
+  }
+
+  return api.put(endpoint, processedData)
+}
+
+/**
+ * PATCH请求
+ * @param {string} endpoint - API端点
+ * @param {object} data - 请求体数据
+ * @returns {Promise} - 请求Promise
+ */
+export function patch(endpoint, data = {}) {
+  // 自动处理响应式对象，避免循环引用
+  const processedData = prepareApiData(data)
+
+  // 在开发环境中检查循环引用
+  if (import.meta.env.DEV && hasCircularReference(data)) {
+    console.warn('⚠️ 检测到循环引用，已自动处理:', endpoint)
+    console.log('原始数据:', data)
+    console.log('处理后数据:', processedData)
+  }
+
+  return api.patch(endpoint, processedData)
 }
 
 /**
@@ -395,10 +424,17 @@ export function del(endpoint) {
   return api.delete(endpoint)
 }
 
+// 在开发环境启用API调试
+if (import.meta.env.DEV) {
+  enableApiDebug(api)
+  console.log('🔧 开发环境API调试已启用')
+}
+
 // 导出默认对象
 export default {
   get,
   post,
   put,
+  patch,
   delete: del
-} 
+}

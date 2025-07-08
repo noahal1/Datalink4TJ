@@ -6,11 +6,11 @@
   >
     <v-card>
       <v-card-title>
-        <span class="text-h5">{{ isNew ? '添加维修数据指标' : '编辑维修数据指标' }}</span>
+        <span class="text-h5">{{ isNew ? '添加维修数据' : '编辑维修数据' }}</span>
       </v-card-title>
       
       <v-card-text>
-        <v-form ref="form">
+        <v-form ref="formRef">
           <v-select
             v-model="localMetric.line"
             :items="lineTypes"
@@ -134,7 +134,7 @@
                 label="使用计算值"
                 density="compact"
                 hide-details
-                @change="updateMTBF"
+                @change="updateMTTR"
               ></v-checkbox>
             </v-card>
           </div>

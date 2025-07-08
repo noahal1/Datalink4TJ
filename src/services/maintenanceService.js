@@ -818,7 +818,60 @@ const maintenanceService = {
         })
       }
     };
+  },
+
+  // 计算设备可动率
+  calculateAvailability(planDownTime, outPlanDownTime, totalTime = 720) {
+    if (totalTime <= 0) return 0
+
+    // 可用时间 = 总时间 - 计划停机时间
+    const availableTime = totalTime - planDownTime
+
+    if (availableTime <= 0) return 0
+
+    // 实际运行时间 = 可用时间 - 非计划停机时间
+    const actualRunTime = Math.max(0, availableTime - outPlanDownTime)
+
+    // 可动率 = 实际运行时间 / 可用时间
+    const availability = actualRunTime / availableTime
+
+    return Math.round(availability * 10000) / 10000 // 保留4位小数
+  },
+
+  // 获取MTTR/MTBF趋势数据
+  async getMttrMtbfTrend(params = {}) {
+    try {
+      const response = await get('/maint/mttr-mtbf-trend', { params })
+      return response.data
+    } catch (error) {
+      console.error('获取MTTR/MTBF趋势数据失败:', error)
+      throw error
+    }
+  },
+
+  // 计算环比变化
+  calculateTrend(current, previous) {
+    if (!previous || previous === 0) return 0
+    return ((current - previous) / previous) * 100
+  },
+
+  // 计算MTTR和MTBF
+  calculateMttrMtbf(outPlanDownTime, issueCount, planDownTime = 0, totalTime = 720) {
+    // 计算MTTR = 非计划停机时间 / 故障次数
+    const mttr = issueCount > 0 ? outPlanDownTime / issueCount : 0
+
+    // 计算实际运行时间
+    const availableTime = totalTime - planDownTime
+    const actualRunTime = Math.max(0, availableTime - outPlanDownTime)
+
+    // 计算MTBF = 实际运行时间 / 故障次数
+    const mtbf = issueCount > 0 ? actualRunTime / issueCount : actualRunTime
+
+    return {
+      mttr: Math.round(mttr * 100) / 100,
+      mtbf: Math.round(mtbf * 100) / 100
+    }
   }
 }
 
-export default maintenanceService 
+export default maintenanceService

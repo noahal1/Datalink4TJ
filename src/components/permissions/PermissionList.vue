@@ -90,7 +90,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { PermissionHelper, PermissionDescriptions } from '../../utils/permissionConstants'
+import { PermissionHelper, PermissionDescriptions } from '../../../../utils/permissionConstants'
 
 const props = defineProps({
   permissions: {

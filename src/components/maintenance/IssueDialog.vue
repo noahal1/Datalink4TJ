@@ -16,7 +16,7 @@
       <v-divider></v-divider>
       
       <v-card-text class="pt-4">
-        <v-form ref="form">
+        <v-form ref="formRef">
           <v-textarea
             v-model="localIssue.description"
             label="问题描述"
@@ -86,7 +86,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'update:issue', 'save', 'close'])
 
-const form = ref(null)
+const formRef = ref(null)
 const isFormValid = computed(() => !!localIssue.value.description)
 
 // 本地问题对象，用于双向绑定
@@ -119,8 +119,8 @@ const setItemColor = (item) => {
 // 保存问题
 const saveIssue = async () => {
   // 表单验证
-  const isValid = await form.value?.validate()
-  
+  const isValid = await formRef.value?.validate()
+
   if (isValid?.valid) {
     emit('save')
   }
@@ -130,7 +130,7 @@ const saveIssue = async () => {
 watch(() => props.modelValue, (newVal) => {
   if (newVal) {
     setTimeout(() => {
-      form.value?.resetValidation()
+      formRef.value?.resetValidation()
     }, 50)
   }
 })

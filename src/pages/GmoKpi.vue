@@ -124,18 +124,28 @@
         ></v-text-field>
       </template>
 
-      <template v-slot:item.achievement_rate="{ item }">
-        <div class="text-center">
-          <v-progress-circular
-            :model-value="getAchievementRate(item.actual_value || 0, item.target_value || 0)"
-            :color="getAchievementColor(getAchievementRate(item.actual_value || 0, item.target_value || 0))"
-            size="40"
-            width="4"
+      <template v-slot:item.remark="{ item }">
+        <div v-if="shouldShowRemark(item)" class="d-flex align-center">
+          <v-btn
+            size="small"
+            variant="outlined"
+            color="warning"
+            prepend-icon="mdi-clipboard-edit"
+            @click="openRemarkDialog(item)"
           >
-            <span class="text-caption">
-              {{ getAchievementRate(item.actual_value || 0, item.target_value || 0) }}%
-            </span>
-          </v-progress-circular>
+            {{ getRemarkButtonText(item) }}
+          </v-btn>
+          <v-icon
+            v-if="hasRemarkContent(item)"
+            color="success"
+            class="ml-2"
+          >
+            mdi-check-circle
+          </v-icon>
+        </div>
+        <div v-else class="text-center text-grey">
+          <v-icon>mdi-check-circle</v-icon>
+          <div class="text-caption">达标</div>
         </div>
       </template>
     </unified-data-table>
@@ -198,6 +208,14 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- 原因分析与行动计划弹窗 -->
+    <kpi-remark-dialog
+      v-model="remarkDialog"
+      :item="selectedItem"
+      title="原因分析与行动计划"
+      @save="saveRemarkData"
+    />
   </unified-page-template>
 </template>
 
@@ -207,6 +225,7 @@ import { get, post, put } from '@/utils/api'
 import Message from '@/utils/notification'
 import UnifiedPageTemplate from '@/components/UnifiedPageTemplate.vue'
 import UnifiedDataTable from '@/components/UnifiedDataTable.vue'
+import KpiRemarkDialog from '@/components/KpiRemarkDialog.vue'
 
 // 响应式数据
 const loading = ref(false)
@@ -220,6 +239,10 @@ const isDataChanged = ref(false)
 const targetDialog = ref(false)
 const savingTargets = ref(false)
 const targetData = ref([])
+
+// 备注弹窗相关
+const remarkDialog = ref(false)
+const selectedItem = ref(null)
 
 // 月份和年份选项
 const monthOptions = Array.from({ length: 12 }, (_, i) => ({
@@ -239,6 +262,7 @@ const headers = [
   { title: '实际值', key: 'actual_value', align: 'center', width: '120px' },
   { title: '目标值', key: 'target_value', align: 'center', width: '120px' },
   { title: 'YTD', key: 'ytd_value', align: 'center', width: '120px' },
+  { title: '原因分析', key: 'remark', align: 'center', width: '150px' },
 ]
 
 // 目标值表格头部
@@ -254,7 +278,10 @@ const kpiDescriptions = [
   'Engineering (VA/VE)',
   'Continuous Improvement',
   'Total cost saving',
-  'Audit score'
+  'Audit score',
+  'AP/AR Spread',
+  'hot forming',
+  'laser cutting'
 ]
 
 // 区域列表
@@ -269,15 +296,31 @@ const initializeKpiData = () => {
   const data = []
   let id = 1
 
+  // 定义每个指标对应的区域
+  const kpiAreaMapping = {
+    'Purchasing': ['新厂', '老厂', '汇总'],
+    'Engineering (VA/VE)': ['新厂', '老厂', '汇总'],
+    'Continuous Improvement': ['新厂', '老厂', '汇总'],
+    'Total cost saving': ['新厂', '老厂', '汇总'],
+    'Audit score': ['新厂', '老厂', '汇总'],
+    'AP/AR Spread': ['新厂', '老厂', '汇总'],
+    'hot forming': ['汇总'],
+    'laser cutting': ['汇总']
+  }
+
   kpiDescriptions.forEach(description => {
-    areas.forEach(area => {
+    const applicableAreas = kpiAreaMapping[description] || areas
+    applicableAreas.forEach(area => {
       data.push({
         id: id++,
         description,
         area,
         actual_value: 0,
         target_value: 0,
-        ytd_value: 0
+        ytd_value: 0,
+        remark: null,
+        action_plan: null,
+        root_cause_analysis: null
       })
     })
   })
@@ -309,6 +352,17 @@ const getAchievementColor = (rate) => {
 const formatNumber = (value) => {
   if (value === 0) return '0'
   return value.toLocaleString()
+}
+
+// 判断是否显示备注输入框 - 实际值小于目标值时显示
+const shouldShowRemark = (item) => {
+  // 对于财务相关指标，当实际值小于目标值时显示备注
+  const financeKpis = ['AP/AR Spread', 'hot forming', 'laser cutting']
+  if (financeKpis.includes(item.description)) {
+    return (item.actual_value || 0) < (item.target_value || 0)
+  }
+  // 对于其他GMO指标，暂时不显示备注（根据需求可以调整）
+  return false
 }
 
 // 处理输入变更
@@ -344,6 +398,9 @@ const loadData = async () => {
           existingItem.actual_value = item.actual_value || 0
           existingItem.target_value = item.target_value || 0
           existingItem.ytd_value = item.ytd_value || 0
+          existingItem.remark = item.remark || null
+          existingItem.action_plan = item.action_plan || null
+          existingItem.root_cause_analysis = item.root_cause_analysis || null
         }
       })
     } else {
@@ -393,7 +450,10 @@ const saveData = async () => {
         area: item.area,
         description: item.description,
         actual_value: item.actual_value,
-        ytd_value: item.ytd_value
+        ytd_value: item.ytd_value,
+        remark: item.remark,
+        action_plan: item.action_plan,
+        root_cause_analysis: item.root_cause_analysis
       }))
     }
 
@@ -451,8 +511,21 @@ const openTargetDialog = async () => {
       // 如果没有目标值，创建默认结构
       targetData.value = []
 
+      // 定义每个指标对应的区域
+      const kpiAreaMapping = {
+        'Purchasing': ['新厂', '老厂', '汇总'],
+        'Engineering (VA/VE)': ['新厂', '老厂', '汇总'],
+        'Continuous Improvement': ['新厂', '老厂', '汇总'],
+        'Total cost saving': ['新厂', '老厂', '汇总'],
+        'Audit score': ['新厂', '老厂', '汇总'],
+        'AP/AR Spread': ['新厂', '老厂', '汇总'],
+        'hot forming': ['汇总'],
+        'laser cutting': ['汇总']
+      }
+
       kpiDescriptions.forEach(description => {
-        areas.forEach(area => {
+        const applicableAreas = kpiAreaMapping[description] || areas
+        applicableAreas.forEach(area => {
           targetData.value.push({
             area,
             description,
@@ -496,6 +569,32 @@ const saveTargets = async () => {
     Message.error('保存目标值失败')
   } finally {
     savingTargets.value = false
+  }
+}
+
+// 弹窗相关方法
+const openRemarkDialog = (item) => {
+  selectedItem.value = item
+  remarkDialog.value = true
+}
+
+const getRemarkButtonText = (item) => {
+  if (hasRemarkContent(item)) {
+    return '查看/编辑'
+  }
+  return '填写分析'
+}
+
+const hasRemarkContent = (item) => {
+  return (item.root_cause_analysis && item.root_cause_analysis.trim()) ||
+         (item.action_plan && item.action_plan.trim())
+}
+
+const saveRemarkData = (data) => {
+  if (selectedItem.value) {
+    selectedItem.value.root_cause_analysis = data.root_cause_analysis
+    selectedItem.value.action_plan = data.action_plan
+    handleInput()
   }
 }
 

@@ -1,5 +1,4 @@
 import { h } from 'vue'
-import SimpleLoading from '../components/SimpleLoading.vue'
 
 /**
  * 创建异步组件的工厂函数

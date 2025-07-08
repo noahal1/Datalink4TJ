@@ -153,7 +153,12 @@ export const getDateRange = (type) => {
 export const formatTime = (minutes) => {
   // 确保输入是数字
   const mins = typeof minutes === 'number' ? minutes : parseFloat(minutes) || 0;
-  
+
+  // 如果是0或无效值，显示为0
+  if (!mins || mins === 0) {
+    return '0分钟';
+  }
+
   if (mins < 60) {
     // 小于1小时，显示为分钟
     return `${mins.toFixed(1)}分钟`;
@@ -161,7 +166,11 @@ export const formatTime = (minutes) => {
     // 大于1小时，显示为小时+分钟
     const hours = Math.floor(mins / 60);
     const remainingMins = mins % 60;
-    return `${hours}小时${remainingMins.toFixed(0)}分钟`;
+    if (remainingMins === 0) {
+      return `${hours}小时`;
+    } else {
+      return `${hours}小时${remainingMins.toFixed(0)}分钟`;
+    }
   }
 };
 

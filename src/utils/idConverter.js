@@ -71,9 +71,14 @@ export function convertApiIds(params, idFields = []) {
   if (!params || typeof params !== 'object') {
     return params
   }
-  
+
+  // 如果是数组，直接返回，不进行ID转换
+  if (Array.isArray(params)) {
+    return params
+  }
+
   const converted = { ...params }
-  
+
   for (const field of idFields) {
     if (field in converted) {
       try {
@@ -90,7 +95,7 @@ export function convertApiIds(params, idFields = []) {
       }
     }
   }
-  
+
   return converted
 }
 
@@ -141,16 +146,21 @@ export function convertApiRequest(options) {
   
   // 转换请求体中的ID字段
   if (converted.data && typeof converted.data === 'object') {
-    const commonIdFields = [
-      'id', 'user_id', 'role_id', 'permission_id', 'route_id', 'department_id',
-      'role_ids', 'permission_ids', 'user_ids'
-    ]
-    
-    try {
-      converted.data = convertApiIds(converted.data, commonIdFields)
-    } catch (error) {
-      console.error('转换请求数据中的ID失败:', error)
-      throw error
+    // 如果是数组，跳过ID转换
+    if (Array.isArray(converted.data)) {
+      // 数组数据不需要ID转换，直接跳过
+    } else {
+      const commonIdFields = [
+        'id', 'user_id', 'role_id', 'permission_id', 'route_id', 'department_id',
+        'role_ids', 'permission_ids', 'user_ids'
+      ]
+
+      try {
+        converted.data = convertApiIds(converted.data, commonIdFields)
+      } catch (error) {
+        console.error('转换请求数据中的ID失败:', error)
+        throw error
+      }
     }
   }
   

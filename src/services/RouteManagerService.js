@@ -245,10 +245,12 @@ class RouteManagerService {
   }
 
   /**
-   * 加载组件列表
+   * 加载组件列表（从后端获取已注册的组件）
    */
   async loadComponents() {
     try {
+      console.log('🔍 RouteManagerService 开始从后端加载已注册的组件列表...')
+
       // 添加时间戳参数防止缓存
       const timestamp = Date.now()
       const response = await api.get(`/routes/components?_t=${timestamp}`, {
@@ -258,39 +260,40 @@ class RouteManagerService {
         }
       })
 
-      console.log("RouteManagerService 组件列表API响应:", response)
+      console.log("📋 RouteManagerService 组件列表API响应:", response)
 
       if (response && response.data && response.data.components) {
         this.state.components = response.data.components
-        console.log(`RouteManagerService 成功获取组件列表: ${this.state.components.length} 个组件`)
+        console.log(`✅ RouteManagerService 成功从后端获取组件列表: ${this.state.components.length} 个组件`)
+        console.log('📋 后端已注册组件:', this.state.components)
       } else if (response && response.data && Array.isArray(response.data)) {
         // 如果直接返回数组
         this.state.components = response.data
-        console.log(`RouteManagerService 成功获取组件列表: ${this.state.components.length} 个组件`)
+        console.log(`✅ RouteManagerService 成功获取组件列表: ${this.state.components.length} 个组件`)
       } else {
-        console.warn("RouteManagerService API响应格式不符合预期:", response)
-        // 使用默认组件列表
-        this.state.components = [
-          'DefaultLayout', 'Dashboard', 'EHS', 'Assy', 'Quality', 'Pcl', 'Admin', 'Gmo',
-          'Maintenance', 'MaintenanceMetrics', 'DowntimeRecords', 'Events',
-          'Qa_others', 'RouteManagement', 'PermissionManagement', 'PermissionTest',
-          'AdminDepartments', 'AdminActivities', 'AdminUsers', 'Login'
-        ]
-        console.log('RouteManagerService 使用默认组件列表')
+        console.warn("⚠️ RouteManagerService API响应格式不符合预期:", response)
+        throw new Error('Invalid API response format')
       }
 
       return this.state.components
     } catch (error) {
-      console.error('RouteManagerService 加载组件失败:', error)
-      // 使用默认组件列表作为后备
-      this.state.components = [
-        'DefaultLayout', 'Dashboard', 'EHS', 'Assy', 'Quality', 'Pcl', 'Admin', 'Gmo',
-        'Maintenance', 'MaintenanceMetrics', 'DowntimeRecords', 'Events',
-        'Qa_others', 'RouteManagement', 'PermissionManagement', 'PermissionTest',
-        'AdminDepartments', 'AdminActivities', 'AdminUsers', 'Login'
-      ]
-      console.log('RouteManagerService 使用默认组件列表作为后备方案')
-      return this.state.components
+      console.error('❌ RouteManagerService 从后端加载组件失败:', error)
+
+      // 从前端组件映射表获取组件列表作为后备
+      try {
+        const { componentMap } = await import('../router/dynamic')
+        this.state.components = Object.keys(componentMap)
+        console.log('🔄 RouteManagerService 使用前端组件映射表作为后备方案')
+        console.log(`📋 前端组件列表 (${this.state.components.length} 个):`, this.state.components)
+        return this.state.components
+      } catch (importError) {
+        console.error('❌ 无法导入前端组件映射表:', importError)
+
+        // 最后的后备方案：基础组件列表
+        this.state.components = ['DefaultLayout', 'Dashboard', 'Login']
+        console.log('🆘 RouteManagerService 使用最小基础组件列表作为最后后备方案')
+        return this.state.components
+      }
     }
   }
 

@@ -196,15 +196,15 @@
                 {{ formatTime(metricsOverview.mttr) }}
             </div>
             <div class="text-caption text-center">
-              相比上月 
+              相比上月
               <span v-if="mttrTrend < 0" class="text-success">
-                <v-icon small>mdi-arrow-down</v-icon> {{ Math.abs(mttrTrend).toFixed(1) }}%
+                <v-icon small>mdi-arrow-down</v-icon> 改善 {{ Math.abs(mttrTrend).toFixed(1) }}%
               </span>
               <span v-else-if="mttrTrend > 0" class="text-error">
-                <v-icon small>mdi-arrow-up</v-icon> {{ mttrTrend.toFixed(1) }}%
+                <v-icon small>mdi-arrow-up</v-icon> 恶化 {{ mttrTrend.toFixed(1) }}%
               </span>
               <span v-else class="text-grey">
-                <v-icon small>mdi-minus</v-icon> 0%
+                <v-icon small>mdi-minus</v-icon> 无变化
               </span>
             </div>
           </v-card-text>
@@ -221,13 +221,13 @@
             <div class="text-caption text-center">
               相比上月
               <span v-if="mtbfTrend > 0" class="text-success">
-                <v-icon small>mdi-arrow-up</v-icon> {{ mtbfTrend.toFixed(1) }}%
+                <v-icon small>mdi-arrow-up</v-icon> 改善 {{ mtbfTrend.toFixed(1) }}%
               </span>
               <span v-else-if="mtbfTrend < 0" class="text-error">
-                <v-icon small>mdi-arrow-down</v-icon> {{ Math.abs(mtbfTrend).toFixed(1) }}%
+                <v-icon small>mdi-arrow-down</v-icon> 恶化 {{ Math.abs(mtbfTrend).toFixed(1) }}%
               </span>
               <span v-else class="text-grey">
-                <v-icon small>mdi-minus</v-icon> 0%
+                <v-icon small>mdi-minus</v-icon> 无变化
               </span>
             </div>
           </v-card-text>
@@ -421,11 +421,19 @@ const metricsOverview = ref({
   availability: 0.95 // 设备可动率（百分比）
 })
 
-// 假设的趋势数据（相对于上月的变化百分比）
-const mttrTrend = ref(-5)
-const mtbfTrend = ref(2)
-const oeeTrend = ref(1.5)
-const availabilityTrend = ref(1.2)
+// 环比趋势数据（相对于上月的变化百分比）
+const mttrTrend = ref(0)
+const mtbfTrend = ref(0)
+const oeeTrend = ref(0)
+const availabilityTrend = ref(0)
+
+// 上月数据用于环比计算
+const lastMonthMetrics = ref({
+  mttr: 0,
+  mtbf: 0,
+  oee: 0,
+  availability: 0
+})
 
 // 页面标签页
 const activeTab = ref('dashboard') // 默认显示仪表盘
@@ -563,6 +571,9 @@ const loadMetrics = async () => {
       out_plan_down_time: item.out_plan_down_time || 0,
       oee: item.oee || 0,
           amount: item.amount || 0,
+          // 使用数据库中的MTTR和MTBF值，如果没有则为null
+          mttr: item.mttr !== undefined ? Number(item.mttr) : null,
+          mtbf: item.mtbf !== undefined ? Number(item.mtbf) : null,
           // 计算可动率 = (总时间 - 计划停机时间 - 非计划停机时间) / (总时间 - 计划停机时间)
           availability: maintenanceService.calculateAvailability(
             item.plan_down_time || 0,
@@ -573,9 +584,9 @@ const loadMetrics = async () => {
       
       console.log(`成功加载 ${metricsList.value.length} 条维修指标记录，总记录数: ${totalMetricsCount.value}`)
     
-    // 计算统计指标
-    calculateMetricsOverview()
-    
+    // 计算统计指标（现在是异步方法）
+    await calculateMetricsOverview()
+
     // 加载图表数据
     await loadChartData()
     } else {
@@ -868,27 +879,131 @@ const loadingCharts = ref({
   mttrMtbf: false
 });
 
-// 计算指标概览
-const calculateMetricsOverview = () => {
-  if (!metricsList.value || metricsList.value.length === 0) {
-    return
+// 获取上月数据用于环比计算
+const loadLastMonthMetrics = async () => {
+  try {
+    // 计算上月的日期范围
+    const now = new Date()
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0)
+
+    const params = {
+      start_date: lastMonth.toISOString().split('T')[0],
+      end_date: lastMonthEnd.toISOString().split('T')[0]
+    }
+
+    // 添加当前筛选条件
+    if (selectedLineType.value !== 'all') {
+      params.line = selectedLineType.value
+    }
+    if (selectedShift.value !== 'all') {
+      params.shift_code = shiftCodeMap[selectedShift.value]
+    }
+
+    console.log('获取上月MTTR/MTBF数据参数:', params)
+
+    // 使用MTTR/MTBF趋势API获取上月数据
+    const response = await maintenanceService.getMttrMtbfTrend(params)
+
+    if (response && response.data && response.data.length > 0) {
+      // 计算上月指标平均值
+      const lastMonthData = calculateMetricsFromMttrData(response.data)
+      lastMonthMetrics.value = lastMonthData
+
+      console.log('上月MTTR/MTBF指标数据:', lastMonthData)
+
+      // 计算环比
+      calculateTrends()
+    } else {
+      console.log('未找到上月MTTR/MTBF数据')
+      // 重置环比数据
+      mttrTrend.value = 0
+      mtbfTrend.value = 0
+      oeeTrend.value = 0
+      availabilityTrend.value = 0
+    }
+  } catch (error) {
+    console.error('获取上月MTTR/MTBF数据失败:', error)
+    // 重置环比数据
+    mttrTrend.value = 0
+    mtbfTrend.value = 0
+    oeeTrend.value = 0
+    availabilityTrend.value = 0
   }
-  
+}
+
+// 从MTTR/MTBF趋势数据计算指标的方法
+const calculateMetricsFromMttrData = (mttrData) => {
+  if (!mttrData || mttrData.length === 0) {
+    return {
+      mttr: 0,
+      mtbf: 0,
+      oee: 0,
+      availability: 0
+    }
+  }
+
+  // 计算平均值
+  let totalMttr = 0
+  let totalMtbf = 0
+  let totalPlannedDowntime = 0
+  let totalUnplannedDowntime = 0
+  let count = mttrData.length
+
+  mttrData.forEach(item => {
+    totalMttr += Number(item.mttr) || 0
+    totalMtbf += Number(item.mtbf) || 0
+    totalPlannedDowntime += Number(item.planned_downtime) || 0
+    totalUnplannedDowntime += Number(item.unplanned_downtime) || 0
+  })
+
+  const avgMttr = count > 0 ? totalMttr / count : 0
+  const avgMtbf = count > 0 ? totalMtbf / count : 0
+  const avgPlannedDowntime = count > 0 ? totalPlannedDowntime / count : 0
+  const avgUnplannedDowntime = count > 0 ? totalUnplannedDowntime / count : 0
+
+  // 计算可动率和OEE
+  const totalTime = 720 // 12小时
+  const availableTime = totalTime - avgPlannedDowntime
+  const actualRunTime = Math.max(0, availableTime - avgUnplannedDowntime)
+
+  const availability = availableTime > 0 ? actualRunTime / availableTime : 1
+  const oee = totalTime > 0 ? actualRunTime / totalTime : 0.95
+
+  return {
+    mttr: avgMttr,
+    mtbf: avgMtbf,
+    oee: oee,
+    availability: availability
+  }
+}
+
+// 从数据列表计算指标的通用方法
+const calculateMetricsFromData = (dataList) => {
+  if (!dataList || dataList.length === 0) {
+    return {
+      mttr: 0,
+      mtbf: 0,
+      oee: 0,
+      availability: 0
+    }
+  }
+
   // 定义常量：每班720分钟(12小时)
   const WORK_MINUTES_PER_SHIFT = 720
-  
+
   // 总计
   let totalPlanDowntime = 0
   let totalOutPlanDowntime = 0
-  let totalShifts = metricsList.value.length
+  let totalShifts = dataList.length
   let totalWorkMinutes = totalShifts * WORK_MINUTES_PER_SHIFT
   let totalOEE = 0
   let totalMTTR = 0
   let totalMTBF = 0
   let mttrCount = 0
   let mtbfCount = 0
-  
-  metricsList.value.forEach(metric => {
+
+  dataList.forEach(metric => {
     // 计划停机时间
     totalPlanDowntime += Number(metric.plan_down_time) || 0
     // 非计划停机时间
@@ -898,58 +1013,165 @@ const calculateMetricsOverview = () => {
     // 如果OEE值大于1，假设是百分比形式，转换为小数
     if (oee > 1) oee = oee / 100
     totalOEE += oee
-    
+
     // 如果数据中有MTTR和MTBF值，直接使用
-    if (metric.mttr !== undefined) {
+    if (metric.mttr !== undefined && metric.mttr !== null) {
       totalMTTR += Number(metric.mttr) || 0
       mttrCount++
     }
-    
-    if (metric.mtbf !== undefined) {
+
+    if (metric.mtbf !== undefined && metric.mtbf !== null) {
       totalMTBF += Number(metric.mtbf) || 0
       mtbfCount++
     }
   })
-  
+
   // 可用时间 = 总时间 - 计划停机时间
   const availableTime = totalWorkMinutes - totalPlanDowntime
-  
+
   // 实际运行时间 = 可用时间 - 非计划停机时间
   const actualRunTime = Math.max(0, availableTime - totalOutPlanDowntime)
-  
-  // MTTR和MTBF - 优先使用数据中的平均值，如果没有则使用默认值
-  const mttr = mttrCount > 0 ? totalMTTR / mttrCount : 30
-  const mtbf = mtbfCount > 0 ? totalMTBF / mtbfCount : 720
-  
+
+  // MTTR和MTBF - 优先使用数据中的平均值，如果没有则计算
+  let mttr, mtbf
+
+  if (mttrCount > 0) {
+    // 使用数据库中的MTTR平均值
+    mttr = totalMTTR / mttrCount
+  } else {
+    // 计算MTTR = 非计划停机时间 / 故障次数（假设每次非计划停机为一次故障）
+    const faultCount = dataList.filter(m => (Number(m.out_plan_down_time) || 0) > 0).length
+    mttr = faultCount > 0 ? totalOutPlanDowntime / faultCount : 0
+  }
+
+  if (mtbfCount > 0) {
+    // 使用数据库中的MTBF平均值
+    mtbf = totalMTBF / mtbfCount
+  } else {
+    // 计算MTBF = 实际运行时间 / 故障次数
+    const faultCount = dataList.filter(m => (Number(m.out_plan_down_time) || 0) > 0).length
+    mtbf = faultCount > 0 ? actualRunTime / faultCount : actualRunTime
+  }
+
   // 计算设备可动率 = 实际运行时间/可用时间
   const availability = availableTime > 0
     ? actualRunTime / availableTime
     : 1
-  
+
   // 使用数据库中OEE的平均值，如果不可用则计算
   const oee = totalShifts > 0
     ? totalOEE / totalShifts
     : (totalWorkMinutes > 0 ? actualRunTime / totalWorkMinutes : 0.95)
-  
-  // 更新指标概览
-  metricsOverview.value = {
+
+  return {
     mttr,
     mtbf,
     oee,
     availability
   }
-  
-  console.log('指标计算结果:', {
-    totalShifts,
-    totalWorkMinutes,
-    totalPlanDowntime,
-    totalOutPlanDowntime,
-    availableTime,
-    actualRunTime,
-    mttr,
-    mtbf,
-    oee,
-    availability
+}
+
+// 计算指标概览
+const calculateMetricsOverview = async () => {
+  if (!metricsList.value || metricsList.value.length === 0) {
+    // 重置指标
+    metricsOverview.value = {
+      mttr: 0,
+      mtbf: 0,
+      oee: 0,
+      availability: 0
+    }
+    return
+  }
+
+  try {
+    // 获取当前月的MTTR/MTBF数据
+    const params = {
+      start_date: selectedDateRange.value[0],
+      end_date: selectedDateRange.value[1]
+    }
+
+    // 添加当前筛选条件
+    if (selectedLineType.value !== 'all') {
+      params.line = selectedLineType.value
+    }
+    if (selectedShift.value !== 'all') {
+      params.shift_code = shiftCodeMap[selectedShift.value]
+    }
+
+    console.log('获取当前MTTR/MTBF数据参数:', params)
+
+    // 使用MTTR/MTBF趋势API获取当前数据
+    const response = await maintenanceService.getMttrMtbfTrend(params)
+
+    if (response && response.data && response.data.length > 0) {
+      // 使用真实的MTTR/MTBF数据计算指标
+      const currentMetrics = calculateMetricsFromMttrData(response.data)
+      metricsOverview.value = currentMetrics
+
+      console.log('当前MTTR/MTBF指标计算结果:', currentMetrics)
+    } else {
+      // 如果没有MTTR/MTBF数据，使用传统方法计算
+      const currentMetrics = calculateMetricsFromData(metricsList.value)
+      metricsOverview.value = currentMetrics
+
+      console.log('当前指标计算结果（传统方法）:', currentMetrics)
+    }
+
+    // 加载上月数据并计算环比
+    loadLastMonthMetrics()
+  } catch (error) {
+    console.error('获取当前MTTR/MTBF数据失败:', error)
+
+    // 如果API调用失败，使用传统方法计算
+    const currentMetrics = calculateMetricsFromData(metricsList.value)
+    metricsOverview.value = currentMetrics
+
+    console.log('当前指标计算结果（备用方法）:', currentMetrics)
+
+    // 仍然尝试加载上月数据
+    loadLastMonthMetrics()
+  }
+}
+
+// 计算环比趋势
+const calculateTrends = () => {
+  const current = metricsOverview.value
+  const lastMonth = lastMonthMetrics.value
+
+  // 计算MTTR环比（MTTR越低越好，所以下降是正面的）
+  if (lastMonth.mttr > 0) {
+    mttrTrend.value = ((current.mttr - lastMonth.mttr) / lastMonth.mttr) * 100
+  } else {
+    mttrTrend.value = 0
+  }
+
+  // 计算MTBF环比（MTBF越高越好）
+  if (lastMonth.mtbf > 0) {
+    mtbfTrend.value = ((current.mtbf - lastMonth.mtbf) / lastMonth.mtbf) * 100
+  } else {
+    mtbfTrend.value = 0
+  }
+
+  // 计算OEE环比（OEE越高越好）
+  if (lastMonth.oee > 0) {
+    oeeTrend.value = ((current.oee - lastMonth.oee) / lastMonth.oee) * 100
+  } else {
+    oeeTrend.value = 0
+  }
+
+  // 计算可动率环比（可动率越高越好）
+  if (lastMonth.availability > 0) {
+    availabilityTrend.value = ((current.availability - lastMonth.availability) / lastMonth.availability) * 100
+  } else {
+    availabilityTrend.value = 0
+  }
+
+  console.log('环比计算结果:', {
+    mttrTrend: mttrTrend.value,
+    mtbfTrend: mtbfTrend.value,
+    oeeTrend: oeeTrend.value,
+    availabilityTrend: availabilityTrend.value
   })
 }
 

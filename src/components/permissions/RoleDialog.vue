@@ -13,7 +13,7 @@
       <v-card-text>
         <v-container>
           <v-form
-            ref="form"
+            ref="formRef"
             v-model="formValid"
             lazy-validation
           >
@@ -101,7 +101,7 @@ const emit = defineEmits(['update:modelValue', 'update:role', 'save', 'close'])
 const localDialog = ref(props.modelValue)
 const localRole = ref({...props.role})
 const formValid = ref(false)
-const form = ref(null)
+const formRef = ref(null)
 
 // 监听dialog prop变化
 watch(() => props.modelValue, (newVal) => {
@@ -126,8 +126,8 @@ const closeDialog = () => {
 
 // 保存角色
 const saveRole = () => {
-  if (!form.value.validate()) return
-  
+  if (!formRef.value?.validate()) return
+
   emit('update:role', localRole.value)
   emit('save')
 }

@@ -1,18 +1,32 @@
 // dynamic.js - 动态路由处理模块
 
 const DefaultLayout = () => import('../layouts/DefaultLayout.vue')
+
 export const componentMap = {
   'DefaultLayout': DefaultLayout,
+  'AdminUser': () => import('../pages/admin/Users.vue'),
   'Dashboard': () => import('../pages/Dashboard.vue'),
+  'ComponentTest': () => import('../pages/ComponentTest.vue'),
   'EHS': () => import('../pages/EHS.vue'),
   'Assy': () => import('../pages/Assy.vue'),
   'Quality': () => import('../pages/Quality.vue'),
   'QualityKpi': () => import('../pages/QualityKpi.vue'),
+  'EhsKpi': () => import('../pages/EhsKpi.vue'),
+  'MaintenanceKpi': () => import('../pages/MaintenanceKpi.vue'),
+  'ProductionKpi': () => import('../pages/ProductionKpi.vue'),
+  'GmoKpi': () => import('../pages/GmoKpi.vue'),
+  'EngKpi': () => import('../pages/EngKpi.vue'),
+  'PrsKpi': () => import('../pages/PrsKpi.vue'),
+  'HrKpi': () => import('../pages/HrKpi.vue'),
+  'LogisticsKpi': () => import('../pages/LogisticsKpi.vue'),
+  'DohDaily': () => import('../pages/DohDaily.vue'),
+  'DohMaster':() => import('../pages/DohMasterData.vue'),
   'Pcl': () => import('../pages/Pcl.vue'),
   'Admin': () => import('../pages/Admin.vue'),
   'Gmo': () => import('../pages/Gmo.vue'),
   'Maintenance': () => import('../pages/Maintenance.vue'),
   'MaintenanceMetrics': () => import('../pages/MaintenanceMetrics.vue'),
+  'PrManagement': () => import('../pages/PrManagement.vue'),
   'DowntimeRecords': () => import('../pages/DowntimeRecords.vue'),
   'Events': () => import('../pages/Events.vue'),
   'RouteManagement': () => import('../pages/RouteManagement.vue'),
@@ -20,12 +34,10 @@ export const componentMap = {
   'SimplePermissionManagement': () => import('../pages/PermissionManagement.vue'),
   'AdminDepartments': () => import('../pages/admin/Departments.vue'),
   'AdminActivities': () => import('../pages/admin/Activities.vue'),
-  'AdminUsers': () => import('../pages/admin/Users.vue'),
+  'AdminUser': () => import('../pages/admin/Users.vue'),
   'Login': () => import('../pages/Login.vue'),
-  'Eng-kpi': () => import('../pages/EngKpi.vue'),
-  'PrsKpi': () => import('../pages/PrsKpi.vue'),
-  'HrKpi': () => import('../pages/HrKpi.vue'),
-  'LogisticsKpi': () => import('../pages/LogisticsKpi.vue'),
+  'RouteDebug': () => import('../pages/RouteDebug.vue'),
+  'ReactiveTestPage': () => import('../pages/ReactiveTestPage.vue'),
 }
 
 /**
@@ -120,14 +132,20 @@ export function processRoute(route) {
 
   // 处理路由组件
   if (route.component) {
+    console.log(`🔍 处理路由组件: ${route.path} -> ${route.component} (类型: ${typeof route.component})`)
+
     // 检查是否是字符串并在映射中存在
     if (typeof route.component === 'string' && componentMap[route.component]) {
+      console.log(`✅ 找到组件映射: ${route.component} -> ${route.path}`)
       route.component = componentMap[route.component]
     } else if (typeof route.component === 'string') {
-      console.warn(`组件 "${route.component}" 未在组件映射表中找到，使用默认布局`)
-      console.warn('可用组件列表:', getAvailableComponents())
+      console.warn(`❌ 组件 "${route.component}" 未在组件映射表中找到，使用默认布局`)
+      console.warn('🔍 可用组件列表:', getAvailableComponents())
+      console.warn(`🛣️ 当前路由路径: ${route.path}`)
       route.component = componentMap['DefaultLayout']
     }
+  } else {
+    console.warn(`⚠️ 路由 ${route.path} 没有组件配置`)
   }
 
   // 处理子路由

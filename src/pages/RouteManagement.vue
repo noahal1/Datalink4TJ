@@ -125,7 +125,6 @@
             :headers="tableHeaders"
             :items="filteredRoutes"
             :loading="loadingRoutes"
-            show-select
             v-model="selectedRoutes"
           >
             <!-- 自定义列渲染 -->
@@ -289,13 +288,13 @@ const availableRoles = ref([])
 const tableHeaders = [
   { title: '路径', key: 'path', align: 'start', sortable: true },
   { title: '名称', key: 'name', align: 'start', sortable: true },
-  { title: '标题', key: 'meta.title', align: 'start', sortable: true },
+  { title: '标题', key: 'meta.title', align: 'start', sortable: true , width: '80px'},
   { title: '组件', key: 'component', align: 'start' },
-  { title: '分组', key: 'meta.group', align: 'center', width: '100px' },
-  { title: '类型', key: 'type', align: 'center', width: '100px' },
-  { title: '权限', key: 'permission', align: 'center', width: '120px' },
-  { title: '排序', key: 'sort_order', align: 'center', width: '80px' },
-  { title: '操作', key: 'actions', align: 'center', sortable: false, width: '120px' }
+  { title: '分组', key: 'meta.group', align: 'center', width: '60px' },
+  { title: '类型', key: 'type', align: 'center', width: '60px' },
+  { title: '权限', key: 'permission', align: 'center', width: '50px' },
+  { title: '排序', key: 'sort_order', align: 'center', width: '50px' },
+  { title: '操作', key: 'actions', align: 'center', sortable: false, width: '100px' }
 ]
 
 // 计算属性

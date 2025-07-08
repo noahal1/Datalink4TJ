@@ -15,18 +15,15 @@
     </v-card-title>
 
     <v-card-text>
-      <v-alert type="info" class="mb-4">
-        <strong>简化权限系统：</strong>基于角色的路由访问控制，权限规则由系统预定义。
-      </v-alert>
-
-      <!-- 权限矩阵表格 -->
-      <v-data-table
+      <unified-data-table
         :headers="matrixHeaders"
         :items="matrixData"
         :loading="loading"
         class="elevation-1"
         item-key="roleId"
         density="compact"
+        :items-per-page= "-1"
+        hide-default-footer
       >
         <template v-slot:top>
           <v-toolbar flat>
@@ -59,7 +56,7 @@
             color="success"
           />
         </template>
-      </v-data-table>
+      </unified-data-table>
 
       <!-- 统计信息 -->
       <v-row class="mt-4">
@@ -180,6 +177,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useNotification } from '../../composables/useNotification'
+import UnifiedDataTable from '@/components/UnifiedDataTable.vue'
 import api from '../../utils/api'
 
 const { showSuccess, showError } = useNotification()

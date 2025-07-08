@@ -186,22 +186,24 @@ export const useUserStore = defineStore('user', {
     async refreshToken() {
       try {
         debug('尝试刷新令牌')
-        
+
         // 调用刷新令牌API
         const tokenData = await userService.refreshToken()
-        
-        if (tokenData && tokenData.token) {
-          this.token = tokenData.token
+
+        if (tokenData && (tokenData.token || tokenData.access_token)) {
+          this.token = tokenData.token || tokenData.access_token
           this.updateTokenExpiry()
           this.saveToStorage()
           debug('令牌刷新成功')
           return true
         } else {
-          throw new Error('刷新令牌失败')
+          throw new Error('刷新令牌失败: 无效的响应数据')
         }
       } catch (error) {
         debug('刷新令牌失败:', error)
-        return false
+        // 刷新失败时清除用户状态
+        this.clearUserState()
+        throw error
       }
     },
 

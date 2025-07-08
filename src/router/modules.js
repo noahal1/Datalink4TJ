@@ -8,6 +8,7 @@ const Pcl = () => import('../pages/Pcl.vue')
 const Gmo = () => import('../pages/Gmo.vue')
 const Maintenance = () => import('../pages/Maintenance.vue')
 const MaintenanceMetrics = () => import('../pages/MaintenanceMetrics.vue')
+const PrManagement = () => import('../pages/PrManagement.vue')
 const DowntimeRecords = () => import('../pages/DowntimeRecords.vue')  
 const Events = () => import('../pages/Events.vue')
 const QualityKpi = () => import('../pages/QualityKpi.vue')
@@ -16,12 +17,13 @@ const MaintenanceKpi = () => import('../pages/MaintenanceKpi.vue')
 const ProductionKpi = () => import('../pages/ProductionKpi.vue')
 const GmoKpi = () => import('../pages/GmoKpi.vue')
 const EngKpi = () => import('../pages/EngKpi.vue')
-const FinKpi = () => import('../pages/FinKpi.vue')
+
 const PrsKpi = () => import('../pages/PrsKpi.vue')
 const HrKpi = () => import('../pages/HrKpi.vue')
 const LogisticsKpi = () => import('../pages/LogisticsKpi.vue')
 const DohDaily = () => import('../pages/DohDaily.vue')
-const UserManagement = () => import('../pages/admin/Users.vue')
+const DohMasterData = () => import('../pages/DohMasterData.vue')
+const AdminUser = () => import('../pages/admin/Users.vue')
 
 
 // 功能模块路由配置
@@ -126,15 +128,7 @@ export const moduleRoutes = [
       requiresAuth: true
     }
   },
-  {
-    path: '/fin-kpi',
-    component: FinKpi,
-    meta: {
-      title: '财务KPI',
-      permission_code: 'view_fin_kpi',
-      requiresAuth: true
-    }
-  },
+
   {
     path: '/prs-kpi',
     component: PrsKpi,
@@ -169,7 +163,15 @@ export const moduleRoutes = [
       title: 'DOH每日填报',
       permission_code: 'view_doh_daily',
       requiresAuth: true,
-      group: 'logistics'
+    }
+  },
+  {
+    path: '/doh-master-data',
+    component: DohMasterData,
+    meta: {
+      title: 'DOH主数据维护',
+      permission_code: 'manage_doh_master',
+      requiresAuth: true,
     }
   },
   { 
@@ -181,14 +183,23 @@ export const moduleRoutes = [
       requiresAuth: true
     } 
   },
-  { 
-    path: '/maintenance-metrics', 
+  {
+    path: '/maintenance-metrics',
     component: MaintenanceMetrics,
-    meta: { 
+    meta: {
       title: '维修指标',
-      permission_code: 'view_maintenance_metrics', 
+      permission_code: 'view_maintenance_metrics',
       requiresAuth: true
-    } 
+    }
+  },
+  {
+    path: '/pr-management',
+    component: PrManagement,
+    meta: {
+      title: 'PR管理',
+      permission_code: 'access_maintenance',
+      requiresAuth: true
+    }
   },
   { 
     path: '/downtime-records', 
@@ -208,13 +219,13 @@ export const moduleRoutes = [
       requiresAuth: true
     } 
   },
-  { 
-    path: '/user', 
-    component: UserManagement,
-    meta: { 
+  {
+    path: '/admin/users',
+    component: AdminUser,
+    meta: {
       title: '用户管理',
-      permission_code: 'view_users', 
-      requiresAuth: true
-    } 
+      permission_code: 'access_admin_users',
+      requiresAuth: true,
   }
+}
 ] 

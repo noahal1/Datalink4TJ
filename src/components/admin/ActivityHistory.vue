@@ -119,7 +119,7 @@
 import { ref, onMounted, watch } from 'vue'
 import api from '../../utils/api'
 import { format } from 'date-fns'
-import debounce from 'lodash.debounce'
+import { debounce } from 'lodash-es'
 
 const activities = ref([])
 const departments = ref([])
