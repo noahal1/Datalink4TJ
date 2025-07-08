@@ -83,7 +83,7 @@
         :items="kpiData"
         :loading="loading"
         density="comfortable"
-        class="production-kpi-table"
+        class="production-kpi-table production-data-table"
         hide-default-footer=""
         :items-per-page="-1"
         hover
@@ -682,9 +682,7 @@ onMounted(() => {
   margin-bottom: 24px;
 }
 
-.table-container:hover {
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-}
+/* 禁用table-container的悬停效果，避免与表格行悬停冲突 */
 
 /* 表格样式优化 */
 .production-kpi-table {
@@ -707,9 +705,21 @@ onMounted(() => {
   transition: all 0.2s ease;
 }
 
-.production-kpi-table :deep(tbody tr:hover) {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.03) 0%, rgba(134, 239, 172, 0.03) 100%);
-  transform: scale(1.001);
+/* 生产KPI表格专用悬停样式 - 避免闪烁 */
+.production-data-table :deep(.v-data-table__tr:hover) {
+  background: rgba(34, 197, 94, 0.04) !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.production-data-table :deep(.v-data-table tbody tr:hover) {
+  background: rgba(34, 197, 94, 0.04) !important;
+  transition: background-color 0.15s ease !important;
+}
+
+/* 禁用其他可能的悬停效果 */
+.production-data-table:hover {
+  transform: none !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08) !important;
 }
 
 .production-kpi-table :deep(tbody tr td) {

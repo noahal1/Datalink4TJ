@@ -83,7 +83,7 @@
         :items="kpiData"
         :loading="loading"
         density="comfortable"
-        class="quality-kpi-table"
+        class="quality-kpi-table kpi-data-table"
         hover
       >
       <template v-slot:item.description="{ item }">
@@ -700,9 +700,7 @@ onMounted(() => {
   margin-bottom: 24px;
 }
 
-.table-container:hover {
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-}
+/* 禁用table-container的悬停效果，避免与表格行悬停冲突 */
 
 /* 表格样式优化 */
 .quality-kpi-table {
@@ -725,9 +723,21 @@ onMounted(() => {
   transition: all 0.2s ease;
 }
 
-.quality-kpi-table :deep(tbody tr:hover) {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(147, 197, 253, 0.03) 100%);
-  transform: scale(1.001);
+/* 质量KPI表格专用悬停样式 - 避免闪烁 */
+.kpi-data-table :deep(.v-data-table__tr:hover) {
+  background: rgba(59, 130, 246, 0.04) !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.kpi-data-table :deep(.v-data-table tbody tr:hover) {
+  background: rgba(59, 130, 246, 0.04) !important;
+  transition: background-color 0.15s ease !important;
+}
+
+/* 禁用其他可能的悬停效果 */
+.kpi-data-table:hover {
+  transform: none !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08) !important;
 }
 
 .quality-kpi-table :deep(tbody tr td) {

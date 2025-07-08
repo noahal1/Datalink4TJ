@@ -398,7 +398,7 @@ onMounted(async () => {
 
 <style scoped>
 .search-field {
-  max-width: 300px;
+  min-width: 200px;
 }
 
 .v-btn {

@@ -106,7 +106,7 @@
         :items="kpiData"
         :loading="loading"
         density="comfortable"
-        class="ehs-kpi-table"
+        class="ehs-kpi-table ehs-data-table"
         hover
       >
       <!-- KPI描述列 -->
@@ -251,7 +251,19 @@
 
             <!-- 目标值输入 -->
             <template v-slot:item.target_value="{ item }">
+              <!-- Environmental Performance 使用选择框 -->
+              <v-select
+                v-if="item.description === 'Environmental Performance'"
+                v-model="item.target_value"
+                :items="environmentalOptions"
+                variant="outlined"
+                density="compact"
+                hide-details
+                class="text-field-small environmental-select"
+              ></v-select>
+              <!-- 其他KPI使用数值输入 -->
               <v-text-field
+                v-else
                 v-model.number="item.target_value"
                 type="number"
                 min="0"
@@ -515,9 +527,16 @@ const loadData = async () => {
         )
 
         if (existingItem) {
-          existingItem.actual_value = item.actual_value || 0
-          existingItem.target_value = item.target_value || 0
-          existingItem.ytd_value = item.ytd_value || 0
+          // Environmental Performance 特殊处理
+          if (existingItem.description === 'Environmental Performance') {
+            existingItem.actual_value = item.actual_value || 'Green'
+            existingItem.target_value = item.target_value || 'Green'
+            existingItem.ytd_value = item.ytd_value || 'Green'
+          } else {
+            existingItem.actual_value = item.actual_value || 0
+            existingItem.target_value = item.target_value || 0
+            existingItem.ytd_value = item.ytd_value || 0
+          }
           existingItem.remark = item.remark || null
           existingItem.action_plan = item.action_plan || null
           existingItem.root_cause_analysis = item.root_cause_analysis || null
@@ -604,7 +623,7 @@ const openTargetDialog = async () => {
           targetData.value.push({
             area,
             description,
-            target_value: 0
+            target_value: description === 'Environmental Performance' ? 'Green' : 0
           })
         })
       })
@@ -627,7 +646,9 @@ const saveTargets = async () => {
       items: targetData.value.map(item => ({
         area: item.area,
         description: item.description,
-        target_value: item.target_value || 0
+        target_value: item.description === 'Environmental Performance'
+          ? (item.target_value || 'Green')
+          : (item.target_value || 0)
       }))
     }
 
@@ -684,8 +705,21 @@ onMounted(() => {
 @import '@/styles/kpi-page-enhancement.css';
 
 /* EHS KPI特殊样式 */
-.ehs-kpi-table :deep(tbody tr:hover) {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.03) 0%, rgba(252, 165, 165, 0.03) 100%);
+/* EHS KPI表格专用悬停样式 - 避免闪烁 */
+.ehs-data-table :deep(.v-data-table__tr:hover) {
+  background: rgba(239, 68, 68, 0.04) !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.ehs-data-table :deep(.v-data-table tbody tr:hover) {
+  background: rgba(239, 68, 68, 0.04) !important;
+  transition: background-color 0.15s ease !important;
+}
+
+/* 禁用其他可能的悬停效果 */
+.ehs-data-table:hover {
+  transform: none !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08) !important;
 }
 
 .ehs-kpi-table .text-field-small :deep(.v-field) {

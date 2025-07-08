@@ -3,9 +3,7 @@
  * 使用方法：
  * 1. 简单模式：v-permission="'permission_code'"
  * 2. 对象模式：v-permission="{ code: 'permission_code' }"
- * 3. 多权限模式：v-permission="{ codes: ['code1', 'code2'], logic: 'or' }"
- * 4. 角色模式：v-permission="{ roles: ['管理员', '编辑'] }"
- * 
+ * 3. 多权限模式：v-permission="{ codes: ['code1', 'code2'], logic: 'or' }""
  * 如果用户没有所需权限，元素将被从DOM中移除
  */
 import { usePermissionStore } from '../stores/permission'

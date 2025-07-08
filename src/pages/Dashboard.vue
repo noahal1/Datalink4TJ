@@ -677,7 +677,7 @@ onMounted(async () => {
   overflow: hidden;
 }
 
-:deep(.unified-data-table:not(.doh-table):not(.master-data-table):hover) {
+:deep(.unified-data-table:not(.doh-table):not(.master-data-table):not(.quality-kpi-table):not(.production-kpi-table):not(.ehs-kpi-table):not(.logistics-kpi-table):hover) {
   transform: translateY(-4px);
   box-shadow:
     0 16px 48px rgba(0, 0, 0, 0.12),

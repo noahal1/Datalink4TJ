@@ -26,7 +26,6 @@ const DohMasterData = () => import('../pages/DohMasterData.vue')
 const AdminUser = () => import('../pages/admin/Users.vue')
 
 
-// 功能模块路由配置
 export const moduleRoutes = [
   { 
     path: '/quality', 

@@ -85,7 +85,7 @@
         :items="kpiData"
         :loading="loading"
         density="comfortable"
-        class="logistics-kpi-table"
+        class="logistics-kpi-table logistics-data-table"
         hide-default-footer=""
         :items-per-page="-1"
         hover
@@ -583,8 +583,21 @@ watch([selectedMonth, selectedYear], () => {
 @import '@/styles/kpi-page-enhancement.css';
 
 /* 物流KPI特殊样式 - 紫色主题 */
-.logistics-kpi-table :deep(tbody tr:hover) {
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.03) 0%, rgba(196, 181, 253, 0.03) 100%);
+/* 物流KPI表格专用悬停样式 - 避免闪烁 */
+.logistics-data-table :deep(.v-data-table__tr:hover) {
+  background: rgba(168, 85, 247, 0.04) !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.logistics-data-table :deep(.v-data-table tbody tr:hover) {
+  background: rgba(168, 85, 247, 0.04) !important;
+  transition: background-color 0.15s ease !important;
+}
+
+/* 禁用其他可能的悬停效果 */
+.logistics-data-table:hover {
+  transform: none !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08) !important;
 }
 
 .logistics-kpi-table .text-field-small :deep(.v-field) {
