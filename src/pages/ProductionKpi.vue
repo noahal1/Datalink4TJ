@@ -182,6 +182,7 @@
         </div>
       </template>
     </unified-data-table>
+    </div>
 
     <!-- 数据变更提示 -->
     <v-snackbar
