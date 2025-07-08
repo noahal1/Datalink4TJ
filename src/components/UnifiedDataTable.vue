@@ -170,7 +170,18 @@ const safeItems = computed(() => {
   background-color: var(--grey-50);
 }
 
+/* 表格行悬停效果 - 优化版，避免闪烁 */
+:deep(.v-data-table__tr) {
+  transition: background-color 0.15s ease !important;
+  position: relative;
+}
+
 :deep(.v-data-table__tr:hover) {
+  background-color: rgba(var(--v-theme-primary), 0.05) !important;
+}
+
+/* 确保表格行悬停效果优先级最高 */
+:deep(.v-data-table tbody tr:hover) {
   background-color: rgba(var(--v-theme-primary), 0.05) !important;
 }
 

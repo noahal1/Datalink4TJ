@@ -1,0 +1,328 @@
+/* 增强组件样式 - 现代化美化 */
+
+/* Vuetify 组件全局美化 */
+
+/* 按钮增强 */
+.v-btn {
+  font-weight: 500 !important;
+  letter-spacing: 0.025em !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border-radius: 8px !important;
+}
+
+.v-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.v-btn--variant-elevated {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.v-btn--variant-outlined {
+  border-width: 1.5px !important;
+}
+
+/* 按钮组美化 */
+.v-btn-toggle {
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(10px) !important;
+  padding: 4px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+.v-btn-toggle .v-btn {
+  border-radius: 8px !important;
+  margin: 0 2px !important;
+  font-weight: 500 !important;
+}
+
+.v-btn-toggle .v-btn--active {
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%) !important;
+  color: white !important;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3) !important;
+}
+
+/* 卡片增强 */
+.v-card {
+  border-radius: 16px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+.v-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+}
+
+.v-card-title {
+  font-weight: 600 !important;
+  color: var(--grey-800) !important;
+}
+
+/* 文本字段增强 */
+.v-text-field .v-field {
+  border-radius: 8px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.v-text-field .v-field:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+.v-text-field .v-field--focused {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.v-text-field--variant-outlined .v-field {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+/* 选择器增强 */
+.v-select .v-field {
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(10px) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.v-select .v-field:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* 芯片增强 */
+.v-chip {
+  font-weight: 500 !important;
+  letter-spacing: 0.025em !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border-radius: 8px !important;
+}
+
+.v-chip:hover {
+  transform: scale(1.05) !important;
+}
+
+.v-chip--variant-tonal {
+  backdrop-filter: blur(10px) !important;
+}
+
+/* 数据表格增强 */
+.v-data-table {
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08) !important;
+}
+
+.v-data-table .v-data-table__wrapper {
+  border-radius: 16px !important;
+}
+
+.v-data-table thead tr th {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+  font-weight: 600 !important;
+  color: var(--grey-700) !important;
+  border-bottom: 2px solid var(--grey-200) !important;
+  padding: 16px 12px !important;
+}
+
+.v-data-table tbody tr {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.v-data-table tbody tr:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(147, 197, 253, 0.03) 100%) !important;
+  transform: scale(1.001) !important;
+}
+
+.v-data-table tbody tr td {
+  border-bottom: 1px solid var(--grey-100) !important;
+}
+
+/* 对话框增强 */
+.v-dialog .v-overlay__content {
+  border-radius: 20px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+.v-dialog .v-card {
+  border-radius: 20px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.v-dialog .v-card-title {
+  background: linear-gradient(135deg, var(--grey-50) 0%, rgba(255, 255, 255, 0.9) 100%) !important;
+  border-bottom: 1px solid var(--grey-200) !important;
+  padding: 20px 24px !important;
+}
+
+/* 警告框增强 */
+.v-alert {
+  border-radius: 12px !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+/* 进度条增强 */
+.v-progress-circular {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1)) !important;
+}
+
+.v-progress-linear {
+  border-radius: 4px !important;
+  overflow: hidden !important;
+}
+
+/* Snackbar 增强 */
+.v-snackbar {
+  border-radius: 12px !important;
+  backdrop-filter: blur(20px) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* 工具提示增强 */
+.v-tooltip .v-overlay__content {
+  background: rgba(0, 0, 0, 0.9) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* 菜单增强 */
+.v-menu .v-overlay__content {
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+/* 面包屑增强 */
+.v-breadcrumbs {
+  padding: 12px 16px !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.v-breadcrumbs-item {
+  font-weight: 500 !important;
+}
+
+.v-breadcrumbs-item--disabled {
+  color: var(--grey-600) !important;
+}
+
+/* 标签页增强 */
+.v-tabs {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 12px !important;
+  padding: 4px !important;
+}
+
+.v-tab {
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.v-tab--selected {
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%) !important;
+  color: white !important;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3) !important;
+}
+
+/* 响应式优化 */
+@media (max-width: 960px) {
+  .v-card {
+    border-radius: 12px !important;
+  }
+  
+  .v-dialog .v-overlay__content {
+    border-radius: 16px !important;
+  }
+  
+  .v-btn-toggle {
+    border-radius: 8px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .v-card {
+    border-radius: 8px !important;
+  }
+  
+  .v-dialog .v-overlay__content {
+    border-radius: 12px !important;
+  }
+  
+  .v-data-table {
+    border-radius: 8px !important;
+  }
+}
+
+/* 加载动画增强 */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+.loading-pulse {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* 悬浮效果 */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.float-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* 渐入动画 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* 缩放进入动画 */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.scale-in {
+  animation: scaleIn 0.4s ease-out;
+}

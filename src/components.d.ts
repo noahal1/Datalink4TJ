@@ -33,6 +33,8 @@ declare module 'vue' {
     PermissionControl: typeof import('./components/PermissionControl.vue')['default']
     PermissionDialog: typeof import('./components/permissions/PermissionDialog.vue')['default']
     PermissionList: typeof import('./components/permissions/PermissionList.vue')['default']
+    PrDetailDialog: typeof import('./components/pr/PrDetailDialog.vue')['default']
+    PrDialog: typeof import('./components/pr/PrDialog.vue')['default']
     RecentActivities: typeof import('./components/RecentActivities.vue')['default']
     RoleDialog: typeof import('./components/permissions/RoleDialog.vue')['default']
     RoleList: typeof import('./components/permissions/RoleList.vue')['default']

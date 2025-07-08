@@ -1,6 +1,6 @@
 <template>
   <v-form
-    ref="form"
+    ref="formRef"
     v-model="valid"
     @submit.prevent="handleSubmit"
     class="unified-form"
@@ -96,6 +96,7 @@ const props = defineProps({
 const emit = defineEmits(['submit', 'reset', 'update:valid']);
 
 const form = ref(null);
+const formRef = ref(null);
 const valid = ref(true);
 
 // 处理表单提交
@@ -103,13 +104,13 @@ const handleSubmit = () => {
   if (props.disableSubmit && !valid.value) {
     return;
   }
-  
-  emit('submit', { valid: valid.value, form: form.value });
+
+  emit('submit', { valid: valid.value, form: formRef.value });
 };
 
 // 处理表单重置
 const handleReset = () => {
-  form.value?.reset();
+  formRef.value?.reset();
   emit('reset');
 };
 
@@ -124,9 +125,9 @@ const watchValid = computed({
 
 // 暴露方法给父组件
 defineExpose({
-  validate: () => form.value?.validate(),
-  reset: () => form.value?.reset(),
-  resetValidation: () => form.value?.resetValidation()
+  validate: () => formRef.value?.validate(),
+  reset: () => formRef.value?.reset(),
+  resetValidation: () => formRef.value?.resetValidation()
 });
 </script>
 

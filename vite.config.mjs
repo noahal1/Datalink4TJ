@@ -108,9 +108,15 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false,
           rewrite: (path) => {
-            const newPath = path.replace(/^\/api/, '/api/v1');
-            console.log(`代理请求: ${path} -> ${newPath}`);
-            return newPath;
+            // 只对不是以 /api/v1 开头的路径进行重写
+            if (path.startsWith('/api/v1')) {
+              console.log(`代理请求 (无需重写): ${path}`);
+              return path;
+            } else {
+              const newPath = path.replace(/^\/api/, '/api/v1');
+              console.log(`代理请求 (重写): ${path} -> ${newPath}`);
+              return newPath;
+            }
           },
         },
       },

@@ -74,16 +74,40 @@ registerPermissionDirective(app)
 // 导入动态路由加载函数
 import { addDynamicRoutes } from './router'
 
+// 导入组件注册服务
+import componentRegistrationService from './services/componentRegistrationService'
+
 // 导入组件映射验证器（仅在开发环境中运行）
 import './utils/componentMappingValidator'
 
-// 尝试加载动态路由
-console.log('应用启动时尝试加载动态路由...')
-addDynamicRoutes().then(routes => {
-  console.log(`应用启动时成功加载 ${routes.length} 个动态路由`);
-}).catch(err => {
-  console.error('应用启动时加载动态路由失败:', err);
-});
+// 导入路由测试工具（仅在开发环境中运行）
+import './utils/routeTestHelper'
+
+// 应用启动时的初始化流程
+async function initializeApp() {
+  console.log('🚀 开始应用初始化...')
+
+  try {
+    // 1. 首先注册组件到后端
+    console.log('📋 步骤1: 注册前端组件到后端...')
+    await componentRegistrationService.autoRegister({
+      retryDelay: 2000,
+      maxRetries: 2
+    })
+
+    // 2. 然后加载动态路由
+    console.log('🛣️ 步骤2: 加载动态路由...')
+    const routes = await addDynamicRoutes()
+    console.log(`🎉 应用初始化完成! 成功加载 ${routes.length} 个动态路由`)
+
+  } catch (err) {
+    console.error('❌ 应用初始化过程中出现错误:', err)
+    console.log('💡 应用将继续运行，动态路由将在首次访问时延迟加载')
+  }
+}
+
+// 启动初始化流程
+initializeApp()
 
 // 注册全局组件
 app.component('v-chart', ECharts);
@@ -94,8 +118,6 @@ app.component('GlobalSnackbar', GlobalSnackbar);
 app.component('UnifiedPageTemplate', UnifiedPageTemplate);
 app.component('UnifiedStatsCard', UnifiedStatsCard);
 app.component('UnifiedDataTable', UnifiedDataTable);
-app.component('EnhancedDataTable', UnifiedDataTable);
-app.component('StatsCard', UnifiedStatsCard);
 app.component('UnifiedForm', UnifiedForm);
 app.component('PermissionControl', PermissionControl);
 

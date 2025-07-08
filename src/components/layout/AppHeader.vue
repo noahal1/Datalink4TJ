@@ -177,51 +177,186 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 应用头部 - 现代化设计 */
 .app-header {
-  border-bottom: 1px solid var(--v-border-color);
-  background-color: #fff;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1) !important;
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(248, 250, 252, 0.95) 100%
+  ) !important;
+  backdrop-filter: blur(25px) !important;
+  box-shadow:
+    0 2px 16px rgba(0, 0, 0, 0.04),
+    0 1px 8px rgba(59, 130, 246, 0.05) !important;
+  position: relative;
+}
+
+.app-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(59, 130, 246, 0.3) 50%,
+    transparent 100%
+  );
 }
 
 .app-logo {
-  height: 32px;
+  height: 36px;
   width: auto;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  transition: all 0.3s ease;
+}
+
+.app-logo:hover {
+  transform: scale(1.05);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
 }
 
 .app-title {
-  color: var(--v-primary-base);
-  font-weight: 500;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: -0.025em;
+  background: linear-gradient(135deg,
+    var(--primary-600) 0%,
+    var(--primary-700) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
 }
 
 .user-menu-btn {
-  border-radius: 24px;
-  padding: 6px 12px;
-  transition: all 0.2s ease;
-  height: 40px;
+  border-radius: 28px;
+  padding: 8px 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 48px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.user-menu-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(59, 130, 246, 0.1) 50%,
+    transparent 100%
+  );
+  transition: left 0.6s ease;
+}
+
+.user-menu-btn:hover::before {
+  left: 100%;
 }
 
 .user-name {
-  max-width: 120px;
+  max-width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-weight: 600;
+  color: var(--grey-700);
 }
 
 .user-menu-btn:hover {
-  background-color: rgba(0, 0, 0, 0.04);
-  transform: translateY(-1px);
+  background: linear-gradient(135deg,
+    rgba(59, 130, 246, 0.08) 0%,
+    rgba(147, 197, 253, 0.06) 100%
+  );
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.1),
+    0 2px 8px rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.3);
 }
 
 .user-menu-content {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 4px 16px rgba(59, 130, 246, 0.1);
+  border-radius: 16px;
   overflow: hidden;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.user-menu-card {
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(248, 250, 252, 0.95) 100%
+  );
+  backdrop-filter: blur(25px);
 }
 
 .user-menu-header {
-  background-color: rgba(var(--v-theme-primary), 0.05);
+  background: linear-gradient(135deg,
+    rgba(59, 130, 246, 0.08) 0%,
+    rgba(147, 197, 253, 0.06) 100%
+  );
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+  position: relative;
+}
+
+.user-menu-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(59, 130, 246, 0.3) 50%,
+    transparent 100%
+  );
+}
+
+:deep(.v-list-item) {
+  border-radius: 8px;
+  margin: 4px 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:deep(.v-list-item:hover) {
+  background: linear-gradient(135deg,
+    rgba(59, 130, 246, 0.08) 0%,
+    rgba(147, 197, 253, 0.06) 100%
+  );
+  transform: translateX(4px);
 }
 
 .logout-item:hover {
-  background-color: rgba(244, 67, 54, 0.08);
+  background: linear-gradient(135deg,
+    rgba(244, 67, 54, 0.08) 0%,
+    rgba(255, 138, 128, 0.06) 100%
+  ) !important;
+  transform: translateX(4px);
 }
-</style> 
+
+/* 响应式设计 */
+@media (max-width: 600px) {
+  .app-title {
+    font-size: 1rem;
+  }
+
+  .user-menu-btn {
+    height: 44px;
+    padding: 6px 12px;
+  }
+
+  .app-logo {
+    height: 32px;
+  }
+}
+</style>

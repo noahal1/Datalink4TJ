@@ -233,11 +233,34 @@ const handleResize = () => {
   height: 100vh !important;
   max-height: 100vh !important;
   overflow: hidden !important;
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(248, 250, 252, 0.95) 100%
+  ) !important;
+  backdrop-filter: blur(25px) !important;
+  box-shadow:
+    4px 0 24px rgba(0, 0, 0, 0.08),
+    2px 0 12px rgba(59, 130, 246, 0.05) !important;
+}
+
+.navigation-drawer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    rgba(59, 130, 246, 0.2) 50%,
+    transparent 100%
+  );
 }
 
 .navigation-drawer .v-navigation-drawer__content {
   height: 100% !important;
   overflow: hidden !important;
+  background: transparent !important;
 }
 
 .help-item, .refresh-item {

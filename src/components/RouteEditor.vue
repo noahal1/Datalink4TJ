@@ -519,6 +519,7 @@ const groupOptions = [
   { title: '系统管理', value: 'admin' },
   { title: '工程', value: 'eng' },
   { title: '人事', value: 'hr' },
+  { title: '财务', value: 'fin' },
   { title: '其他', value: 'other' }
 ]
 
