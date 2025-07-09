@@ -31,6 +31,21 @@
                 style="min-width: 200px"
               />
             </v-col>
+
+            <v-col cols="auto">
+              <v-select
+                v-model="statusFilter"
+                :items="statusFilterOptions"
+                item-title="text"
+                item-value="value"
+                label="产品状态"
+                variant="outlined"
+                density="compact"
+                hide-details
+                style="min-width: 120px;"
+                @update:model-value="fetchData"
+              />
+            </v-col>
           </v-row>
         </v-col>
         
@@ -348,6 +363,14 @@ const isSaving = ref(false)
 const isSavingSafety = ref(false)
 const selectedCategory = ref('all')
 const searchText = ref('')
+const statusFilter = ref(null) // null表示显示所有，1表示只显示启用，0表示只显示禁用
+
+// 状态过滤选项
+const statusFilterOptions = [
+  { text: '全部状态', value: null },
+  { text: '仅启用', value: 1 },
+  { text: '仅禁用', value: 0 }
+]
 
 // 表格数据
 const tableData = ref([])
@@ -443,10 +466,16 @@ const formatDate = (dateStr) => {
 const fetchData = async () => {
   isLoading.value = true
   try {
-    const response = await get('/doh/v2/master-data/')
-    
+    // 构建查询参数
+    const params = {}
+    if (statusFilter.value !== null) {
+      params.is_active = statusFilter.value
+    }
+
+    const response = await get('/doh/v2/master-data/', { params })
+
     tableData.value = response.data || []
-    
+
     // 计算统计数据
     calculateSummaryStats()
     
@@ -564,16 +593,16 @@ const openSafetyStockDialog = (item) => {
 // 保存安全库存设置
 const saveSafetyStock = async () => {
   if (!selectedProduct.value) return
-  
+
   isSavingSafety.value = true
   try {
     const dataToSend = {
       min_safety_days: parseFloat(safetyStockForm.value.min_safety_days) || 0,
       max_safety_days: parseFloat(safetyStockForm.value.max_safety_days) || 0
     }
-    
-    const response = await put(`/doh/v2/master-data/${selectedProduct.value.id}/safety-stock/`, dataToSend)
-    
+
+    const response = await put(`/doh/v2/master-data/${selectedProduct.value.id}/safety-stock`, dataToSend)
+
     if (response && response.data) {
       Message.success('安全库存设置保存成功')
       safetyStockDialog.value = false
@@ -581,7 +610,7 @@ const saveSafetyStock = async () => {
     } else {
       Message.error('保存失败: 服务器响应格式不正确')
     }
-    
+
   } catch (error) {
     console.error('保存安全库存设置错误:', error)
     Message.error('保存失败: ' + (error.response?.data?.detail || error.message))
