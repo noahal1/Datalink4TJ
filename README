@@ -1,0 +1,54 @@
+### 项目介绍
+    针对于麦格纳汽车部件(天津)有限公司的部分需求，个人提供以下解决方案：
+    1. 多部门数据汇总上报至数据库，并计算处理
+        - 支持Excel文件批量导入
+        - 数据自动校验和处理
+        - 历史数据追溯和导出
+    2. 个人工作汇总组件，包括任务的分配、进度跟踪、问题处理等
+        - 任务看板展示
+        - 进度实时更新
+        - 问题跟踪和处理流程
+        - 个人提报PR的跟踪管理
+    3. 完整的登录验证系统，包括用户注册、登录、权限管理、路由管理等
+        - 基于JWT的身份验证
+        - 多级权限控制
+        - 操作日志记录                                                                                      
+    4. 丰富的首页数据展示
+        - 数据可视化图表
+        - 实时数据更新
+        - 自定义数据展示
+### 技术栈
+    前端：Vue3 + Vuetify + Echarts
+    后端：Python + FastAPI + SQLAlchemy + MySQL
+    部署：Docker + Nginx + Jenkins
+
+### 启动项目                                                                        
+
+    前端启动：
+    1. 克隆前端仓库
+    ```bash                                                                                                                                         
+    git clone https://github.com/noahall/Datalink4TJ.git
+    cd Datalink4TJ
+    ```
+
+    2. 安装依赖并启动
+    ```bash
+    pnpm install
+    pnpm run dev  # 开发环境
+    pnpm run build  # 生产环境
+    ```
+
+    3. 部署
+    ```bash
+    # 将dist文件夹上传至服务器
+    scp -r dist/ user@server:/path/to/deploy
+    ```
+
+    后端启动：未开源，如需学习使用请联系我
+###截图展示：
+![首页](https://github.com/noahal1/Datalink4TJ/blob/main/Screenshot-dashboard.png)
+![维修数据](https://github.com/noahal1/Datalink4TJ/blob/main/Screenshot-metric.png)
+![路由管理](https://github.com/noahal1/Datalink4TJ/blob/main/screenshot-route.png)
+![个人任务跟踪](https://github.com/noahal1/Datalink4TJ/blob/main/Screenshot%202025-07-22%2008.48.32.png)
+![PR跟踪管理](https://github.com/noahal1/Datalink4TJ/blob/main/Screenshot%202025-07-22%2008.47.53.png)
+![数据导入与验证](https://github.com/noahal1/Datalink4TJ/blob/main/Screenshot%202025-07-22%2008.58.49.png)

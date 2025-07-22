@@ -20,6 +20,7 @@ declare module 'vue-router/auto-routes' {
   export interface RouteNamedMap {
     '/admin/Activities': RouteRecordInfo<'/admin/Activities', '/admin/Activities', Record<never, never>, Record<never, never>>,
     '/admin/Departments': RouteRecordInfo<'/admin/Departments', '/admin/Departments', Record<never, never>, Record<never, never>>,
+    '/admin/System': RouteRecordInfo<'/admin/System', '/admin/System', Record<never, never>, Record<never, never>>,
     '/admin/Users': RouteRecordInfo<'/admin/Users', '/admin/Users', Record<never, never>, Record<never, never>>,
     '/Admin': RouteRecordInfo<'/Admin', '/Admin', Record<never, never>, Record<never, never>>,
     '/Assy': RouteRecordInfo<'/Assy', '/Assy', Record<never, never>, Record<never, never>>,
@@ -44,11 +45,13 @@ declare module 'vue-router/auto-routes' {
     '/PermissionManagement': RouteRecordInfo<'/PermissionManagement', '/PermissionManagement', Record<never, never>, Record<never, never>>,
     '/PrManagement': RouteRecordInfo<'/PrManagement', '/PrManagement', Record<never, never>, Record<never, never>>,
     '/ProductionKpi': RouteRecordInfo<'/ProductionKpi', '/ProductionKpi', Record<never, never>, Record<never, never>>,
+    '/Profile': RouteRecordInfo<'/Profile', '/Profile', Record<never, never>, Record<never, never>>,
     '/PrsKpi': RouteRecordInfo<'/PrsKpi', '/PrsKpi', Record<never, never>, Record<never, never>>,
     '/Quality': RouteRecordInfo<'/Quality', '/Quality', Record<never, never>, Record<never, never>>,
     '/QualityKpi': RouteRecordInfo<'/QualityKpi', '/QualityKpi', Record<never, never>, Record<never, never>>,
     '/ReactiveTestPage': RouteRecordInfo<'/ReactiveTestPage', '/ReactiveTestPage', Record<never, never>, Record<never, never>>,
     '/RouteDebug': RouteRecordInfo<'/RouteDebug', '/RouteDebug', Record<never, never>, Record<never, never>>,
     '/RouteManagement': RouteRecordInfo<'/RouteManagement', '/RouteManagement', Record<never, never>, Record<never, never>>,
+    '/Settings': RouteRecordInfo<'/Settings', '/Settings', Record<never, never>, Record<never, never>>,
   }
 }
