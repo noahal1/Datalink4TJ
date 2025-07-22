@@ -38,6 +38,8 @@ export const componentMap = {
   'Login': () => import('../pages/Login.vue'),
   'RouteDebug': () => import('../pages/RouteDebug.vue'),
   'ReactiveTestPage': () => import('../pages/ReactiveTestPage.vue'),
+  'Profile': () => import('../pages/Profile.vue'),
+  'Settings': () => import('../pages/Settings.vue'),
 }
 
 /**
