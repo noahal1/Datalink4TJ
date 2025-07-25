@@ -3,88 +3,93 @@
     title="质量KPI数据管理"
     icon="mdi-chart-line"
     color="primary">
-    <!-- 顶部控制栏 -->
-    <div class="controls-bar mb-6">
-      <v-row class="align-center">
-        <v-col cols="12" md="6">
-          <v-row>
-            <v-col cols="6" md="4">
-              <v-select
-                v-model="selectedMonth"
-                :items="monthOptions"
-                label="选择月份"
-                variant="outlined"
-                density="compact"
-                @update:model-value="loadData"
-                hide-details
-                class="control-select"
-              ></v-select>
-            </v-col>
-            <v-col cols="6" md="4">
-              <v-select
-                v-model="selectedYear"
-                :items="yearOptions"
-                label="选择年份"
-                variant="outlined"
-                density="compact"
-                @update:model-value="loadData"
-                hide-details
-                class="control-select"
-              ></v-select>
-            </v-col>
-          </v-row>
-        </v-col>
+    <!-- 固定区域：控制栏 + 表格头部 -->
+    <div class="sticky-header-container">
+      <!-- 顶部控制栏 -->
+      <div class="controls-bar">
+        <v-row class="align-center">
+          <v-col cols="12" md="6">
+            <v-row>
+              <v-col cols="6" md="4">
+                <v-select
+                  v-model="selectedMonth"
+                  :items="monthOptions"
+                  label="选择月份"
+                  variant="outlined"
+                  density="compact"
+                  @update:model-value="loadData"
+                  hide-details
+                  class="control-select"
+                ></v-select>
+              </v-col>
+              <v-col cols="6" md="4">
+                <v-select
+                  v-model="selectedYear"
+                  :items="yearOptions"
+                  label="选择年份"
+                  variant="outlined"
+                  density="compact"
+                  @update:model-value="loadData"
+                  hide-details
+                  class="control-select"
+                ></v-select>
+              </v-col>
+            </v-row>
+          </v-col>
 
-        <v-spacer></v-spacer>
+          <v-spacer></v-spacer>
 
-        <!-- 右侧：工具栏 -->
-        <v-col cols="auto">
-          <v-btn
-            color="info"
-            @click="openTargetDialog"
-            prepend-icon="mdi-target"
-            variant="outlined"
-            class="mr-2 action-btn"
-          >
-            设置目标值
-          </v-btn>
-          <v-btn
-            color="secondary"
-            @click="resetData"
-            :disabled="!isDataChanged"
-            prepend-icon="mdi-refresh"
-            variant="outlined"
-            class="mr-2 action-btn"
-          >
-            重置
-          </v-btn>
-          <v-btn
-            color="primary"
-            @click="saveData"
-            :loading="submitting"
-            :disabled="!isDataChanged"
-            prepend-icon="mdi-content-save"
-            variant="elevated"
-            class="action-btn"
-          >
-            保存数据
-          </v-btn>
-        </v-col>
-      </v-row>
+          <!-- 右侧：工具栏 -->
+          <v-col cols="auto">
+            <v-btn
+              color="info"
+              @click="openTargetDialog"
+              prepend-icon="mdi-target"
+              variant="outlined"
+              class="mr-2 action-btn"
+            >
+              设置目标值
+            </v-btn>
+            <v-btn
+              color="secondary"
+              @click="resetData"
+              :disabled="!isDataChanged"
+              prepend-icon="mdi-refresh"
+              variant="outlined"
+              class="mr-2 action-btn"
+            >
+              重置
+            </v-btn>
+            <v-btn
+              color="primary"
+              @click="saveData"
+              :loading="submitting"
+              :disabled="!isDataChanged"
+              prepend-icon="mdi-content-save"
+              variant="elevated"
+              class="action-btn"
+            >
+              保存数据
+            </v-btn>
+          </v-col>
+        </v-row>
+      </div>
     </div>
 
     <!-- 加载指示器 -->
     <loading-overlay :loading="loading" message="加载数据中..." />
 
-    <!-- 数据表格容器 -->
-    <div class="table-container">
+    <!-- 可滚动的数据表格容器 -->
+    <div class="scrollable-table-container">
       <unified-data-table
         :headers="headers"
         :items="kpiData"
         :loading="loading"
         density="comfortable"
-        class="quality-kpi-table kpi-data-table"
+        class="quality-kpi-table kpi-data-table frozen-header-table"
         hover
+        :fixed-header="true"
+        :height="'calc(100vh - 280px)'"
       >
       <template v-slot:item.description="{ item }">
         <div class="font-weight-medium">
@@ -259,11 +264,27 @@ import UnifiedDataTable from '@/components/UnifiedDataTable.vue'
 import KpiRemarkDialog from '@/components/KpiRemarkDialog.vue'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 
+// 获取上一个月的月份和年份
+const getPreviousMonth = () => {
+  const now = new Date()
+  const prevMonth = now.getMonth() // getMonth() 返回 0-11，所以当前月减1就是上个月
+  const prevYear = now.getFullYear()
+
+  if (prevMonth === 0) {
+    // 如果当前是1月，上个月是去年12月
+    return { month: 12, year: prevYear - 1 }
+  } else {
+    return { month: prevMonth, year: prevYear }
+  }
+}
+
+const { month: defaultMonth, year: defaultYear } = getPreviousMonth()
+
 // 响应式数据
 const loading = ref(false)
 const submitting = ref(false)
-const selectedMonth = ref(new Date().getMonth() + 1)
-const selectedYear = ref(new Date().getFullYear())
+const selectedMonth = ref(defaultMonth)
+const selectedYear = ref(defaultYear)
 const showChangeAlert = ref(false)
 const isDataChanged = ref(false)
 
@@ -649,20 +670,58 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 控制栏美化 */
+/* 固定头部容器 - 类似冻结窗格 */
+.sticky-header-container {
+  position: sticky;
+  top: 64px; /* 导航栏高度 */
+  z-index: 1000;
+  background: white;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 控制栏样式 */
 .controls-bar {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
-  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%);
   padding: 20px;
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
 }
 
-.controls-bar:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+/* 可滚动表格容器 */
+.scrollable-table-container {
+  background: white;
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* 冻结头部表格样式 */
+.frozen-header-table {
+  background: transparent;
+}
+
+.frozen-header-table :deep(.v-data-table__wrapper) {
+  max-height: calc(100vh - 280px);
+  overflow-y: auto;
+}
+
+.frozen-header-table :deep(thead) {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+}
+
+.frozen-header-table :deep(thead tr th) {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 16px 12px;
+  position: sticky;
+  top: 0;
+  z-index: 999;
 }
 
 /* 控制组件美化 */
@@ -800,17 +859,26 @@ onMounted(() => {
 }
 
 /* 响应式优化 */
+@media (max-width: 1264px) {
+  .sticky-header-container {
+    top: 56px; /* 移动端导航栏高度 */
+  }
+}
+
 @media (max-width: 960px) {
   .controls-bar {
     padding: 16px;
-    border-radius: 12px;
   }
 
-  .table-container {
-    border-radius: 12px;
+  .scrollable-table-container {
+    border-radius: 0 0 12px 12px;
   }
 
-  .quality-kpi-table :deep(thead tr th) {
+  .frozen-header-table :deep(.v-data-table__wrapper) {
+    max-height: calc(100vh - 240px);
+  }
+
+  .frozen-header-table :deep(thead tr th) {
     padding: 12px 8px;
     font-size: 0.875rem;
   }
@@ -823,7 +891,10 @@ onMounted(() => {
 @media (max-width: 600px) {
   .controls-bar {
     padding: 12px;
-    border-radius: 8px;
+  }
+
+  .frozen-header-table :deep(.v-data-table__wrapper) {
+    max-height: calc(100vh - 220px);
   }
 
   .text-field-small {

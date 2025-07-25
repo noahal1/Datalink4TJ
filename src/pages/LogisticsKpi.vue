@@ -1,6 +1,6 @@
 <template>
   <unified-page-template
-    title="物流KPI数据管理"
+    title="物流KPI管理"
     icon="mdi-truck"
     color="info"
   >
@@ -246,11 +246,27 @@ import UnifiedDataTable from '@/components/UnifiedDataTable.vue'
 import KpiRemarkDialog from '@/components/KpiRemarkDialog.vue'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 
+// 获取上一个月的月份和年份
+const getPreviousMonth = () => {
+  const now = new Date()
+  const prevMonth = now.getMonth() // getMonth() 返回 0-11，所以当前月减1就是上个月
+  const prevYear = now.getFullYear()
+
+  if (prevMonth === 0) {
+    // 如果当前是1月，上个月是去年12月
+    return { month: 12, year: prevYear - 1 }
+  } else {
+    return { month: prevMonth, year: prevYear }
+  }
+}
+
+const { month: defaultMonth, year: defaultYear } = getPreviousMonth()
+
 // 响应式数据
 const loading = ref(false)
 const submitting = ref(false)
-const selectedMonth = ref(new Date().getMonth() + 1)
-const selectedYear = ref(new Date().getFullYear())
+const selectedMonth = ref(defaultMonth)
+const selectedYear = ref(defaultYear)
 const isDataChanged = ref(false)
 
 // 目标值管理相关

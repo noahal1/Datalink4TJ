@@ -1,74 +1,96 @@
 <template>
-  <unified-page-template 
+  <unified-page-template
     title="PRS冲压部门KPI数据管理"
     icon="mdi-hammer"
     color="primary">
-    <v-row class="mb-4 align-center">
-      <v-col cols="12" md="6">
-        <v-row>
-          <v-col cols="6" md="4">
-            <v-select
-              v-model="selectedMonth"
-              :items="monthOptions"
-              label="选择月份"
-              variant="outlined"
-              density="compact"
-              @update:model-value="loadData"
-            ></v-select>
+    <!-- 固定区域：控制栏 + 表格头部 -->
+    <div class="sticky-header-container">
+      <!-- 顶部控制栏 -->
+      <div class="controls-bar">
+        <v-row class="align-center">
+          <v-col cols="12" md="6">
+            <v-row>
+              <v-col cols="6" md="4">
+                <v-select
+                  v-model="selectedMonth"
+                  :items="monthOptions"
+                  label="选择月份"
+                  variant="outlined"
+                  density="compact"
+                  @update:model-value="loadData"
+                  hide-details
+                  class="control-select"
+                ></v-select>
+              </v-col>
+              <v-col cols="6" md="4">
+                <v-select
+                  v-model="selectedYear"
+                  :items="yearOptions"
+                  label="选择年份"
+                  variant="outlined"
+                  density="compact"
+                  @update:model-value="loadData"
+                  hide-details
+                  class="control-select"
+                ></v-select>
+              </v-col>
+            </v-row>
           </v-col>
-          <v-col cols="6" md="4">
-            <v-select
-              v-model="selectedYear"
-              :items="yearOptions"
-              label="选择年份"
+
+          <v-spacer></v-spacer>
+
+          <!-- 右侧：工具栏 -->
+          <v-col cols="auto">
+            <v-btn
+              color="info"
+              @click="openTargetDialog"
+              prepend-icon="mdi-target"
               variant="outlined"
-              density="compact"
-              @update:model-value="loadData"
-            ></v-select>
+              class="mr-2 action-btn"
+            >
+              设置目标值
+            </v-btn>
+            <v-btn
+              color="secondary"
+              @click="resetData"
+              :disabled="!isDataChanged"
+              prepend-icon="mdi-refresh"
+              variant="outlined"
+              class="mr-2 action-btn"
+            >
+              重置
+            </v-btn>
+            <v-btn
+              color="primary"
+              @click="saveData"
+              :loading="submitting"
+              :disabled="!isDataChanged"
+              prepend-icon="mdi-content-save"
+              variant="elevated"
+              class="action-btn"
+            >
+              保存数据
+            </v-btn>
           </v-col>
         </v-row>
-      </v-col>
+      </div>
+    </div>
 
-      <v-col cols="12" md="6" class="text-right">
-        <v-btn
-          color="info"
-          @click="openTargetDialog"
-          prepend-icon="mdi-target"
-          variant="outlined"
-          class="mr-2"
-        >
-          设置目标值
-        </v-btn>
-        <v-btn
-          color="secondary"
-          @click="resetData"
-          :disabled="!isDataChanged"
-          prepend-icon="mdi-refresh"
-          variant="outlined"
-          class="mr-2"
-        >
-          重置
-        </v-btn>
-        <v-btn
-          color="primary"
-          @click="saveData"
-          :loading="submitting"
-          :disabled="!isDataChanged"
-          prepend-icon="mdi-content-save"
-          variant="elevated"
-        >
-          保存数据
-        </v-btn>
-      </v-col>
-    </v-row>
+    <!-- 加载指示器 -->
+    <loading-overlay :loading="loading" message="加载数据中..." />
 
-    <unified-data-table
-      :headers="headers"
-      :items="kpiData"
-      :loading="loading"
-      density="comfortable"
-      class="mb-6"
-    >
+    <!-- 可滚动的数据表格容器 -->
+    <div class="scrollable-table-container">
+      <unified-data-table
+        :headers="headers"
+        :items="kpiData"
+        :loading="loading"
+        density="comfortable"
+        class="prs-kpi-table kpi-data-table frozen-header-table"
+        hover
+        :fixed-header="true"
+        :height="'calc(100vh - 280px)'"
+      >
       <template v-slot:item.description="{ item }">
         <div class="font-weight-medium">
           {{ item.description }}
@@ -144,38 +166,44 @@
           </v-icon>
         </div>
         <div v-else class="text-center text-grey">
-          <v-icon>mdi-check-circle</v-icon>
-          <div class="text-caption">达标</div>
+          -
         </div>
       </template>
     </unified-data-table>
+    </div>
 
     <!-- 数据变更提示 -->
-    <v-alert
-      v-if="showChangeAlert"
-      type="info"
-      variant="tonal"
-      closable
-      @click:close="showChangeAlert = false"
-      class="mb-4"
+    <v-snackbar
+      v-model="showChangeAlert"
+      color="warning"
+      timeout="3000"
     >
-      <v-icon start>mdi-information</v-icon>
-      数据已修改，请记得保存更改
-    </v-alert>
+      数据已修改，请记得保存
+      <template v-slot:actions>
+        <v-btn
+          color="white"
+          variant="text"
+          @click="showChangeAlert = false"
+        >
+          关闭
+        </v-btn>
+      </template>
+    </v-snackbar>
 
-    <!-- 目标值设置弹窗 -->
-    <v-dialog v-model="targetDialog" max-width="800px" persistent>
+    <!-- 目标值设置对话框 -->
+    <v-dialog v-model="targetDialog" max-width="800px">
       <v-card>
-        <v-card-title class="text-h5 bg-primary text-white">
-          <v-icon start>mdi-target</v-icon>
-          设置PRS冲压部门KPI目标值 ({{ selectedYear }}年)
+        <v-card-title class="text-h5">
+          设置 {{ selectedYear }} 年度目标值
         </v-card-title>
-        <v-card-text class="pa-6">
-          <unified-data-table
+        <v-card-text>
+          <v-data-table
             :headers="targetHeaders"
             :items="targetData"
             density="compact"
+            :items-per-page="50"
             hide-default-footer
+            class="elevation-1"
           >
             <template v-slot:item.target_value="{ item }">
               <v-text-field
@@ -186,26 +214,17 @@
                 variant="outlined"
                 density="compact"
                 hide-details
-                suffix="%"
+                class="text-field-small"
               ></v-text-field>
             </template>
-          </unified-data-table>
+          </v-data-table>
         </v-card-text>
-        <v-card-actions class="pa-6 pt-0">
+        <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-            color="grey"
-            variant="outlined"
-            @click="targetDialog = false"
-          >
+          <v-btn color="grey" variant="text" @click="targetDialog = false">
             取消
           </v-btn>
-          <v-btn
-            color="primary"
-            variant="elevated"
-            :loading="savingTargets"
-            @click="saveTargets"
-          >
+          <v-btn color="primary" variant="elevated" @click="saveTargets" :loading="savingTargets">
             保存目标值
           </v-btn>
         </v-card-actions>
@@ -223,18 +242,35 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
-import { get, post, put } from '@/utils/api'
+import { ref, onMounted, watch } from 'vue'
+import { get, put } from '@/utils/api'
 import Message from '@/utils/notification'
 import UnifiedPageTemplate from '@/components/UnifiedPageTemplate.vue'
 import UnifiedDataTable from '@/components/UnifiedDataTable.vue'
 import KpiRemarkDialog from '@/components/KpiRemarkDialog.vue'
+import LoadingOverlay from '@/components/LoadingOverlay.vue'
+
+// 获取上一个月的月份和年份
+const getPreviousMonth = () => {
+  const now = new Date()
+  const prevMonth = now.getMonth() // getMonth() 返回 0-11，所以当前月减1就是上个月
+  const prevYear = now.getFullYear()
+
+  if (prevMonth === 0) {
+    // 如果当前是1月，上个月是去年12月
+    return { month: 12, year: prevYear - 1 }
+  } else {
+    return { month: prevMonth, year: prevYear }
+  }
+}
+
+const { month: defaultMonth, year: defaultYear } = getPreviousMonth()
 
 // 响应式数据
 const loading = ref(false)
 const submitting = ref(false)
-const selectedMonth = ref(new Date().getMonth() + 1)
-const selectedYear = ref(new Date().getFullYear())
+const selectedMonth = ref(defaultMonth)
+const selectedYear = ref(defaultYear)
 const isDataChanged = ref(false)
 const showChangeAlert = ref(false)
 
@@ -550,11 +586,244 @@ watch(selectedYear, () => {
 </script>
 
 <style scoped>
+/* 固定头部容器 - 类似冻结窗格 */
+.sticky-header-container {
+  position: sticky;
+  top: 64px; /* 导航栏高度 */
+  z-index: 1000;
+  background: white;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 控制栏样式 */
+.controls-bar {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%);
+  padding: 20px;
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+/* 可滚动表格容器 */
+.scrollable-table-container {
+  background: white;
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* 冻结头部表格样式 */
+.frozen-header-table {
+  background: transparent;
+}
+
+.frozen-header-table :deep(.v-data-table__wrapper) {
+  max-height: calc(100vh - 280px);
+  overflow-y: auto;
+}
+
+.frozen-header-table :deep(thead) {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+}
+
+.frozen-header-table :deep(thead tr th) {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 16px 12px;
+  position: sticky;
+  top: 0;
+  z-index: 999;
+}
+
+/* 控制组件美化 */
+.control-select :deep(.v-field) {
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.control-select :deep(.v-field:hover) {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* 操作按钮美化 */
+.action-btn {
+  transition: all 0.3s ease;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 表格容器美化 */
+.table-container {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  margin-bottom: 24px;
+}
+
+/* 表格样式优化 */
+.prs-kpi-table {
+  background: transparent;
+}
+
+.prs-kpi-table :deep(.v-data-table__wrapper) {
+  border-radius: 16px;
+}
+
+.prs-kpi-table :deep(thead tr th) {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 16px 12px;
+}
+
+.prs-kpi-table :deep(tbody tr) {
+  transition: all 0.2s ease;
+}
+
+/* PRS KPI表格专用悬停样式 - 避免闪烁 */
+.kpi-data-table :deep(.v-data-table__tr:hover) {
+  background: rgba(59, 130, 246, 0.04) !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.kpi-data-table :deep(.v-data-table tbody tr:hover) {
+  background: rgba(59, 130, 246, 0.04) !important;
+  transition: background-color 0.15s ease !important;
+}
+
+/* 禁用其他可能的悬停效果 */
+.kpi-data-table:hover {
+  transform: none !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08) !important;
+}
+
+.prs-kpi-table :deep(tbody tr td) {
+  padding: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* 文本字段美化 */
 .text-field-small {
   max-width: 120px;
 }
 
+.text-field-small :deep(.v-field) {
+  border-radius: 8px;
+  background: rgba(59, 130, 246, 0.02);
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  transition: all 0.3s ease;
+}
+
+.text-field-small :deep(.v-field:hover) {
+  border-color: rgba(59, 130, 246, 0.3);
+  background: rgba(59, 130, 246, 0.05);
+  transform: scale(1.02);
+}
+
+.text-field-small :deep(.v-field--focused) {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 字体样式 */
 .font-weight-medium {
   font-weight: 500;
+}
+
+/* 芯片美化 */
+:deep(.v-chip) {
+  font-weight: 500;
+  letter-spacing: 0.025em;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+}
+
+:deep(.v-chip:hover) {
+  transform: scale(1.05);
+}
+
+/* 对话框美化 */
+:deep(.v-dialog .v-card) {
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+:deep(.v-dialog .v-card-title) {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #e2e8f0;
+  padding: 20px 24px;
+  font-weight: 600;
+}
+
+/* 响应式优化 */
+@media (max-width: 1264px) {
+  .sticky-header-container {
+    top: 56px; /* 移动端导航栏高度 */
+  }
+}
+
+@media (max-width: 960px) {
+  .controls-bar {
+    padding: 16px;
+  }
+
+  .scrollable-table-container {
+    border-radius: 0 0 12px 12px;
+  }
+
+  .frozen-header-table :deep(.v-data-table__wrapper) {
+    max-height: calc(100vh - 240px);
+  }
+
+  .frozen-header-table :deep(thead tr th) {
+    padding: 12px 8px;
+    font-size: 0.875rem;
+  }
+
+  .prs-kpi-table :deep(tbody tr td) {
+    padding: 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  .controls-bar {
+    padding: 12px;
+  }
+
+  .frozen-header-table :deep(.v-data-table__wrapper) {
+    max-height: calc(100vh - 220px);
+  }
+
+  .text-field-small {
+    max-width: 100px;
+  }
+}
+
+/* 加载动画美化 */
+:deep(.v-progress-circular) {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* Snackbar美化 */
+:deep(.v-snackbar) {
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
 }
 </style>

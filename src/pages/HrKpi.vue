@@ -1,74 +1,92 @@
 <template>
   <unified-page-template 
-    title="人力资源KPI数据管理"
+    title="人力资源KPI管理"
     icon="mdi-account-group"
     color="primary">
-    <v-row class="mb-4 align-center">
-      <v-col cols="12" md="6">
-        <v-row>
-          <v-col cols="6" md="4">
-            <v-select
-              v-model="selectedMonth"
-              :items="monthOptions"
-              label="选择月份"
-              variant="outlined"
-              density="compact"
-              @update:model-value="loadData"
-            ></v-select>
+    <!-- 固定区域：控制栏 + 表格头部 -->
+    <div class="sticky-header-container">
+      <!-- 顶部控制栏 -->
+      <div class="controls-bar">
+        <v-row class="align-center">
+          <v-col cols="12" md="6">
+            <v-row>
+              <v-col cols="6" md="4">
+                <v-select
+                  v-model="selectedMonth"
+                  :items="monthOptions"
+                  label="选择月份"
+                  variant="outlined"
+                  density="compact"
+                  @update:model-value="loadData"
+                  hide-details
+                  class="control-select"
+                ></v-select>
+              </v-col>
+              <v-col cols="6" md="4">
+                <v-select
+                  v-model="selectedYear"
+                  :items="yearOptions"
+                  label="选择年份"
+                  variant="outlined"
+                  density="compact"
+                  @update:model-value="loadData"
+                  hide-details
+                  class="control-select"
+                ></v-select>
+              </v-col>
+            </v-row>
           </v-col>
-          <v-col cols="6" md="4">
-            <v-select
-              v-model="selectedYear"
-              :items="yearOptions"
-              label="选择年份"
+
+          <v-spacer></v-spacer>
+
+          <!-- 右侧：工具栏 -->
+          <v-col cols="auto">
+            <v-btn
+              color="info"
+              @click="openTargetDialog"
+              prepend-icon="mdi-target"
               variant="outlined"
-              density="compact"
-              @update:model-value="loadData"
-            ></v-select>
+              class="mr-2 action-btn"
+            >
+              设置目标值
+            </v-btn>
+            <v-btn
+              color="secondary"
+              @click="resetData"
+              :disabled="!isDataChanged"
+              prepend-icon="mdi-refresh"
+              variant="outlined"
+              class="mr-2 action-btn"
+            >
+              重置
+            </v-btn>
+            <v-btn
+              color="primary"
+              @click="saveData"
+              :loading="submitting"
+              :disabled="!isDataChanged"
+              prepend-icon="mdi-content-save"
+              variant="elevated"
+              class="action-btn"
+            >
+              保存数据
+            </v-btn>
           </v-col>
         </v-row>
-      </v-col>
+      </div>
+    </div>
 
-      <v-col cols="12" md="6" class="text-right">
-        <v-btn
-          color="info"
-          @click="openTargetDialog"
-          prepend-icon="mdi-target"
-          variant="outlined"
-          class="mr-2"
-        >
-          设置目标值
-        </v-btn>
-        <v-btn
-          color="secondary"
-          @click="resetData"
-          :disabled="!isDataChanged"
-          prepend-icon="mdi-refresh"
-          variant="outlined"
-          class="mr-2"
-        >
-          重置
-        </v-btn>
-        <v-btn
-          color="primary"
-          @click="saveData"
-          :loading="submitting"
-          :disabled="!isDataChanged"
-          prepend-icon="mdi-content-save"
-          variant="elevated"
-        >
-          保存数据
-        </v-btn>
-      </v-col>
-    </v-row>
-
-    <unified-data-table
-      :headers="headers"
-      :items="kpiData"
-      :loading="loading"
-      density="comfortable"
-      class="mb-6"
-    >
+    <!-- 可滚动的数据表格容器 -->
+    <div class="scrollable-table-container">
+      <unified-data-table
+        :headers="headers"
+        :items="kpiData"
+        :loading="loading"
+        density="comfortable"
+        class="hr-kpi-table hr-data-table frozen-header-table"
+        :fixed-header="true"
+        :height="'calc(100vh - 280px)'"
+      >
       <template v-slot:item.description="{ item }">
         <div class="font-weight-medium">
           {{ item.description }}
@@ -149,19 +167,25 @@
         </div>
       </template>
     </unified-data-table>
+    </div>
 
     <!-- 数据变更提示 -->
-    <v-alert
-      v-if="showChangeAlert"
-      type="info"
-      variant="tonal"
-      closable
-      @click:close="showChangeAlert = false"
-      class="mb-4"
+    <v-snackbar
+      v-model="showChangeAlert"
+      color="warning"
+      timeout="3000"
     >
-      <v-icon start>mdi-information</v-icon>
-      数据已修改，请记得保存更改
-    </v-alert>
+      数据已修改，请记得保存
+      <template v-slot:actions>
+        <v-btn
+          color="white"
+          variant="text"
+          @click="showChangeAlert = false"
+        >
+          关闭
+        </v-btn>
+      </template>
+    </v-snackbar>
 
     <!-- 目标值设置弹窗 -->
     <v-dialog v-model="targetDialog" max-width="800px" persistent>
@@ -229,11 +253,27 @@ import UnifiedPageTemplate from '@/components/UnifiedPageTemplate.vue'
 import UnifiedDataTable from '@/components/UnifiedDataTable.vue'
 import KpiRemarkDialog from '@/components/KpiRemarkDialog.vue'
 
+// 获取上一个月的月份和年份
+const getPreviousMonth = () => {
+  const now = new Date()
+  const prevMonth = now.getMonth() // getMonth() 返回 0-11，所以当前月减1就是上个月
+  const prevYear = now.getFullYear()
+
+  if (prevMonth === 0) {
+    // 如果当前是1月，上个月是去年12月
+    return { month: 12, year: prevYear - 1 }
+  } else {
+    return { month: prevMonth, year: prevYear }
+  }
+}
+
+const { month: defaultMonth, year: defaultYear } = getPreviousMonth()
+
 // 响应式数据
 const loading = ref(false)
 const submitting = ref(false)
-const selectedMonth = ref(new Date().getMonth() + 1)
-const selectedYear = ref(new Date().getFullYear())
+const selectedMonth = ref(defaultMonth)
+const selectedYear = ref(defaultYear)
 const isDataChanged = ref(false)
 const showChangeAlert = ref(false)
 
@@ -559,11 +599,212 @@ watch(selectedYear, () => {
 </script>
 
 <style scoped>
+/* 固定头部容器 - 类似冻结窗格 */
+.sticky-header-container {
+  position: sticky;
+  top: 64px; /* 导航栏高度 */
+  z-index: 1000;
+  background: white;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 控制栏样式 */
+.controls-bar {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%);
+  padding: 20px;
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+/* 可滚动表格容器 */
+.scrollable-table-container {
+  background: white;
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* 冻结头部表格样式 */
+.frozen-header-table {
+  background: transparent;
+}
+
+.frozen-header-table :deep(.v-data-table__wrapper) {
+  max-height: calc(100vh - 280px);
+  overflow-y: auto;
+}
+
+.frozen-header-table :deep(thead) {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+}
+
+.frozen-header-table :deep(thead tr th) {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 16px 12px;
+  position: sticky;
+  top: 0;
+  z-index: 999;
+}
+
+/* 控制组件美化 */
+.control-select :deep(.v-field) {
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.control-select :deep(.v-field:hover) {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* 操作按钮美化 */
+.action-btn {
+  transition: all 0.3s ease;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* HR KPI表格专用悬停样式 - 避免闪烁 */
+.hr-data-table :deep(.v-data-table__tr:hover) {
+  background: rgba(59, 130, 246, 0.04) !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.hr-data-table :deep(.v-data-table tbody tr:hover) {
+  background: rgba(59, 130, 246, 0.04) !important;
+  transition: background-color 0.15s ease !important;
+}
+
+/* 禁用其他可能的悬停效果 */
+.hr-data-table:hover {
+  transform: none !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08) !important;
+}
+
+.hr-kpi-table :deep(tbody tr td) {
+  padding: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* 文本字段美化 */
 .text-field-small {
   max-width: 120px;
 }
 
+.text-field-small :deep(.v-field) {
+  border-radius: 8px;
+  background: rgba(59, 130, 246, 0.02);
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  transition: all 0.3s ease;
+}
+
+.text-field-small :deep(.v-field:hover) {
+  border-color: rgba(59, 130, 246, 0.3);
+  background: rgba(59, 130, 246, 0.05);
+  transform: scale(1.02);
+}
+
+.text-field-small :deep(.v-field--focused) {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 字体样式 */
 .font-weight-medium {
   font-weight: 500;
+}
+
+/* 芯片美化 */
+:deep(.v-chip) {
+  font-weight: 500;
+  letter-spacing: 0.025em;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+}
+
+:deep(.v-chip:hover) {
+  transform: scale(1.05);
+}
+
+/* 对话框美化 */
+:deep(.v-dialog .v-card) {
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+:deep(.v-dialog .v-card-title) {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #e2e8f0;
+  padding: 20px 24px;
+  font-weight: 600;
+}
+
+/* 响应式优化 */
+@media (max-width: 1264px) {
+  .sticky-header-container {
+    top: 56px; /* 移动端导航栏高度 */
+  }
+}
+
+@media (max-width: 960px) {
+  .controls-bar {
+    padding: 16px;
+  }
+
+  .scrollable-table-container {
+    border-radius: 0 0 12px 12px;
+  }
+
+  .frozen-header-table :deep(.v-data-table__wrapper) {
+    max-height: calc(100vh - 240px);
+  }
+
+  .frozen-header-table :deep(thead tr th) {
+    padding: 12px 8px;
+    font-size: 0.875rem;
+  }
+
+  .hr-kpi-table :deep(tbody tr td) {
+    padding: 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  .controls-bar {
+    padding: 12px;
+  }
+
+  .frozen-header-table :deep(.v-data-table__wrapper) {
+    max-height: calc(100vh - 220px);
+  }
+
+  .text-field-small {
+    max-width: 100px;
+  }
+}
+
+/* 加载动画美化 */
+:deep(.v-progress-circular) {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* Snackbar美化 */
+:deep(.v-snackbar) {
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
 }
 </style>
