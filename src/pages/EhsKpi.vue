@@ -170,7 +170,9 @@
             size="small"
             variant="flat"
           >
-            {{ item.target_value || 0 }}
+            {{ item.description === 'Environmental Performance'
+                ? (environmentalValueToText[item.target_value] || 'Green')
+                : (item.target_value || 0) }}
           </v-chip>
         </div>
       </template>
@@ -366,13 +368,29 @@ const yearOptions = Array.from({ length: 5 }, (_, i) => ({
   value: new Date().getFullYear() - 2 + i
 }))
 
-// Environmental Performance 选项
+// Environmental Performance 选项 - 使用数字值
 const environmentalOptions = [
-  { title: 'Green', value: 'Green' },
-  { title: 'Yellow/Green', value: 'Yellow/Green' },
-  { title: 'Yellow', value: 'Yellow' },
-  { title: 'Red', value: 'Red' }
+  { title: 'Green', value: 4 },
+  { title: 'Yellow/Green', value: 3 },
+  { title: 'Yellow', value: 2 },
+  { title: 'Red', value: 1 }
 ]
+
+// Environmental Performance 数字到文本的映射
+const environmentalValueToText = {
+  4: 'Green',
+  3: 'Yellow/Green',
+  2: 'Yellow',
+  1: 'Red'
+}
+
+// Environmental Performance 文本到数字的映射
+const environmentalTextToValue = {
+  'Green': 4,
+  'Yellow/Green': 3,
+  'Yellow': 2,
+  'Red': 1
+}
 
 // KPI数据
 const kpiData = ref([])
@@ -412,9 +430,9 @@ const initializeKpiData = () => {
       data.push({
         area,
         description,
-        actual_value: description === 'Environmental Performance' ? 'Green' : 0,
-        target_value: 0,
-        ytd_value: description === 'Environmental Performance' ? 'Green' : 0,
+        actual_value: description === 'Environmental Performance' ? 4 : 0, // Green = 4
+        target_value: description === 'Environmental Performance' ? 4 : 0, // Green = 4
+        ytd_value: description === 'Environmental Performance' ? 4 : 0, // Green = 4
         remark: null,
         action_plan: null,
         root_cause_analysis: null
@@ -440,10 +458,10 @@ const getStatusColor = (item) => {
   // Environmental Performance 特殊处理
   if (item.description === 'Environmental Performance') {
     const colorMap = {
-      'Green': 'success',
-      'Yellow/Green': 'warning',
-      'Yellow': 'warning',
-      'Red': 'error'
+      4: 'success',    // Green
+      3: 'warning',    // Yellow/Green
+      2: 'warning',    // Yellow
+      1: 'error'       // Red
     }
     return colorMap[item.actual_value] || 'grey'
   }
@@ -473,7 +491,7 @@ const getStatusColor = (item) => {
 const getStatusText = (item) => {
   // Environmental Performance 特殊处理
   if (item.description === 'Environmental Performance') {
-    return item.actual_value || 'Green'
+    return environmentalValueToText[item.actual_value] || 'Green'
   }
 
   if (!item.target_value || item.target_value === 0) return '无目标'
@@ -552,9 +570,16 @@ const loadData = async () => {
         if (existingItem) {
           // Environmental Performance 特殊处理
           if (existingItem.description === 'Environmental Performance') {
-            existingItem.actual_value = item.actual_value || 'Green'
-            existingItem.target_value = item.target_value || 'Green'
-            existingItem.ytd_value = item.ytd_value || 'Green'
+            // 如果API返回的是字符串，转换为数字；如果已经是数字，直接使用
+            existingItem.actual_value = typeof item.actual_value === 'string'
+              ? (environmentalTextToValue[item.actual_value] || 4)
+              : (item.actual_value || 4)
+            existingItem.target_value = typeof item.target_value === 'string'
+              ? (environmentalTextToValue[item.target_value] || 4)
+              : (item.target_value || 4)
+            existingItem.ytd_value = typeof item.ytd_value === 'string'
+              ? (environmentalTextToValue[item.ytd_value] || 4)
+              : (item.ytd_value || 4)
           } else {
             existingItem.actual_value = item.actual_value || 0
             existingItem.target_value = item.target_value || 0
@@ -625,7 +650,13 @@ const openTargetDialog = async () => {
     })
 
     if (response.data && response.data.length > 0) {
-      targetData.value = response.data
+      // 转换API返回的数据，将Environmental Performance的字符串值转换为数字
+      targetData.value = response.data.map(item => ({
+        ...item,
+        target_value: item.description === 'Environmental Performance' && typeof item.target_value === 'string'
+          ? (environmentalTextToValue[item.target_value] || 4)
+          : item.target_value
+      }))
     } else {
       // 如果没有目标值，创建默认结构
       targetData.value = []
@@ -646,7 +677,7 @@ const openTargetDialog = async () => {
           targetData.value.push({
             area,
             description,
-            target_value: description === 'Environmental Performance' ? 'Green' : 0
+            target_value: description === 'Environmental Performance' ? 4 : 0 // Green = 4
           })
         })
       })
@@ -670,7 +701,7 @@ const saveTargets = async () => {
         area: item.area,
         description: item.description,
         target_value: item.description === 'Environmental Performance'
-          ? (item.target_value || 'Green')
+          ? (item.target_value || 4) // 确保发送数字值，默认为4 (Green)
           : (item.target_value || 0)
       }))
     }
@@ -685,7 +716,8 @@ const saveTargets = async () => {
 
   } catch (error) {
     console.error('保存目标值失败:', error)
-    Message.error('保存目标值失败')
+    const errorMessage = error.response?.data?.detail || error.response?.data?.message || error.message || '未知错误'
+    Message.error(`保存目标值失败: ${errorMessage}`)
   } finally {
     savingTargets.value = false
   }

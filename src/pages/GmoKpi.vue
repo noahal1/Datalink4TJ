@@ -286,8 +286,8 @@ const selectedItem = ref(null)
 
 // 月份和年份选项
 const monthOptions = Array.from({ length: 12 }, (_, i) => ({
-  title: `${i}月`,
-  value: i
+  title: `${i + 1}月`,
+  value: i + 1
 }))
 
 const yearOptions = Array.from({ length: 5 }, (_, i) => ({
@@ -320,6 +320,8 @@ const kpiDescriptions = [
   'Total cost saving',
   'Audit score',
   'AP/AR Spread',
+  'hot forming',
+  'laser cutting'
 ]
 
 // 区域列表
@@ -506,7 +508,8 @@ const saveData = async () => {
 
   } catch (error) {
     console.error('保存数据失败:', error)
-    Message.error(`保存失败: ${error.message || '未知错误'}`)
+    const errorMessage = error.response?.data?.detail || error.response?.data?.message || error.message || '未知错误'
+    Message.error(`保存失败: ${errorMessage}`)
   } finally {
     submitting.value = false
   }
@@ -604,7 +607,8 @@ const saveTargets = async () => {
 
   } catch (error) {
     console.error('保存目标值失败:', error)
-    Message.error('保存目标值失败')
+    const errorMessage = error.response?.data?.detail || error.response?.data?.message || error.message || '未知错误'
+    Message.error(`保存目标值失败: ${errorMessage}`)
   } finally {
     savingTargets.value = false
   }
