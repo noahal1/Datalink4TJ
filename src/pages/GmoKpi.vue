@@ -320,8 +320,6 @@ const kpiDescriptions = [
   'Total cost saving',
   'Audit score',
   'AP/AR Spread',
-  'hot forming',
-  'laser cutting'
 ]
 
 // 区域列表
@@ -344,8 +342,6 @@ const initializeKpiData = () => {
     'Total cost saving': ['新厂', '老厂', '汇总'],
     'Audit score': ['新厂', '老厂', '汇总'],
     'AP/AR Spread': ['新厂', '老厂', '汇总'],
-    'hot forming': ['汇总'],
-    'laser cutting': ['汇总']
   }
 
   kpiDescriptions.forEach(description => {
@@ -394,14 +390,13 @@ const formatNumber = (value) => {
   return value.toLocaleString()
 }
 
-// 判断是否显示备注输入框 - 实际值小于目标值时显示
+// 判断是否显示备注输入框 - 只有AP/AR Spread指标需要填写原因分析
 const shouldShowRemark = (item) => {
-  // 对于财务相关指标，当实际值小于目标值时显示备注
-  const financeKpis = ['AP/AR Spread', 'hot forming', 'laser cutting']
-  if (financeKpis.includes(item.description)) {
+  // 只有AP/AR Spread指标在实际值小于目标值时显示备注填写按钮
+  if (item.description === 'AP/AR Spread') {
     return (item.actual_value || 0) < (item.target_value || 0)
   }
-  // 对于其他GMO指标，暂时不显示备注（根据需求可以调整）
+  // 其他GMO指标都不需要填写原因分析
   return false
 }
 
@@ -560,8 +555,6 @@ const openTargetDialog = async () => {
         'Total cost saving': ['新厂', '老厂', '汇总'],
         'Audit score': ['新厂', '老厂', '汇总'],
         'AP/AR Spread': ['新厂', '老厂', '汇总'],
-        'hot forming': ['汇总'],
-        'laser cutting': ['汇总']
       }
 
       kpiDescriptions.forEach(description => {
