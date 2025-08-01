@@ -88,6 +88,8 @@
         density="comfortable"
         class="quality-kpi-table kpi-data-table frozen-header-table"
         hover
+        hide-default-footer=""
+        :items-per-page="-1"
         :fixed-header="true"
         :height="'calc(100vh - 280px)'"
       >

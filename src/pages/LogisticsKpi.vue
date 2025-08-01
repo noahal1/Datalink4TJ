@@ -317,7 +317,7 @@ const kpiDescriptions = [
 ]
 
 // 区域列表
-const areas = ['新厂', '老厂', '汇总']
+const areas = ['TJM', 'TJC', '汇总']
 
 // KPI数据
 const kpiData = ref([])
@@ -350,8 +350,8 @@ const initializeKpiData = () => {
 // 区域颜色映射
 const getAreaColor = (area) => {
   const colorMap = {
-    '新厂': 'primary',
-    '老厂': 'secondary',
+    'TJM': 'primary',
+    'TJC': 'secondary',
     '汇总': 'success'
   }
   return colorMap[area] || 'grey'

@@ -330,7 +330,7 @@ const targetHeaders = [
 
 // 生产KPI指标列表
 const kpiDescriptions = [
-  'Spot weling',
+  'Spot Welding',
   'Arc Welding',
   'Other Process',
   'Divisional Assembly Line Overall (New)',
@@ -341,7 +341,7 @@ const kpiDescriptions = [
 ]
 
 // 区域列表
-const areas = ['新厂', '老厂', '汇总']
+const areas = ['TJM', 'TJC', '汇总']
 
 // KPI数据
 const kpiData = ref([])
@@ -354,14 +354,14 @@ const initializeKpiData = () => {
 
   // 根据您提供的主数据创建KPI项目
   const kpiItems = [
-    { description: 'Spot weling', areas: ['新厂', '老厂', '汇总'] },
-    { description: 'Arc Welding', areas: ['新厂', '汇总'] },
-    { description: 'Other Process', areas: ['新厂', '老厂', '汇总'] },
+    { description: 'Spot Welding', areas: ['TJM', 'TJC', '汇总'] },
+    { description: 'Arc Welding', areas: ['TJM', '汇总'] },
+    { description: 'Other Process', areas: ['TJM', 'TJC', '汇总'] },
     { description: 'Divisional Assembly Line Overall (New)', areas: ['汇总'] },
     { description: 'Divisional General Purpose Equipment Overall (New)', areas: ['汇总'] },
     { description: 'Division Overall OEE', areas: ['汇总'] },
-    { description: 'Labour Efficiency', areas: ['新厂', '老厂', '汇总'] },
-    { description: 'Divisional Theoretical Manpower Ratio (New)', areas: ['新厂', '老厂', '汇总'] }
+    { description: 'Labour Efficiency', areas: ['TJM', 'TJC', '汇总'] },
+    { description: 'Divisional Theoretical Manpower Ratio (New)', areas: ['TJM', 'TJC', '汇总'] }
   ]
 
   kpiItems.forEach(kpiItem => {
@@ -386,8 +386,8 @@ const initializeKpiData = () => {
 // 工具函数
 const getAreaColor = (area) => {
   const colors = {
-    '新厂': 'primary',
-    '老厂': 'secondary',
+    'TJM': 'primary',
+    'TJC': 'secondary',
     '汇总': 'success'
   }
   return colors[area] || 'default'
@@ -562,14 +562,14 @@ const openTargetDialog = async () => {
 
       // 根据主数据创建目标值结构
       const kpiItems = [
-        { description: 'Spot weling', areas: ['新厂', '老厂', '汇总'] },
-        { description: 'Arc Welding', areas: ['新厂', '汇总'] },
-        { description: 'Other Process', areas: ['新厂', '老厂', '汇总'] },
+        { description: 'Spot Welding', areas: ['TJM', 'TJC', '汇总'] },
+        { description: 'Arc Welding', areas: ['TJM', '汇总'] },
+        { description: 'Other Process', areas: ['TJM', 'TJC', '汇总'] },
         { description: 'Divisional Assembly Line Overall (New)', areas: ['汇总'] },
         { description: 'Divisional General Purpose Equipment Overall (New)', areas: ['汇总'] },
         { description: 'Division Overall OEE', areas: ['汇总'] },
-        { description: 'Labour Efficiency', areas: ['新厂', '老厂', '汇总'] },
-        { description: 'Divisional Theoretical Manpower Ratio (New)', areas: ['新厂', '老厂', '汇总'] }
+        { description: 'Labour Efficiency', areas: ['TJM', 'TJC', '汇总'] },
+        { description: 'Divisional Theoretical Manpower Ratio (New)', areas: ['TJM', 'TJC', '汇总'] }
       ]
 
       kpiItems.forEach(kpiItem => {

@@ -323,7 +323,7 @@ const kpiDescriptions = [
 ]
 
 // 区域列表
-const areas = ['新厂', '老厂', '汇总']
+const areas = ['TJM', 'TJC', '汇总']
 
 // KPI数据
 const kpiData = ref([])
@@ -336,12 +336,12 @@ const initializeKpiData = () => {
 
   // 定义每个指标对应的区域
   const kpiAreaMapping = {
-    'Purchasing': ['新厂', '老厂', '汇总'],
-    'Engineering (VA/VE)': ['新厂', '老厂', '汇总'],
-    'Continuous Improvement': ['新厂', '老厂', '汇总'],
-    'Total cost saving': ['新厂', '老厂', '汇总'],
-    'Audit score': ['新厂', '老厂', '汇总'],
-    'AP/AR Spread': ['新厂', '老厂', '汇总'],
+    'Purchasing': ['TJM', 'TJC', '汇总'],
+    'Engineering (VA/VE)': ['TJM', 'TJC', '汇总'],
+    'Continuous Improvement': ['TJM', 'TJC', '汇总'],
+    'Total cost saving': ['TJM', 'TJC', '汇总'],
+    'Audit score': ['TJM', 'TJC', '汇总'],
+    'AP/AR Spread': ['TJM', 'TJC', '汇总'],
   }
 
   kpiDescriptions.forEach(description => {
@@ -367,8 +367,8 @@ const initializeKpiData = () => {
 // 工具函数
 const getAreaColor = (area) => {
   const colors = {
-    '新厂': 'primary',
-    '老厂': 'secondary',
+    'TJM': 'primary',
+    'TJC': 'secondary',
     '汇总': 'success'
   }
   return colors[area] || 'default'
@@ -549,12 +549,12 @@ const openTargetDialog = async () => {
 
       // 定义每个指标对应的区域
       const kpiAreaMapping = {
-        'Purchasing': ['新厂', '老厂', '汇总'],
-        'Engineering (VA/VE)': ['新厂', '老厂', '汇总'],
-        'Continuous Improvement': ['新厂', '老厂', '汇总'],
-        'Total cost saving': ['新厂', '老厂', '汇总'],
-        'Audit score': ['新厂', '老厂', '汇总'],
-        'AP/AR Spread': ['新厂', '老厂', '汇总'],
+        'Purchasing': ['TJM', 'TJC', '汇总'],
+        'Engineering (VA/VE)': ['TJM', 'TJC', '汇总'],
+        'Continuous Improvement': ['TJM', 'TJC', '汇总'],
+        'Total cost saving': ['TJM', 'TJC', '汇总'],
+        'Audit score': ['TJM', 'TJC', '汇总'],
+        'AP/AR Spread': ['TJM', 'TJC', '汇总'],
       }
 
       kpiDescriptions.forEach(description => {

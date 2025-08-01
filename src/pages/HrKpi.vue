@@ -85,6 +85,8 @@
         density="comfortable"
         class="hr-kpi-table hr-data-table frozen-header-table"
         :fixed-header="true"
+        hide-default-footer=""
+        :items-per-page="-1"
         :height="'calc(100vh - 280px)'"
       >
       <template v-slot:item.description="{ item }">
@@ -325,9 +327,9 @@ const initializeKpiData = () => {
 
   // HR KPI项目
   const kpiItems = [
-    { description: 'EOS Audit Score', areas: ['新厂', '老厂', '汇总'] },
-    { description: 'Turnover-contract employee', areas: ['新厂', '老厂', '汇总'] },
-    { description: 'Training attainment(people-course)', areas: ['新厂', '老厂'] },
+    { description: 'EOS Audit Score', areas: ['TJM', 'TJC', '汇总'] },
+    { description: 'Turnover-contract employee', areas: ['TJM', 'TJC', '汇总'] },
+    { description: 'Training attainment(people-course)', areas: ['TJM', 'TJC', '汇总'] },
   ]
 
   kpiItems.forEach(kpiItem => {
@@ -352,8 +354,8 @@ const initializeKpiData = () => {
 // 工具函数
 const getAreaColor = (area) => {
   const colors = {
-    '新厂': 'primary',
-    '老厂': 'secondary',
+    'TJM': 'primary',
+    'TJC': 'secondary',
     '汇总': 'success'
   }
   return colors[area] || 'default'
@@ -508,9 +510,9 @@ const openTargetDialog = async () => {
 
       // 根据主数据创建目标值结构
       const kpiItems = [
-        { description: 'EOS Audit Score', areas: ['新厂', '老厂', '汇总'] },
-        { description: 'Turnover-contract employee', areas: ['新厂', '老厂', '汇总'] },
-        { description: 'Training attainment(people-course)', areas: ['新厂', '老厂'] },
+        { description: 'EOS Audit Score', areas: ['TJM', 'TJC', '汇总'] },
+        { description: 'Turnover-contract employee', areas: ['TJM', 'TJC', '汇总'] },
+        { description: 'Training attainment(people-course)', areas: ['TJM', 'TJC','汇总'] },
       ]
 
       kpiItems.forEach(kpiItem => {

@@ -307,7 +307,7 @@ const targetHeaders = [
 ]
 
 // 区域列表
-const areas = ['新厂', '老厂', '汇总']
+const areas = ['TJM', 'TJC', '汇总']
 
 // KPI数据
 const kpiData = ref([])
@@ -320,7 +320,7 @@ const initializeKpiData = () => {
 
   // 工程KPI项目 - Achievement of CT Target at PPAP Approval
   const kpiItems = [
-    { description: 'Achievement of CT Target at PPAP Approval', areas: ['新厂', '老厂', '汇总'] }
+    { description: 'Achievement of CT Target at PPAP Approval', areas: ['TJM', 'TJC', '汇总'] }
   ]
 
   kpiItems.forEach(kpiItem => {
@@ -345,8 +345,8 @@ const initializeKpiData = () => {
 // 工具函数
 const getAreaColor = (area) => {
   const colors = {
-    '新厂': 'primary',
-    '老厂': 'secondary',
+    'TJM': 'primary',
+    'TJC': 'secondary',
     '汇总': 'success'
   }
   return colors[area] || 'default'
@@ -498,7 +498,7 @@ const openTargetDialog = async () => {
     let id = 1
 
     const kpiItems = [
-      { description: 'Achievement of CT Target at PPAP Approval', areas: ['新厂', '老厂', '汇总'] }
+      { description: 'Achievement of CT Target at PPAP Approval', areas: ['TJM', 'TJC', '汇总'] }
     ]
 
     kpiItems.forEach(kpiItem => {
