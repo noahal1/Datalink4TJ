@@ -17,7 +17,7 @@ const MaintenanceKpi = () => import('../pages/MaintenanceKpi.vue')
 const ProductionKpi = () => import('../pages/ProductionKpi.vue')
 const GmoKpi = () => import('../pages/GmoKpi.vue')
 const EngKpi = () => import('../pages/EngKpi.vue')
-
+const KpiExport = () => import('../pages/KpiExport.vue')
 const PrsKpi = () => import('../pages/PrsKpi.vue')
 const HrKpi = () => import('../pages/HrKpi.vue')
 const LogisticsKpi = () => import('../pages/LogisticsKpi.vue')
@@ -224,6 +224,13 @@ export const moduleRoutes = [
     meta: {
       title: '用户管理',
       permission_code: 'access_admin_users',
+      requiresAuth: true,
+  },
+  {
+    path: '/admin/kpiexport',
+    component: KpiExport,
+    meta: {
+      title: 'Kpi导出',
       requiresAuth: true,
   }
 }

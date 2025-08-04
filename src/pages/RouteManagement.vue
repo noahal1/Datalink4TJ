@@ -4,32 +4,41 @@
     icon="mdi-routes"
     color="primary"
   >
-    <!-- 顶部工具栏 -->
-    <template #actions>
-      <v-btn-group density="compact" variant="outlined">
-        <v-btn @click="openModernRouteEditor()" color="primary">
-          <v-icon>mdi-plus</v-icon>
-          创建路由
-        </v-btn>
-        <v-btn @click="batchDeleteSelected" :disabled="selectedRoutes.length === 0" color="error">
-          <v-icon>mdi-delete-sweep</v-icon>
-          批量删除
-        </v-btn>
-        <v-btn @click="exportRoutes" color="info">
-          <v-icon>mdi-export</v-icon>
-          导出
-        </v-btn>
-        <v-btn @click="toggleTreeView">
-          <v-icon>{{ showTreeView ? 'mdi-table' : 'mdi-file-tree' }}</v-icon>
-          {{ showTreeView ? '表格视图' : '树形视图' }}
-        </v-btn>
-      </v-btn-group>
+    <template #header-actions>
+      <v-btn
+        color="primary"
+        prepend-icon="mdi-plus"
+        @click="openModernRouteEditor()"
+      >
+        创建路由
+      </v-btn>
+      <v-btn
+        color="error"
+        prepend-icon="mdi-delete-sweep"
+        @click="batchDeleteSelected"
+        :disabled="selectedRoutes.length === 0"
+      >
+        批量删除
+      </v-btn>
+      <v-btn
+        color="info"
+        prepend-icon="mdi-export"
+        @click="exportRoutes"
+      >
+        导出
+      </v-btn>
+      <v-btn
+        prepend-icon="mdi-view-list"
+        @click="toggleTreeView"
+      >
+        {{ showTreeView ? '表格视图' : '树形视图' }}
+      </v-btn>
     </template>
 
     <v-row>
       <v-col cols="12">
         <!-- 搜索和过滤器 -->
-        <v-card class="mb-4" variant="outlined">
+        <v-card class="mb-4">
           <v-card-text>
             <v-row>
               <v-col cols="12" md="4">
@@ -116,7 +125,7 @@
         </v-card>
 
         <!-- 数据展示区域 -->
-        <v-card variant="outlined">
+        <v-card>
           <!-- 表格视图 -->
           <unified-data-table
             v-if="!showTreeView"

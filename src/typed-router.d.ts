@@ -36,6 +36,7 @@ declare module 'vue-router/auto-routes' {
     '/Gmo': RouteRecordInfo<'/Gmo', '/Gmo', Record<never, never>, Record<never, never>>,
     '/GmoKpi': RouteRecordInfo<'/GmoKpi', '/GmoKpi', Record<never, never>, Record<never, never>>,
     '/HrKpi': RouteRecordInfo<'/HrKpi', '/HrKpi', Record<never, never>, Record<never, never>>,
+    '/KpiExport': RouteRecordInfo<'/KpiExport', '/KpiExport', Record<never, never>, Record<never, never>>,
     '/Login': RouteRecordInfo<'/Login', '/Login', Record<never, never>, Record<never, never>>,
     '/LogisticsKpi': RouteRecordInfo<'/LogisticsKpi', '/LogisticsKpi', Record<never, never>, Record<never, never>>,
     '/Maintenance': RouteRecordInfo<'/Maintenance', '/Maintenance', Record<never, never>, Record<never, never>>,

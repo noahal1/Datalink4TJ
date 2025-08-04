@@ -15,6 +15,7 @@ export const componentMap = {
   'MaintenanceKpi': () => import('../pages/MaintenanceKpi.vue'),
   'ProductionKpi': () => import('../pages/ProductionKpi.vue'),
   'GmoKpi': () => import('../pages/GmoKpi.vue'),
+  'KpiExport':() => import('../pages/KpiExport.vue'),
   'EngKpi': () => import('../pages/EngKpi.vue'),
   'PrsKpi': () => import('../pages/PrsKpi.vue'),
   'HrKpi': () => import('../pages/HrKpi.vue'),

@@ -706,16 +706,18 @@ const forceReloadRoutes = async () => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  max-height: 100vh;
+  flex: 1;
+  min-height: 0;
 }
 
 .nav-content {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  min-height: 0; /* 确保flex子项可以收缩 */
+  min-height: 0;
   scrollbar-width: thin;
   scrollbar-color: rgba(var(--v-theme-primary), 0.3) transparent;
+  padding-bottom: 16px; /* 确保底部有足够空间 */
 }
 
 /* Webkit浏览器滚动条样式 */
@@ -738,7 +740,7 @@ const forceReloadRoutes = async () => {
 }
 
 .nav-list {
-  padding-bottom: 8px;
+  padding: 8px 0 16px 0; /* 增加底部填充 */
 }
 
 .nav-bottom-actions {
@@ -882,7 +884,67 @@ const forceReloadRoutes = async () => {
 /* 确保在小屏幕上也能正常滚动 */
 @media (max-width: 600px) {
   .dynamic-nav {
-    max-height: calc(100vh - 64px); /* 减去顶部导航栏高度 */
+    flex: 1;
+    min-height: 0;
+  }
+  
+  .nav-content {
+    padding-bottom: 24px; /* 小屏幕上增加更多底部空间 */
+  }
+  
+  .nav-list {
+    padding: 4px 0 20px 0; /* 小屏幕上调整填充 */
+  }
+  
+  .nav-list-item {
+    margin: 2px 4px; /* 减少外边距 */
+    padding: 8px 12px !important; /* 减少内边距 */
+    font-size: 0.875rem; /* 稍微减小字体 */
+  }
+  
+  .nav-list-subitem {
+    margin: 2px 4px 2px 16px; /* 调整子项目边距 */
+    padding: 6px 8px 6px 20px !important; /* 调整子项目内边距 */
+    font-size: 0.8rem; /* 稍微减小子项目字体 */
+  }
+  
+  .nav-group-title {
+    padding: 0 12px; /* 减少分组标题内边距 */
+    font-size: 0.7rem; /* 减小分组标题字体 */
+  }
+}
+
+/* 针对非常小的屏幕进一步优化 */
+@media (max-width: 480px) {
+  .nav-content {
+    padding-bottom: 32px; /* 极小屏幕上增加更多底部空间 */
+  }
+  
+  .nav-list {
+    padding: 2px 0 24px 0;
+  }
+  
+  .nav-list-item {
+    font-size: 0.8rem;
+    padding: 6px 8px !important;
+    margin: 1px 2px;
+  }
+  
+  .nav-list-subitem {
+    font-size: 0.75rem;
+    padding: 4px 6px 4px 16px !important;
+    margin: 1px 2px 1px 12px;
+  }
+}
+
+/* 确保底部按钮区域有足够空间 */
+@media (max-height: 600px) {
+  .nav-content {
+    padding-bottom: 20px;
+  }
+  
+  .nav-list {
+    padding: 4px 0 16px 0;
   }
 }
 </style>

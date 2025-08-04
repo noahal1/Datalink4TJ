@@ -10,10 +10,9 @@
       <v-navigation-drawer
         v-model="drawer"
         app
-        :width="260"
+        :width="drawerWidth"
         elevation="4"
         class="navigation-drawer"
-        :height="'100vh'"
       >
         <dynamic-navigation 
           :show-bottom-actions="true" 
@@ -72,6 +71,20 @@ const drawer = ref(localStorage.getItem('sideNavState') === 'true' || window.inn
 const isLoading = ref(true)
 const isDebugMode = ref(false) 
 const showHelpDialog = ref(false)
+
+// 窗口尺寸响应式状态
+const windowWidth = ref(window.innerWidth)
+
+// 响应式侧边栏宽度
+const drawerWidth = computed(() => {
+  if (windowWidth.value < 600) {
+    return Math.min(280, windowWidth.value * 0.85) // 小屏幕使用85%宽度，最大280px
+  } else if (windowWidth.value < 960) {
+    return 240 // 中等屏幕使用240px
+  } else {
+    return 260 // 大屏幕使用260px
+  }
+})
 
 const pageTransition = computed(() => {
   const fromPath = route.from?.path || ''
@@ -158,6 +171,9 @@ onMounted(async () => {
 })
 
 const handleResize = () => {
+  // 更新窗口宽度响应式状态
+  windowWidth.value = window.innerWidth
+  
   // 在大屏幕上(>=1264px)，如果侧边栏是隐藏的，则显示它
   if (window.innerWidth >= 1264 && !drawer.value) {
     drawer.value = true;
@@ -182,8 +198,6 @@ const handleResize = () => {
 
 .navigation-drawer {
   border-right: none !important;
-  height: 100vh !important;
-  max-height: 100vh !important;
   overflow: hidden !important;
   background: linear-gradient(135deg,
     rgba(255, 255, 255, 0.98) 0%,
@@ -193,6 +207,20 @@ const handleResize = () => {
   box-shadow:
     4px 0 24px rgba(0, 0, 0, 0.08),
     2px 0 12px rgba(59, 130, 246, 0.05) !important;
+}
+
+/* 响应式优化 */
+@media (max-width: 600px) {
+  .navigation-drawer {
+    width: 85vw !important;
+    max-width: 280px !important;
+  }
+}
+
+@media (max-width: 960px) {
+  .navigation-drawer {
+    width: 240px !important;
+  }
 }
 
 .navigation-drawer::before {
@@ -210,9 +238,10 @@ const handleResize = () => {
 }
 
 .navigation-drawer .v-navigation-drawer__content {
-  height: 100% !important;
   overflow: hidden !important;
   background: transparent !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 .help-item, .refresh-item {
