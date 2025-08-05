@@ -8,14 +8,42 @@
     <div class="controls-bar mb-4">
       <v-row class="align-center">
         <!-- 左侧：筛选器 -->
-        <v-col cols="12" md="8">
+        <v-col
+          cols="12"
+          md="8"
+        >
           <v-row class="align-center">
             <v-col cols="auto">
-              <v-btn-toggle v-model="selectedCategory" density="comfortable" color="primary" mandatory>
-                <v-btn value="all" prepend-icon="mdi-view-grid">全部</v-btn>
-                <v-btn value="原材料" prepend-icon="mdi-cube-outline">原材料</v-btn>
-                <v-btn value="半成品" prepend-icon="mdi-package">半成品</v-btn>
-                <v-btn value="成品" prepend-icon="mdi-package-variant-closed">成品</v-btn>
+              <v-btn-toggle
+                v-model="selectedCategory"
+                density="comfortable"
+                color="primary"
+                mandatory
+              >
+                <v-btn
+                  value="all"
+                  prepend-icon="mdi-view-grid"
+                >
+                  全部
+                </v-btn>
+                <v-btn
+                  value="原材料"
+                  prepend-icon="mdi-cube-outline"
+                >
+                  原材料
+                </v-btn>
+                <v-btn
+                  value="半成品"
+                  prepend-icon="mdi-package"
+                >
+                  半成品
+                </v-btn>
+                <v-btn
+                  value="成品"
+                  prepend-icon="mdi-package-variant-closed"
+                >
+                  成品
+                </v-btn>
               </v-btn-toggle>
             </v-col>
             
@@ -50,7 +78,11 @@
         </v-col>
         
         <!-- 右侧：操作按钮 -->
-        <v-col cols="12" md="4" class="text-right">
+        <v-col
+          cols="12"
+          md="4"
+          class="text-right"
+        >
           <v-btn 
             prepend-icon="mdi-plus"
             color="primary"
@@ -63,8 +95,8 @@
             prepend-icon="mdi-refresh"
             variant="text"
             class="ml-2"
-            @click="refreshData"
             :loading="isLoading"
+            @click="refreshData"
           >
             刷新
           </v-btn>
@@ -73,12 +105,22 @@
     </div>
     
     <!-- 加载指示器 -->
-    <loading-overlay :loading="isLoading" message="加载数据中..." />
+    <loading-overlay
+      :loading="isLoading"
+      message="加载数据中..."
+    />
 
     <!-- 统计卡片 -->
-    <div class="summary-cards mb-4" v-if="summaryStats">
+    <div
+      v-if="summaryStats"
+      class="summary-cards mb-4"
+    >
       <v-row>
-        <v-col cols="12" sm="6" md="3">
+        <v-col
+          cols="12"
+          sm="6"
+          md="3"
+        >
           <unified-stats-card
             title="总产品数"
             :value="summaryStats.total.toString()"
@@ -87,7 +129,11 @@
             color="primary"
           />
         </v-col>
-        <v-col cols="12" sm="6" md="3">
+        <v-col
+          cols="12"
+          sm="6"
+          md="3"
+        >
           <unified-stats-card
             title="原材料"
             :value="summaryStats.raw_material.toString()"
@@ -95,7 +141,11 @@
             icon="mdi-cube-outline" 
           />
         </v-col>
-        <v-col cols="12" sm="6" md="3">
+        <v-col
+          cols="12"
+          sm="6"
+          md="3"
+        >
           <unified-stats-card
             title="半成品"
             :value="summaryStats.semi_finished.toString()"
@@ -103,7 +153,11 @@
             icon="mdi-package"
           />
         </v-col>
-        <v-col cols="12" sm="6" md="3">
+        <v-col
+          cols="12"
+          sm="6"
+          md="3"
+        >
           <unified-stats-card
             title="成品"
             :value="summaryStats.finished_goods.toString()"
@@ -123,7 +177,7 @@
         class="mt-4 master-data-table doh-master-table"
         hover
       >
-        <template v-slot:item="{ item }">
+        <template #item="{ item }">
           <tr>
             <td class="text-center font-weight-medium">
               <v-chip 
@@ -134,9 +188,13 @@
                 {{ item.category }}
               </v-chip>
             </td>
-            <td class="text-center">{{ item.product_code }}</td>
+            <td class="text-center">
+              {{ item.product_code }}
+            </td>
             <td>{{ item.product_name }}</td>
-            <td class="text-center">{{ item.unit }}</td>
+            <td class="text-center">
+              {{ item.unit }}
+            </td>
             <td class="text-center">
               <div class="safety-range">
                 <small class="text-grey-600">
@@ -153,29 +211,31 @@
                 {{ item.is_active ? '启用' : '禁用' }}
               </v-chip>
             </td>
-            <td class="text-center">{{ formatDate(item.updated_at) }}</td>
+            <td class="text-center">
+              {{ formatDate(item.updated_at) }}
+            </td>
             <td class="text-center">
               <v-btn
                 icon="mdi-pencil"
                 size="small"
                 variant="text"
-                @click="openEditDialog(item)"
                 title="编辑产品"
+                @click="openEditDialog(item)"
               />
               <v-btn
                 icon="mdi-cog"
                 size="small"
                 variant="text"
-                @click="openSafetyStockDialog(item)"
                 title="设置安全库存"
+                @click="openSafetyStockDialog(item)"
               />
               <v-btn
                 :icon="item.is_active ? 'mdi-eye-off' : 'mdi-eye'"
                 size="small"
                 variant="text"
                 :color="item.is_active ? 'warning' : 'success'"
-                @click="toggleStatus(item)"
                 :title="item.is_active ? '禁用产品' : '启用产品'"
+                @click="toggleStatus(item)"
               />
             </td>
           </tr>
@@ -184,17 +244,29 @@
     </div>
     
     <!-- 产品编辑对话框 -->
-    <v-dialog v-model="editDialog" max-width="600px">
+    <v-dialog
+      v-model="editDialog"
+      max-width="600px"
+    >
       <v-card>
         <v-card-title class="text-h6">
-          <v-icon :icon="isCreating ? 'mdi-plus' : 'mdi-pencil'" class="mr-2" />
+          <v-icon
+            :icon="isCreating ? 'mdi-plus' : 'mdi-pencil'"
+            class="mr-2"
+          />
           {{ isCreating ? '新增产品' : '编辑产品' }}
         </v-card-title>
         
         <v-card-text>
-          <v-form ref="editFormRef" v-model="editFormValid">
+          <v-form
+            ref="editFormRef"
+            v-model="editFormValid"
+          >
             <v-row>
-              <v-col cols="12" md="6">
+              <v-col
+                cols="12"
+                md="6"
+              >
                 <v-select
                   v-model="editForm.category"
                   :items="categoryOptions"
@@ -205,7 +277,10 @@
                   required
                 />
               </v-col>
-              <v-col cols="12" md="6">
+              <v-col
+                cols="12"
+                md="6"
+              >
                 <v-text-field
                   v-model="editForm.product_code"
                   label="分类"
@@ -227,7 +302,10 @@
                   required
                 />
               </v-col>
-              <v-col cols="12" md="6">
+              <v-col
+                cols="12"
+                md="6"
+              >
                 <v-text-field
                   v-model="editForm.unit"
                   label="单位"
@@ -237,7 +315,10 @@
                   required
                 />
               </v-col>
-              <v-col cols="12" md="6">
+              <v-col
+                cols="12"
+                md="6"
+              >
                 <v-text-field
                   v-model="editForm.sort_order"
                   label="排序顺序"
@@ -260,9 +341,9 @@
           </v-btn>
           <v-btn
             color="primary"
-            @click="saveProduct"
             :loading="isSaving"
             :disabled="!editFormValid"
+            @click="saveProduct"
           >
             保存
           </v-btn>
@@ -271,10 +352,16 @@
     </v-dialog>
     
     <!-- 安全库存设置对话框 -->
-    <v-dialog v-model="safetyStockDialog" max-width="500px">
+    <v-dialog
+      v-model="safetyStockDialog"
+      max-width="500px"
+    >
       <v-card>
         <v-card-title class="text-h6">
-          <v-icon icon="mdi-cog" class="mr-2" />
+          <v-icon
+            icon="mdi-cog"
+            class="mr-2"
+          />
           设置安全库存
         </v-card-title>
         
@@ -336,8 +423,8 @@
           </v-btn>
           <v-btn
             color="primary"
-            @click="saveSafetyStock"
             :loading="isSavingSafety"
+            @click="saveSafetyStock"
           >
             保存
           </v-btn>

@@ -14,11 +14,11 @@
         variant="text"
         size="small"
         color="primary"
-        @click="refreshEvents"
         :disabled="isLoading"
         :loading="isLoading"
         class="mr-2"
-      ></v-btn>
+        @click="refreshEvents"
+      />
       <v-btn
         variant="text"
         size="small"
@@ -26,14 +26,19 @@
         color="primary"
       >
         查看全部
-        <v-icon end>mdi-chevron-right</v-icon>
+        <v-icon end>
+          mdi-chevron-right
+        </v-icon>
       </v-btn>
     </template>
     
     <template #pre-table>
       <loading-overlay :loading="isLoading" />
       
-      <v-list v-if="filteredEvents.length > 0" class="py-0">
+      <v-list
+        v-if="filteredEvents.length > 0"
+        class="py-0"
+      >
         <v-list-item
           v-for="event in filteredEvents.slice(0, limit)" 
           :key="event.id"
@@ -41,9 +46,16 @@
           link
           class="event-item"
         >
-          <template v-slot:prepend>
-            <v-avatar :color="getEventColor(event.type || event.department) + '-lighten-4'" size="42" class="me-3">
-              <v-icon :icon="getEventIcon(event.type || event.department)" :color="getEventColor(event.type || event.department)"></v-icon>
+          <template #prepend>
+            <v-avatar
+              :color="getEventColor(event.type || event.department) + '-lighten-4'"
+              size="42"
+              class="me-3"
+            >
+              <v-icon
+                :icon="getEventIcon(event.type || event.department)"
+                :color="getEventColor(event.type || event.department)"
+              />
             </v-avatar>
           </template>
           
@@ -62,12 +74,20 @@
           
           <v-list-item-subtitle class="d-flex align-center flex-wrap">
             <span class="d-flex align-center">
-              <v-icon size="x-small" color="grey" class="mr-1">mdi-calendar</v-icon>
+              <v-icon
+                size="x-small"
+                color="grey"
+                class="mr-1"
+              >mdi-calendar</v-icon>
               {{ formatDate(event.start_date || event.start_time) }}
             </span>
             <span class="mx-1">•</span>
             <span class="d-flex align-center">
-              <v-icon size="x-small" color="grey" class="mr-1">mdi-clock-outline</v-icon>
+              <v-icon
+                size="x-small"
+                color="grey"
+                class="mr-1"
+              >mdi-clock-outline</v-icon>
               {{ formatTime(event.start_time) }}
             </span>
             <v-chip
@@ -80,8 +100,17 @@
             </v-chip>
           </v-list-item-subtitle>
           
-          <v-list-item-subtitle v-if="event.location" class="d-flex align-center text-caption">
-            <v-icon size="x-small" color="grey" class="mr-1">mdi-map-marker</v-icon>
+          <v-list-item-subtitle
+            v-if="event.location"
+            class="d-flex align-center text-caption"
+          >
+            <v-icon
+              size="x-small"
+              color="grey"
+              class="mr-1"
+            >
+              mdi-map-marker
+            </v-icon>
             {{ event.location }}
           </v-list-item-subtitle>
         </v-list-item>
@@ -95,10 +124,25 @@
         border="start"
       >
         <div class="text-center">
-          <v-icon size="large" color="error" class="mb-2">mdi-alert-circle</v-icon>
-          <div class="text-subtitle-1">{{ error }}</div>
-          <v-btn color="error" variant="text" class="mt-2" @click="refreshEvents">
-            <v-icon start>mdi-refresh</v-icon>
+          <v-icon
+            size="large"
+            color="error"
+            class="mb-2"
+          >
+            mdi-alert-circle
+          </v-icon>
+          <div class="text-subtitle-1">
+            {{ error }}
+          </div>
+          <v-btn
+            color="error"
+            variant="text"
+            class="mt-2"
+            @click="refreshEvents"
+          >
+            <v-icon start>
+              mdi-refresh
+            </v-icon>
             重试
           </v-btn>
         </div>
@@ -112,11 +156,28 @@
         border="start"
       >
         <div class="text-center">
-          <v-icon size="large" color="info" class="mb-2">mdi-calendar-blank</v-icon>
-          <div class="text-subtitle-1">暂无即将开始的事件</div>
-          <div class="text-body-2 mt-1">您可以前往事件页面创建新的事件</div>
-          <v-btn color="primary" variant="text" class="mt-2" to="/events">
-            <v-icon start>mdi-calendar-plus</v-icon>
+          <v-icon
+            size="large"
+            color="info"
+            class="mb-2"
+          >
+            mdi-calendar-blank
+          </v-icon>
+          <div class="text-subtitle-1">
+            暂无即将开始的事件
+          </div>
+          <div class="text-body-2 mt-1">
+            您可以前往事件页面创建新的事件
+          </div>
+          <v-btn
+            color="primary"
+            variant="text"
+            class="mt-2"
+            to="/events"
+          >
+            <v-icon start>
+              mdi-calendar-plus
+            </v-icon>
             管理事件
           </v-btn>
         </div>

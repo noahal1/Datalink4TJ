@@ -1,11 +1,27 @@
 <template>
-  <v-container class="fill-height" fluid>
-    <v-row align="center" justify="center">
-      <v-col cols="12" sm="8" md="4">
+  <v-container
+    class="fill-height"
+    fluid
+  >
+    <v-row
+      align="center"
+      justify="center"
+    >
+      <v-col
+        cols="12"
+        sm="8"
+        md="4"
+      >
         <v-card class="elevation-12 login-card">
-          <v-card-title class="headline text-center mb-4">欢迎登录</v-card-title>
+          <v-card-title class="headline text-center mb-4">
+            欢迎登录
+          </v-card-title>
           <v-card-text>
-            <v-form ref="loginForm" v-model="formValid" @submit.prevent="login">
+            <v-form
+              ref="loginForm"
+              v-model="formValid"
+              @submit.prevent="login"
+            >
               <v-text-field 
                 v-model="username"
                 label="用户名"
@@ -16,7 +32,7 @@
                 :rules="[v => !!v || '用户名不能为空']"
                 class="mb-4"
                 @keyup.enter="login"
-              ></v-text-field>
+              />
               <v-text-field 
                 v-model="password"
                 label="密码"
@@ -28,29 +44,32 @@
                 :rules="[v => !!v || '密码不能为空']"
                 class="mb-4"
                 @keyup.enter="login"
-              ></v-text-field>
+              />
               <div class="d-flex justify-space-between align-center mb-4">
                 <v-checkbox 
                   v-model="rememberPassword"
                   label="记住密码"
                   hide-details 
                   class="mt-0 pt-0"
-                ></v-checkbox>
+                />
               </div>
-              <div v-if="errorMessage" class="error-message mb-4">
+              <div
+                v-if="errorMessage"
+                class="error-message mb-4"
+              >
                 {{ errorMessage }}
               </div>
             </v-form>
           </v-card-text>
           <v-card-actions>
-            <v-spacer></v-spacer>
+            <v-spacer />
             <v-btn 
               color="primary"
-              @click="login"
-              block 
-              :loading="loading"
+              block
+              :loading="loading" 
               :disabled="!formValid || loading"
               height="48"
+              @click="login"
             >
               登录 
             </v-btn>

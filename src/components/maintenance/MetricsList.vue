@@ -2,7 +2,7 @@
   <v-card class="h-100">
     <v-card-title class="d-flex align-center">
       <span>维修数据指标</span>
-      <v-spacer></v-spacer>
+      <v-spacer />
       <v-text-field
         v-model="search"
         append-icon="mdi-magnify"
@@ -10,20 +10,26 @@
         single-line
         hide-details
         class="mx-4"
-      ></v-text-field>
+      />
       <v-btn 
-        color="primary" 
+        v-permission="'MAINT:WRITE'" 
+        color="primary"
         @click="$emit('add-metric')"
-        v-permission="'MAINT:WRITE'"
       >
-        <v-icon left>mdi-plus</v-icon>
+        <v-icon left>
+          mdi-plus
+        </v-icon>
         添加指标
       </v-btn>
     </v-card-title>
     
     <v-card-text>
       <v-row>
-        <v-col cols="12" sm="6" md="4">
+        <v-col
+          cols="12"
+          sm="6"
+          md="4"
+        >
           <v-select
             v-model="selectedLine"
             :items="lineTypes"
@@ -31,9 +37,13 @@
             variant="outlined"
             density="compact"
             clearable
-          ></v-select>
+          />
         </v-col>
-        <v-col cols="12" sm="6" md="4">
+        <v-col
+          cols="12"
+          sm="6"
+          md="4"
+        >
           <v-select
             v-model="selectedShift"
             :items="shiftTypes"
@@ -41,7 +51,7 @@
             variant="outlined"
             density="compact"
             clearable
-          ></v-select>
+          />
         </v-col>
       </v-row>
       
@@ -58,7 +68,7 @@
         class="elevation-1"
         :server-items-length="totalItems"
       >
-        <template v-slot:item.line="{ item }">
+        <template #item.line="{ item }">
           <v-chip
             :color="getLineColor(item.line)"
             size="small"
@@ -68,7 +78,7 @@
           </v-chip>
         </template>
         
-        <template v-slot:item.shift="{ item }">
+        <template #item.shift="{ item }">
           <v-chip
             :color="item.shift_code === 1 ? 'amber-darken-1' : 'blue-darken-3'"
             size="small"
@@ -78,11 +88,11 @@
           </v-chip>
         </template>
         
-        <template v-slot:item.shift_date="{ item }">
+        <template #item.shift_date="{ item }">
           {{ formatDate(item.shift_date) }}
         </template>
         
-        <template v-slot:item.plan_down_time="{ item }">
+        <template #item.plan_down_time="{ item }">
           <span :class="getTimeColor(item.plan_down_time, 60, 120, false)">
             {{ item.plan_down_time || 0 }}
           </span>
@@ -91,7 +101,7 @@
           </v-tooltip>
         </template>
         
-        <template v-slot:item.out_plan_down_time="{ item }">
+        <template #item.out_plan_down_time="{ item }">
           <span :class="getTimeColor(item.out_plan_down_time, 30, 60)">
             {{ item.out_plan_down_time || 0 }}
           </span>
@@ -100,7 +110,7 @@
           </v-tooltip>
         </template>
         
-        <template v-slot:item.availability="{ item }">
+        <template #item.availability="{ item }">
           {{ formatPercentage(calculateAvailability(item)) }}
           <v-tooltip activator="parent">
             可用率 = 实际运行时间/可用时间<br>
@@ -108,7 +118,7 @@
           </v-tooltip>
         </template>
         
-        <template v-slot:item.oee="{ item }">
+        <template #item.oee="{ item }">
           <span :class="getOEEColor(item.oee)">
             {{ formatPercentage(item.oee) }}
           </span>
@@ -117,7 +127,7 @@
           </v-tooltip>
         </template>
         
-        <template v-slot:item.mttr="{ item }">
+        <template #item.mttr="{ item }">
           <span :class="getMTTRColor(calculateMTTR(item))">
             {{ formatTime(calculateMTTR(item)) }}
           </span>
@@ -126,7 +136,7 @@
           </v-tooltip>
         </template>
         
-        <template v-slot:item.mtbf="{ item }">
+        <template #item.mtbf="{ item }">
           <span :class="getMTBFColor(calculateMTBF(item))">
             {{ formatTime(calculateMTBF(item)) }}
           </span>
@@ -136,37 +146,41 @@
           </v-tooltip>
         </template>
         
-        <template v-slot:item.actions="{ item }">
+        <template #item.actions="{ item }">
           <v-btn
+            v-permission="'MAINT:WRITE'"
             icon
             variant="text"
             size="small"
             color="primary"
             @click="$emit('edit-metric', item)"
-            v-permission="'MAINT:WRITE'"
           >
             <v-icon>mdi-pencil</v-icon>
           </v-btn>
           <v-btn
+            v-permission="'MAINT:ADMIN'"
             icon
             variant="text"
             size="small"
             color="error"
             @click="confirmDelete(item)"
-            v-permission="'MAINT:ADMIN'"
           >
             <v-icon>mdi-delete</v-icon>
           </v-btn>
         </template>
         
-        <template v-slot:no-data>
+        <template #no-data>
           <div class="text-center py-4">
-            <v-icon icon="mdi-alert-circle-outline" size="large" class="mb-2"></v-icon>
+            <v-icon
+              icon="mdi-alert-circle-outline"
+              size="large"
+              class="mb-2"
+            />
             <div>暂无数据</div>
           </div>
         </template>
         
-        <template v-slot:bottom>
+        <template #bottom>
           <div class="d-flex align-center">
             <div class="flex-grow-1 text-caption me-2">
               每班总工作时间: 720分钟 (12小时)
@@ -177,9 +191,9 @@
               v-model="currentPage"
               :length="pageCount"
               :total-visible="7"
-              @update:model-value="changePage"
               rounded
-            ></v-pagination>
+              @update:model-value="changePage"
+            />
             
             <!-- 显示分页信息 -->
             <div class="text-caption ms-2">
@@ -191,16 +205,33 @@
     </v-card-text>
     
     <!-- 删除确认对话框 -->
-    <v-dialog v-model="deleteDialog" max-width="400">
+    <v-dialog
+      v-model="deleteDialog"
+      max-width="400"
+    >
       <v-card>
-        <v-card-title class="headline">确认删除</v-card-title>
+        <v-card-title class="headline">
+          确认删除
+        </v-card-title>
         <v-card-text>
           您确定要删除这条维修数据指标吗？此操作不可撤销。
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="grey darken-1" text @click="deleteDialog = false">取消</v-btn>
-          <v-btn color="red darken-1" text @click="deleteItem">删除</v-btn>
+          <v-spacer />
+          <v-btn
+            color="grey darken-1"
+            text
+            @click="deleteDialog = false"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="red darken-1"
+            text
+            @click="deleteItem"
+          >
+            删除
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

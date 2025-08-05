@@ -6,24 +6,35 @@
   >
     <template #header-actions>
       <v-btn
+        v-permission="'MAINT:WRITE'"
         color="primary"
         prepend-icon="mdi-plus"
         @click="openPrDialog"
-        v-permission="'MAINT:WRITE'"
       >
         新建PR
       </v-btn>
     </template>
 
     <!-- 筛选条件 -->
-    <v-card class="mb-4" rounded="lg">
+    <v-card
+      class="mb-4"
+      rounded="lg"
+    >
       <v-card-title class="d-flex align-center">
-        <v-icon color="info" class="mr-2">mdi-filter-variant</v-icon>
+        <v-icon
+          color="info"
+          class="mr-2"
+        >
+          mdi-filter-variant
+        </v-icon>
         <span>筛选条件</span>
       </v-card-title>
       <v-card-text>
         <v-row>
-          <v-col cols="12" md="3">
+          <v-col
+            cols="12"
+            md="3"
+          >
             <v-select
               v-model="filters.status_id"
               :items="statusOptions"
@@ -36,7 +47,10 @@
               @update:model-value="loadPrList"
             />
           </v-col>
-          <v-col cols="12" md="3">
+          <v-col
+            cols="12"
+            md="3"
+          >
             <v-select
               v-model="filters.pr_type_id"
               :items="typeOptions"
@@ -49,7 +63,10 @@
               @update:model-value="loadPrList"
             />
           </v-col>
-          <v-col cols="12" md="3">
+          <v-col
+            cols="12"
+            md="3"
+          >
             <v-select
               v-model="filters.priority_id"
               :items="priorityOptions"
@@ -62,7 +79,10 @@
               @update:model-value="loadPrList"
             />
           </v-col>
-          <v-col cols="12" md="3">
+          <v-col
+            cols="12"
+            md="3"
+          >
             <v-text-field
               v-model="filters.search"
               label="搜索"
@@ -82,119 +102,132 @@
     <!-- PR列表 -->
     <v-card rounded="lg">
       <v-card-title class="d-flex align-center">
-        <v-icon color="info" class="mr-2">mdi-format-list-bulleted</v-icon>
+        <v-icon
+          color="info"
+          class="mr-2"
+        >
+          mdi-format-list-bulleted
+        </v-icon>
         <span>PR列表</span>
         <v-spacer />
-        <v-chip v-if="prList.length > 0" color="info" variant="outlined" size="small">
+        <v-chip
+          v-if="prList.length > 0"
+          color="info"
+          variant="outlined"
+          size="small"
+        >
           共 {{ pagination.total }} 条记录
         </v-chip>
       </v-card-title>
       <v-card-text>
-            <v-data-table-server
-              v-model:items-per-page="pagination.page_size"
-              v-model:page="pagination.page"
-              :headers="headers"
-              :items="prList"
-              :items-length="pagination.total"
-              :loading="loading"
-              item-value="id"
-              @update:options="handleTableUpdate"
-              density="compact"
-              hover
-              class="unified-table"
+        <v-data-table-server
+          v-model:items-per-page="pagination.page_size"
+          v-model:page="pagination.page"
+          :headers="headers"
+          :items="prList"
+          :items-length="pagination.total"
+          :loading="loading"
+          item-value="id"
+          density="compact"
+          hover
+          class="unified-table"
+          @update:options="handleTableUpdate"
+        >
+          <!-- PR编号 -->
+          <template #item.pr_number="{ item }">
+            <v-chip
+              color="primary"
+              variant="outlined"
+              size="small"
+              class="cursor-pointer"
+              @click="viewPrDetail(item)"
             >
-              <!-- PR编号 -->
-              <template v-slot:item.pr_number="{ item }">
-                <v-chip
-                  color="primary"
-                  variant="outlined"
-                  size="small"
-                  @click="viewPrDetail(item)"
-                  class="cursor-pointer"
-                >
-                  {{ item.pr_number }}
-                </v-chip>
-              </template>
+              {{ item.pr_number }}
+            </v-chip>
+          </template>
 
-              <!-- 状态 -->
-              <template v-slot:item.status="{ item }">
-                <v-chip
-                  :color="getStatusColor(item.status)"
-                  size="small"
-                  variant="flat"
-                >
-                  {{ item.status?.name }}
-                </v-chip>
-              </template>
+          <!-- 状态 -->
+          <template #item.status="{ item }">
+            <v-chip
+              :color="getStatusColor(item.status)"
+              size="small"
+              variant="flat"
+            >
+              {{ item.status?.name }}
+            </v-chip>
+          </template>
 
-              <!-- 类型 -->
-              <template v-slot:item.pr_type="{ item }">
-                <v-chip
-                  color="info"
-                  variant="outlined"
-                  size="small"
-                >
-                  {{ item.pr_type?.name }}
-                </v-chip>
-              </template>
+          <!-- 类型 -->
+          <template #item.pr_type="{ item }">
+            <v-chip
+              color="info"
+              variant="outlined"
+              size="small"
+            >
+              {{ item.pr_type?.name }}
+            </v-chip>
+          </template>
 
-              <!-- 优先级 -->
-              <template v-slot:item.priority="{ item }">
-                <v-chip
-                  :color="getPriorityColor(item.priority)"
-                  size="small"
-                  variant="flat"
-                >
-                  {{ item.priority?.name }}
-                </v-chip>
-              </template>
+          <!-- 优先级 -->
+          <template #item.priority="{ item }">
+            <v-chip
+              :color="getPriorityColor(item.priority)"
+              size="small"
+              variant="flat"
+            >
+              {{ item.priority?.name }}
+            </v-chip>
+          </template>
 
-              <!-- 申请人 -->
-              <template v-slot:item.requester="{ item }">
-                {{ item.requester?.name }}
-              </template>
+          <!-- 申请人 -->
+          <template #item.requester="{ item }">
+            {{ item.requester?.name }}
+          </template>
 
-              <!-- 申请日期 -->
-              <template v-slot:item.requested_date="{ item }">
-                {{ formatDate(item.requested_date) }}
-              </template>
+          <!-- 申请日期 -->
+          <template #item.requested_date="{ item }">
+            {{ formatDate(item.requested_date) }}
+          </template>
 
-              <!-- 预估成本 -->
-              <template v-slot:item.estimated_cost="{ item }">
-                <span v-if="item.estimated_cost">
-                  ¥{{ item.estimated_cost.toLocaleString() }}
-                </span>
-                <span v-else class="text-medium-emphasis">-</span>
-              </template>
+          <!-- 预估成本 -->
+          <template #item.estimated_cost="{ item }">
+            <span v-if="item.estimated_cost">
+              ¥{{ item.estimated_cost.toLocaleString() }}
+            </span>
+            <span
+              v-else
+              class="text-medium-emphasis"
+            >-</span>
+          </template>
 
-              <!-- 操作 -->
-              <template v-slot:item.actions="{ item }">
-                <v-btn
-                  icon="mdi-eye"
-                  size="small"
-                  variant="text"
-                  @click="viewPrDetail(item)"
-                  title="查看详情"
-                />
-                <v-btn
-                  v-if="canEdit(item)"
-                  icon="mdi-pencil"
-                  size="small"
-                  variant="text"
-                  @click="editPr(item)"
-                  title="编辑"
-                />
-                <v-btn
-                  v-if="canDelete(item)"
-                  icon="mdi-delete"
-                  size="small"
-                  variant="text"
-                  color="error"
-                  @click="deletePr(item)"
-                  title="删除"
-                />
-              </template>
-            </v-data-table-server>
+          <!-- 操作 -->
+          <template #item.actions="{ item }">
+            <v-btn
+              icon="mdi-eye"
+              size="small"
+              variant="text"
+              title="查看详情"
+              @click="viewPrDetail(item)"
+            />
+            <v-btn
+              v-if="canEdit(item)"
+              icon="mdi-pencil"
+              size="small"
+              variant="text"
+              title="编辑"
+              @click="editPr(item)"
+            />
+            <v-btn
+              v-if="canDelete(item)"
+              icon="mdi-delete"
+              size="small"
+              variant="text"
+              color="error"
+              title="删除"
+              @click="deletePr(item)"
+            />
+          </template>
+        </v-data-table-server>
       </v-card-text>
     </v-card>
 
@@ -221,7 +254,10 @@
     />
 
     <!-- 删除确认对话框 -->
-    <v-dialog v-model="deleteDialog" max-width="400">
+    <v-dialog
+      v-model="deleteDialog"
+      max-width="400"
+    >
       <v-card>
         <v-card-title>确认删除</v-card-title>
         <v-card-text>
@@ -229,8 +265,16 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn @click="deleteDialog = false">取消</v-btn>
-          <v-btn color="error" @click="confirmDelete" :loading="deleting">删除</v-btn>
+          <v-btn @click="deleteDialog = false">
+            取消
+          </v-btn>
+          <v-btn
+            color="error"
+            :loading="deleting"
+            @click="confirmDelete"
+          >
+            删除
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

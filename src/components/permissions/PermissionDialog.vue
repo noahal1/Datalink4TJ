@@ -27,11 +27,14 @@
                   :rules="[v => !!v || '权限代码不能为空']"
                   hint="权限代码，例如：access_dashboard、manage_users"
                   persistent-hint
-                ></v-text-field>
+                />
               </v-col>
               
               <!-- 路由选择 -->
-              <v-col cols="12" sm="6">
+              <v-col
+                cols="12"
+                sm="6"
+              >
                 <v-select
                   v-model="localPermission.route_id"
                   :items="routeOptions"
@@ -41,11 +44,14 @@
                   hint="将权限与路由关联"
                   persistent-hint
                   clearable
-                ></v-select>
+                />
               </v-col>
               
               <!-- 角色选择 -->
-              <v-col cols="12" sm="6">
+              <v-col
+                cols="12"
+                sm="6"
+              >
                 <v-select
                   v-model="localPermission.role_id"
                   :items="roleOptions"
@@ -55,7 +61,7 @@
                   hint="将权限分配给角色"
                   persistent-hint
                   clearable
-                ></v-select>
+                />
               </v-col>
               
               <!-- 权限描述 -->
@@ -65,7 +71,7 @@
                   label="描述"
                   hint="权限的详细描述"
                   persistent-hint
-                ></v-text-field>
+                />
               </v-col>
               
               <!-- 权限说明 -->
@@ -86,20 +92,20 @@
       </v-card-text>
       
       <v-card-actions>
-        <v-spacer></v-spacer>
+        <v-spacer />
         <v-btn
           color="grey-darken-1"
           variant="text"
-          @click="closeDialog"
           :disabled="loading"
+          @click="closeDialog"
         >
           取消
         </v-btn>
         <v-btn
           color="primary"
-          @click="savePermission"
           :loading="loading"
           :disabled="!formValid || loading"
+          @click="savePermission"
         >
           保存
         </v-btn>

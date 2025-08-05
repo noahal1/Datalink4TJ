@@ -2,7 +2,7 @@
   <v-card class="permission-list-card">
     <v-card-title class="d-flex align-center">
       <span>路由权限列表</span>
-      <v-spacer></v-spacer>
+      <v-spacer />
       <v-text-field
         v-model="search"
         append-icon="mdi-magnify"
@@ -12,9 +12,15 @@
         density="compact"
         class="ml-2"
         style="max-width: 300px;"
-      ></v-text-field>
-      <v-btn color="primary" class="ml-2" @click="$emit('add-permission')">
-        <v-icon left>mdi-plus</v-icon>
+      />
+      <v-btn
+        color="primary"
+        class="ml-2"
+        @click="$emit('add-permission')"
+      >
+        <v-icon left>
+          mdi-plus
+        </v-icon>
         添加权限
       </v-btn>
     </v-card-title>
@@ -30,7 +36,7 @@
       @update:options="loadItems"
     >
       <!-- 权限代码列 -->
-      <template v-slot:item.permission_code="{ item }">
+      <template #item.permission_code="{ item }">
         <v-chip
           color="info"
           text-color="white"
@@ -41,30 +47,43 @@
       </template>
       
       <!-- 路由列 -->
-      <template v-slot:item.route="{ item }">
+      <template #item.route="{ item }">
         <span v-if="item.route">
-          <v-chip color="purple" size="small" class="mr-1">
+          <v-chip
+            color="purple"
+            size="small"
+            class="mr-1"
+          >
             {{ item.route.name }}
           </v-chip>
           <span class="text-caption">{{ item.route.path }}</span>
         </span>
-        <span v-else class="text-grey">未指定路由</span>
+        <span
+          v-else
+          class="text-grey"
+        >未指定路由</span>
       </template>
       
       <!-- 角色列 -->
-      <template v-slot:item.role="{ item }">
+      <template #item.role="{ item }">
         <span v-if="item.role">{{ item.role.name }}</span>
-        <span v-else class="text-grey">未指定角色</span>
+        <span
+          v-else
+          class="text-grey"
+        >未指定角色</span>
       </template>
       
       <!-- 描述列 -->
-      <template v-slot:item.description="{ item }">
+      <template #item.description="{ item }">
         <span v-if="item.description">{{ item.description }}</span>
-        <span v-else class="text-grey">无描述</span>
+        <span
+          v-else
+          class="text-grey"
+        >无描述</span>
       </template>
       
       <!-- 操作列 -->
-      <template v-slot:item.actions="{ item }">
+      <template #item.actions="{ item }">
         <v-btn
           icon
           variant="text"

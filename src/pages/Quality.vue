@@ -8,7 +8,14 @@
     <div class="stats-row mb-4">
       <v-row>
         <!-- 报废率统计卡片 - 为每条线体单独显示报废率 -->
-        <v-col cols="12" sm="6" md="4" lg="2" v-for="line in standardFields" :key="line">
+        <v-col
+          v-for="line in standardFields"
+          :key="line"
+          cols="12"
+          sm="6"
+          md="4"
+          lg="2"
+        >
           <unified-stats-card
             :title="line.toUpperCase() + ' 报废率'"
             :value="getLineScrapRate(line)"
@@ -17,7 +24,12 @@
             show-progress
           />
         </v-col>
-        <v-col cols="12" sm="6" md="4" lg="2">
+        <v-col
+          cols="12"
+          sm="6"
+          md="4"
+          lg="2"
+        >
           <unified-stats-card
             title="总报废率"
             :value="scrapRate"
@@ -32,26 +44,43 @@
     <!-- 月度产线总数输入区域 -->
     <div class="stats-row mb-4">
       <v-col cols="12">
-        <v-card class="mb-4" rounded="lg">
+        <v-card
+          class="mb-4"
+          rounded="lg"
+        >
           <v-card-title class="d-flex align-center">
-            <v-icon color="primary" class="mr-2">mdi-calendar-month</v-icon>
+            <v-icon
+              color="primary"
+              class="mr-2"
+            >
+              mdi-calendar-month
+            </v-icon>
             <span>月度生产总数</span>
-            <v-spacer></v-spacer>
+            <v-spacer />
             <v-btn
               v-if="isMonthlyTotalChanged"
               color="primary"
               variant="text"
-              @click="saveMonthlyTotals"
               :loading="isSavingMonthlyTotals"
               size="small"
+              @click="saveMonthlyTotals"
             >
-              <v-icon class="mr-1">mdi-content-save</v-icon>
+              <v-icon class="mr-1">
+                mdi-content-save
+              </v-icon>
               保存总数
             </v-btn>
           </v-card-title>
           <v-card-text>
             <v-row>
-              <v-col cols="12" sm="6" md="4" lg="2.4" v-for="line in standardFields" :key="line">
+              <v-col
+                v-for="line in standardFields"
+                :key="line"
+                cols="12"
+                sm="6"
+                md="4"
+                lg="2.4"
+              >
                 <v-text-field
                   v-model="monthlyTotals[line]"
                   :label="line.toUpperCase() + ' 月度总数'"
@@ -61,7 +90,7 @@
                   hide-details
                   class="monthly-total-input"
                   @input="handleMonthlyTotalInput"
-                ></v-text-field>
+                />
               </v-col>
             </v-row>
           </v-card-text>
@@ -76,47 +105,88 @@
           v-model="selectedMonth"
           mandatory
           color="primary"
-          @update:modelValue="handleMonthChange"
           class="month-selector mr-4"
           density="comfortable"
           rounded="lg"
+          @update:model-value="handleMonthChange"
         >
-          <v-btn value="1">一月</v-btn>
-          <v-btn value="2">二月</v-btn>
-          <v-btn value="3">三月</v-btn>
-          <v-btn value="4">四月</v-btn>
-          <v-btn value="5">五月</v-btn>
-          <v-btn value="6">六月</v-btn>
-          <v-btn value="7">七月</v-btn>
-          <v-btn value="8">八月</v-btn>
-          <v-btn value="9">九月</v-btn>
-          <v-btn value="10">十月</v-btn>
-          <v-btn value="11">十一月</v-btn>
-          <v-btn value="12">十二月</v-btn>
+          <v-btn value="1">
+            一月
+          </v-btn>
+          <v-btn value="2">
+            二月
+          </v-btn>
+          <v-btn value="3">
+            三月
+          </v-btn>
+          <v-btn value="4">
+            四月
+          </v-btn>
+          <v-btn value="5">
+            五月
+          </v-btn>
+          <v-btn value="6">
+            六月
+          </v-btn>
+          <v-btn value="7">
+            七月
+          </v-btn>
+          <v-btn value="8">
+            八月
+          </v-btn>
+          <v-btn value="9">
+            九月
+          </v-btn>
+          <v-btn value="10">
+            十月
+          </v-btn>
+          <v-btn value="11">
+            十一月
+          </v-btn>
+          <v-btn value="12">
+            十二月
+          </v-btn>
         </v-btn-toggle>
       </div>
       
-      <v-spacer></v-spacer>
+      <v-spacer />
       
       <!-- 工具栏 -->    
-      <v-btn-toggle v-model="dataView" density="comfortable" color="primary">
-        <v-btn value="regular" prepend-icon="mdi-table">GP12</v-btn>
-        <v-btn value="scrap" prepend-icon="mdi-delete">报废数</v-btn>
+      <v-btn-toggle
+        v-model="dataView"
+        density="comfortable"
+        color="primary"
+      >
+        <v-btn
+          value="regular"
+          prepend-icon="mdi-table"
+        >
+          GP12
+        </v-btn>
+        <v-btn
+          value="scrap"
+          prepend-icon="mdi-delete"
+        >
+          报废数
+        </v-btn>
       </v-btn-toggle>
       
       <v-btn
         prepend-icon="mdi-refresh"
         variant="text"
         class="ml-2"
-        @click="refreshData"
         :loading="isLoading"
+        @click="refreshData"
       >
         刷新
       </v-btn>
     </div>
     
     <!-- 加载指示器 -->
-    <loading-overlay :loading="isLoading" message="加载数据中..." />
+    <loading-overlay
+      :loading="isLoading"
+      message="加载数据中..."
+    />
     
     <!-- 数据表格容器 - 添加自适应高度容器 -->
     <div class="table-container">
@@ -128,16 +198,32 @@
 
         hover
       >
-        <template v-slot:item="{ item }">
+        <template #item="{ item }">
           <tr :class="{'highlight-weekend': isWeekend(item.date)}">
-            <td class="text-center font-weight-medium" style="min-width: 60px">{{ formatDate(item.date) }}</td>
-            <td class="text-center" style="min-width: 80px">{{ item.welding }}</td>
-            <td class="text-center" style="min-width: 80px">{{ item.stamping }}</td>
+            <td
+              class="text-center font-weight-medium"
+              style="min-width: 60px"
+            >
+              {{ formatDate(item.date) }}
+            </td>
+            <td
+              class="text-center"
+              style="min-width: 80px"
+            >
+              {{ item.welding }}
+            </td>
+            <td
+              class="text-center"
+              style="min-width: 80px"
+            >
+              {{ item.stamping }}
+            </td>
             <!-- 正常品或报废品字段 -->
-            <td v-for="field in dataView === 'regular' ? standardFields : scrapFields" 
-                :key="field" 
-                style="min-width: 90px"
-                class="editable-cell"
+            <td
+              v-for="field in dataView === 'regular' ? standardFields : scrapFields" 
+              :key="field" 
+              style="min-width: 90px"
+              class="editable-cell"
             >
               <v-text-field
                 v-model="item[field]"
@@ -156,15 +242,17 @@
     </div>
     
     <v-btn
-      size="large"
       v-if="isDataChanged"
+      size="large"
       class="floating-button"
       color="primary"
       rounded="pill"
       elevation="3"
       @click="confirmChanges"
     >
-      <v-icon class="mr-1">mdi-content-save</v-icon>
+      <v-icon class="mr-1">
+        mdi-content-save
+      </v-icon>
       保存更改
     </v-btn>
   </unified-page-template>

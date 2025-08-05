@@ -1,6 +1,13 @@
 <template>
-  <transition name="fade" appear>
-    <div v-if="loading" class="loading-overlay" :class="{ 'loading-overlay--blur': blur }">
+  <transition
+    name="fade"
+    appear
+  >
+    <div
+      v-if="loading"
+      class="loading-overlay"
+      :class="{ 'loading-overlay--blur': blur }"
+    >
       <div class="loading-content">
         <div class="loading-spinner">
           <v-progress-circular
@@ -9,15 +16,18 @@
             indeterminate
             color="primary"
             class="loading-circle"
-          ></v-progress-circular>
-          <div class="loading-pulse"></div>
+          />
+          <div class="loading-pulse" />
         </div>
-        <div v-if="message" class="loading-text">
+        <div
+          v-if="message"
+          class="loading-text"
+        >
           <span class="loading-text-content">{{ message }}</span>
           <div class="loading-dots">
-            <span></span>
-            <span></span>
-            <span></span>
+            <span />
+            <span />
+            <span />
           </div>
         </div>
       </div>

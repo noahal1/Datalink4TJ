@@ -2,17 +2,34 @@
   <v-container fluid>
     <v-card elevation="3">
       <v-card-title class="d-flex align-center py-4 px-6">
-        <v-icon class="mr-2" color="primary">mdi-matrix</v-icon>
-        <div class="text-h5 font-weight-medium">角色权限矩阵</div>
-        <v-spacer></v-spacer>
-        <v-btn color="primary" @click="refreshData" :loading="loading">
-          <v-icon start>mdi-refresh</v-icon>
+        <v-icon
+          class="mr-2"
+          color="primary"
+        >
+          mdi-matrix
+        </v-icon>
+        <div class="text-h5 font-weight-medium">
+          角色权限矩阵
+        </div>
+        <v-spacer />
+        <v-btn
+          color="primary"
+          :loading="loading"
+          @click="refreshData"
+        >
+          <v-icon start>
+            mdi-refresh
+          </v-icon>
           刷新
         </v-btn>
       </v-card-title>
       
       <v-card-text class="pa-6">
-        <v-alert v-if="!roles.length || !permissions.length" type="warning" class="mb-4">
+        <v-alert
+          v-if="!roles.length || !permissions.length"
+          type="warning"
+          class="mb-4"
+        >
           {{ !roles.length ? '没有找到角色数据' : '没有找到权限数据' }}
         </v-alert>
         
@@ -25,31 +42,51 @@
           class="elevation-1"
           density="compact"
         >
-          <template v-slot:item="{ item }">
+          <template #item="{ item }">
             <tr>
-              <td class="font-weight-medium">{{ item.module }}</td>
-              <td class="font-weight-medium">{{ item.level }}</td>
-              <td v-for="role in roles" :key="role.id" class="text-center">
+              <td class="font-weight-medium">
+                {{ item.module }}
+              </td>
+              <td class="font-weight-medium">
+                {{ item.level }}
+              </td>
+              <td
+                v-for="role in roles"
+                :key="role.id"
+                class="text-center"
+              >
                 <v-checkbox
                   :model-value="hasPermission(role.id, item.id)"
-                  @update:model-value="togglePermission(role.id, item.id, $event)"
                   :loading="saving"
                   hide-details
                   density="compact"
+                  @update:model-value="togglePermission(role.id, item.id, $event)"
                 />
               </td>
             </tr>
           </template>
         </v-data-table>
         
-        <v-alert v-if="hasChanges" type="info" class="mt-4">
+        <v-alert
+          v-if="hasChanges"
+          type="info"
+          class="mt-4"
+        >
           <div class="d-flex align-center">
             <span>有未保存的更改</span>
-            <v-spacer></v-spacer>
-            <v-btn color="success" @click="saveChanges" :loading="saving">
+            <v-spacer />
+            <v-btn
+              color="success"
+              :loading="saving"
+              @click="saveChanges"
+            >
               保存更改
             </v-btn>
-            <v-btn color="grey" @click="cancelChanges" class="ml-2">
+            <v-btn
+              color="grey"
+              class="ml-2"
+              @click="cancelChanges"
+            >
               取消
             </v-btn>
           </div>

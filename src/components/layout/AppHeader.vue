@@ -1,12 +1,24 @@
 <template>
   <!-- 顶部应用栏 -->
-  <v-app-bar app elevation="2" class="app-header">
+  <v-app-bar
+    app
+    elevation="2"
+    class="app-header"
+  >
     <v-container fluid>
-      <v-row align="center" justify="space-between" no-gutters>
+      <v-row
+        align="center"
+        justify="space-between"
+        no-gutters
+      >
         <!-- 左侧Logo区域 -->
         <v-col cols="auto">
           <div class="d-flex align-center">
-            <img src="@/assets/logo.png" alt="Logo" class="app-logo">
+            <img
+              src="@/assets/logo.png"
+              alt="Logo"
+              class="app-logo"
+            >
             <span class="text-h6 font-weight-medium ml-2 app-title d-none d-sm-flex">
               麦格纳(天津)数据管理系统
             </span>
@@ -26,41 +38,80 @@
                   transition="slide-y-transition"
                   content-class="user-menu-content"
                 >
-                  <template v-slot:activator="{ props }">
+                  <template #activator="{ props }">
                     <v-btn 
                       variant="text" 
                       v-bind="props"
                       class="user-menu-btn"
                     >
-                      <v-avatar size="32" color="primary" class="mr-2">
+                      <v-avatar
+                        size="32"
+                        color="primary"
+                        class="mr-2"
+                      >
                         <span class="text-white text-subtitle-2">{{ userInitials }}</span>
                       </v-avatar>
                       <span class="d-none d-sm-flex user-name">{{ userStore.user }}</span>
-                      <v-icon size="small" class="ml-1">mdi-chevron-down</v-icon>
+                      <v-icon
+                        size="small"
+                        class="ml-1"
+                      >
+                        mdi-chevron-down
+                      </v-icon>
                     </v-btn>
                   </template>
-                  <v-card min-width="240" elevation="4" rounded="lg" class="user-menu-card">
+                  <v-card
+                    min-width="240"
+                    elevation="4"
+                    rounded="lg"
+                    class="user-menu-card"
+                  >
                     <!-- 用户信息头部 -->
                     <div class="pa-4 user-menu-header">
-                      <div class="text-h6">{{ userStore.user }}</div>
-                      <div class="text-subtitle-2">{{ getDepartmentName(userStore.department) }} 部门</div>
+                      <div class="text-h6">
+                        {{ userStore.user }}
+                      </div>
+                      <div class="text-subtitle-2">
+                        {{ getDepartmentName(userStore.department) }} 部门
+                      </div>
                     </div>
                     
-                    <v-divider></v-divider>
+                    <v-divider />
                     
                     <!-- 快捷菜单选项 -->
                     <v-list density="compact">
-                      <v-list-item to="/profile" prepend-icon="mdi-account-circle" title="个人资料"></v-list-item>
-                      <v-list-item to="/settings" prepend-icon="mdi-cog" title="设置"></v-list-item>
-                      <v-list-item @click="toggleTheme" prepend-icon="mdi-theme-light-dark" title="切换主题"></v-list-item>
+                      <v-list-item
+                        to="/profile"
+                        prepend-icon="mdi-account-circle"
+                        title="个人资料"
+                      />
+                      <v-list-item
+                        to="/settings"
+                        prepend-icon="mdi-cog"
+                        title="设置"
+                      />
+                      <v-list-item
+                        prepend-icon="mdi-theme-light-dark"
+                        title="切换主题"
+                        @click="toggleTheme"
+                      />
                     </v-list>
                     
-                    <v-divider></v-divider>
+                    <v-divider />
                     
                     <v-list density="compact">
-                      <v-list-item link @click="logout" class="logout-item">
-                        <template v-slot:prepend>
-                          <v-icon size="small" color="error">mdi-logout</v-icon>
+                      <v-list-item
+                        link
+                        class="logout-item"
+                        @click="logout"
+                      >
+                        <template #prepend>
+                          <v-icon
+                            size="small"
+                            color="error"
+                          >
+                            mdi-logout
+                          </v-icon>
                         </template>
                         <v-list-item-title class="text-error">
                           登出
@@ -71,7 +122,12 @@
                 </v-menu>
               </div>
               
-              <v-btn v-else variant="text" to="/login" prepend-icon="mdi-login">
+              <v-btn
+                v-else
+                variant="text"
+                to="/login"
+                prepend-icon="mdi-login"
+              >
                 登录
               </v-btn>
             </div>
@@ -82,7 +138,7 @@
         <v-app-bar-nav-icon 
           class="d-md-none" 
           @click="toggleDrawer"
-        ></v-app-bar-nav-icon>
+        />
       </v-row>
     </v-container>
   </v-app-bar>

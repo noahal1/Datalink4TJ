@@ -1,15 +1,22 @@
 <template>
   <v-card class="h-100 elevation-2">
     <v-card-title class="d-flex align-center">
-      <v-icon class="mr-2">mdi-calendar-week</v-icon>
+      <v-icon class="mr-2">
+        mdi-calendar-week
+      </v-icon>
       本周维修计划
-      <v-spacer></v-spacer>
-      <v-btn color="success" size="small" prepend-icon="mdi-file-export" @click="$emit('export')">
+      <v-spacer />
+      <v-btn
+        color="success"
+        size="small"
+        prepend-icon="mdi-file-export"
+        @click="$emit('export')"
+      >
         导出
       </v-btn>
     </v-card-title>
     
-    <v-divider></v-divider>
+    <v-divider />
     
     <v-data-table
       :headers="headers"
@@ -17,11 +24,11 @@
       class="elevation-0"
       density="compact"
     >
-      <template v-slot:item.date="{ item }">
+      <template #item.date="{ item }">
         {{ formatDate(item.date) }}
       </template>
       
-      <template v-slot:item.type="{ item }">
+      <template #item.type="{ item }">
         <v-chip
           :color="getTaskTypeColor(item.type)"
           size="small"
@@ -31,7 +38,7 @@
         </v-chip>
       </template>
       
-      <template v-slot:item.solved="{ item }">
+      <template #item.solved="{ item }">
         <v-icon
           :color="item.solved ? 'success' : 'grey'"
         >
@@ -39,10 +46,17 @@
         </v-icon>
       </template>
       
-      <template v-slot:no-data>
+      <template #no-data>
         <div class="text-center py-4">
-          <v-icon size="40" color="grey-lighten-1">mdi-calendar-blank</v-icon>
-          <div class="mt-2 text-body-2 text-grey">本周没有维修计划</div>
+          <v-icon
+            size="40"
+            color="grey-lighten-1"
+          >
+            mdi-calendar-blank
+          </v-icon>
+          <div class="mt-2 text-body-2 text-grey">
+            本周没有维修计划
+          </div>
         </div>
       </template>
     </v-data-table>

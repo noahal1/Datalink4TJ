@@ -4,13 +4,25 @@
     icon="mdi-shield-account"
     color="primary"
   >
-    <v-tabs v-model="activeTab" bg-color="primary">
-      <v-tab value="roles">角色管理</v-tab>
-      <v-tab value="route-permissions">路由权限矩阵</v-tab>
-      <v-tab value="permission-codes">权限代码</v-tab>
+    <v-tabs
+      v-model="activeTab"
+      bg-color="primary"
+    >
+      <v-tab value="roles">
+        角色管理
+      </v-tab>
+      <v-tab value="route-permissions">
+        路由权限矩阵
+      </v-tab>
+      <v-tab value="permission-codes">
+        权限代码
+      </v-tab>
     </v-tabs>
     
-    <v-window v-model="activeTab" class="mt-4">
+    <v-window
+      v-model="activeTab"
+      class="mt-4"
+    >
       <!-- 角色管理标签页 -->
       <v-window-item value="roles">
         <v-container>

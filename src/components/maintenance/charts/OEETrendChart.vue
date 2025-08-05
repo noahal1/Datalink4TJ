@@ -3,23 +3,50 @@
     <v-card>
       <v-card-title class="d-flex align-center">
         <span>OEE和设备可动率趋势</span>
-        <v-spacer></v-spacer>
-        <v-chip v-if="chartData.length > 0" color="primary" size="small" class="ml-2">
+        <v-spacer />
+        <v-chip
+          v-if="chartData.length > 0"
+          color="primary"
+          size="small"
+          class="ml-2"
+        >
           {{ chartData.length }} 条数据
         </v-chip>
       </v-card-title>
-      <v-card-subtitle v-if="chartData.length === 0 && !loading" class="text-error">
-        <v-icon small class="mr-1">mdi-alert</v-icon>
+      <v-card-subtitle
+        v-if="chartData.length === 0 && !loading"
+        class="text-error"
+      >
+        <v-icon
+          small
+          class="mr-1"
+        >
+          mdi-alert
+        </v-icon>
         未找到符合条件的数据
       </v-card-subtitle>
       <v-card-text class="position-relative">
         <!-- 加载状态指示器 -->
-        <div v-if="loading" class="chart-loading-overlay d-flex justify-center align-center">
-          <v-progress-circular indeterminate color="primary" class="me-2"></v-progress-circular>
+        <div
+          v-if="loading"
+          class="chart-loading-overlay d-flex justify-center align-center"
+        >
+          <v-progress-circular
+            indeterminate
+            color="primary"
+            class="me-2"
+          />
           <span>加载数据中...</span>
         </div>
-        <div id="oee-chart" style="height: 300px;">
-          <v-skeleton-loader v-if="loading" type="image" height="300"></v-skeleton-loader>
+        <div
+          id="oee-chart"
+          style="height: 300px;"
+        >
+          <v-skeleton-loader
+            v-if="loading"
+            type="image"
+            height="300"
+          />
           <v-chart 
             v-else 
             class="chart" 

@@ -9,7 +9,10 @@
     >
       <v-card>
         <v-card-title :class="['text-h5', confirmDialog.titleClass]">
-          <v-icon v-if="confirmDialog.icon" class="mr-2">
+          <v-icon
+            v-if="confirmDialog.icon"
+            class="mr-2"
+          >
             {{ confirmDialog.icon }}
           </v-icon>
           {{ confirmDialog.title }}
@@ -20,7 +23,7 @@
         </v-card-text>
         
         <v-card-actions>
-          <v-spacer></v-spacer>
+          <v-spacer />
           <v-btn
             variant="text"
             @click="handleConfirmCancel"
@@ -45,7 +48,10 @@
     >
       <v-card>
         <v-card-title :class="['text-h5', alertDialog.titleClass]">
-          <v-icon v-if="alertDialog.icon" class="mr-2">
+          <v-icon
+            v-if="alertDialog.icon"
+            class="mr-2"
+          >
             {{ alertDialog.icon }}
           </v-icon>
           {{ alertDialog.title }}
@@ -56,7 +62,7 @@
         </v-card-text>
         
         <v-card-actions>
-          <v-spacer></v-spacer>
+          <v-spacer />
           <v-btn
             color="primary"
             @click="handleAlertOk"

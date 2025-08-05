@@ -27,7 +27,7 @@
                   :rules="[v => !!v || '角色名称不能为空']"
                   hint="输入角色的名称，如：系统管理员、质量主管等"
                   persistent-hint
-                ></v-text-field>
+                />
               </v-col>
               
               <!-- 角色描述 -->
@@ -39,7 +39,7 @@
                   persistent-hint
                   rows="3"
                   auto-grow
-                ></v-textarea>
+                />
               </v-col>
             </v-row>
           </v-form>
@@ -47,20 +47,20 @@
       </v-card-text>
       
       <v-card-actions>
-        <v-spacer></v-spacer>
+        <v-spacer />
         <v-btn
           color="grey-darken-1"
           variant="text"
-          @click="closeDialog"
           :disabled="loading"
+          @click="closeDialog"
         >
           取消
         </v-btn>
         <v-btn
           color="primary"
-          @click="saveRole"
           :loading="loading"
           :disabled="!formValid || loading"
+          @click="saveRole"
         >
           保存
         </v-btn>

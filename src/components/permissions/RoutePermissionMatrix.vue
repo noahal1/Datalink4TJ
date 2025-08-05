@@ -1,15 +1,30 @@
 <template>
   <v-card>
     <v-card-title class="d-flex align-center">
-      <v-icon class="mr-2">mdi-matrix</v-icon>
+      <v-icon class="mr-2">
+        mdi-matrix
+      </v-icon>
       角色路由访问权限矩阵
-      <v-spacer></v-spacer>
-      <v-btn color="primary" @click="refreshMatrix" :loading="loading" class="mr-2">
-        <v-icon left>mdi-refresh</v-icon>
+      <v-spacer />
+      <v-btn
+        color="primary"
+        :loading="loading"
+        class="mr-2"
+        @click="refreshMatrix"
+      >
+        <v-icon left>
+          mdi-refresh
+        </v-icon>
         刷新
       </v-btn>
-      <v-btn color="success" @click="openBatchDialog" :disabled="!roles.length || !routes.length">
-        <v-icon left>mdi-account-cog</v-icon>
+      <v-btn
+        color="success"
+        :disabled="!roles.length || !routes.length"
+        @click="openBatchDialog"
+      >
+        <v-icon left>
+          mdi-account-cog
+        </v-icon>
         批量设置
       </v-btn>
     </v-card-title>
@@ -22,14 +37,17 @@
         class="elevation-1"
         item-key="roleId"
         density="compact"
-        :items-per-page= "-1"
+        :items-per-page="-1"
         hide-default-footer
       >
-        <template v-slot:top>
+        <template #top>
           <v-toolbar flat>
             <v-toolbar-title>权限矩阵</v-toolbar-title>
-            <v-spacer></v-spacer>
-            <v-chip color="success" class="mr-2">
+            <v-spacer />
+            <v-chip
+              color="success"
+              class="mr-2"
+            >
               {{ roles.length }} 个角色
             </v-chip>
             <v-chip color="info">
@@ -39,37 +57,57 @@
         </template>
 
         <!-- 角色名称列 -->
-        <template v-slot:item.roleName="{ item }">
-          <v-chip :color="getRoleColor(item.roleName)" dark size="small">
+        <template #item.roleName="{ item }">
+          <v-chip
+            :color="getRoleColor(item.roleName)"
+            dark
+            size="small"
+          >
             {{ item.roleName }}
           </v-chip>
         </template>
 
         <!-- 路由访问权限列 -->
-        <template v-for="route in routes" :key="route.id" v-slot:[`item.route_${route.id}`]="{ item }">
+        <template
+          v-for="route in routes"
+          :key="route.id"
+          #[`item.route_${route.id}`]="{ item }"
+        >
           <v-checkbox
             :model-value="item[`route_${route.id}`]"
-            @update:model-value="togglePermission(item.roleId, route.id, $event)"
             :loading="savingPermissions"
             hide-details
             density="compact"
             color="success"
+            @update:model-value="togglePermission(item.roleId, route.id, $event)"
           />
         </template>
       </unified-data-table>
 
       <!-- 统计信息 -->
       <v-row class="mt-4">
-        <v-col cols="12" md="6">
+        <v-col
+          cols="12"
+          md="6"
+        >
           <v-card variant="outlined">
             <v-card-title class="text-h6">
-              <v-icon class="mr-2">mdi-account-group</v-icon>
+              <v-icon class="mr-2">
+                mdi-account-group
+              </v-icon>
               角色统计
             </v-card-title>
             <v-card-text>
-              <div v-for="role in roles" :key="role.id" class="d-flex justify-space-between mb-2">
+              <div
+                v-for="role in roles"
+                :key="role.id"
+                class="d-flex justify-space-between mb-2"
+              >
                 <span>{{ role.name }}</span>
-                <v-chip size="small" :color="getAccessCountColor(getRouteAccessCount(role.id))">
+                <v-chip
+                  size="small"
+                  :color="getAccessCountColor(getRouteAccessCount(role.id))"
+                >
                   {{ getRouteAccessCount(role.id) }} / {{ routes.length }}
                 </v-chip>
               </div>
@@ -77,16 +115,28 @@
           </v-card>
         </v-col>
 
-        <v-col cols="12" md="6">
+        <v-col
+          cols="12"
+          md="6"
+        >
           <v-card variant="outlined">
             <v-card-title class="text-h6">
-              <v-icon class="mr-2">mdi-routes</v-icon>
+              <v-icon class="mr-2">
+                mdi-routes
+              </v-icon>
               路由统计
             </v-card-title>
             <v-card-text>
-              <div v-for="route in routes" :key="route.id" class="d-flex justify-space-between mb-2">
+              <div
+                v-for="route in routes"
+                :key="route.id"
+                class="d-flex justify-space-between mb-2"
+              >
                 <span>{{ route.name }}</span>
-                <v-chip size="small" :color="getRoleAccessCountColor(getRoleAccessCount(route.id))">
+                <v-chip
+                  size="small"
+                  :color="getRoleAccessCountColor(getRoleAccessCount(route.id))"
+                >
                   {{ getRoleAccessCount(route.id) }} / {{ roles.length }}
                 </v-chip>
               </div>
@@ -97,10 +147,15 @@
     </v-card-text>
 
     <!-- 批量设置对话框 -->
-    <v-dialog v-model="batchDialog" max-width="600px">
+    <v-dialog
+      v-model="batchDialog"
+      max-width="600px"
+    >
       <v-card>
         <v-card-title>
-          <v-icon class="mr-2">mdi-account-cog</v-icon>
+          <v-icon class="mr-2">
+            mdi-account-cog
+          </v-icon>
           批量设置角色权限
         </v-card-title>
 
@@ -119,7 +174,10 @@
               />
             </v-col>
 
-            <v-col cols="12" v-if="selectedRole">
+            <v-col
+              v-if="selectedRole"
+              cols="12"
+            >
               <v-card variant="outlined">
                 <v-card-title class="text-subtitle-1">
                   选择可访问的路由
@@ -127,10 +185,29 @@
                 <v-card-text>
                   <v-row>
                     <v-col cols="12">
-                      <v-btn-toggle v-model="selectAllMode" mandatory class="mb-3">
-                        <v-btn value="none" size="small">全不选</v-btn>
-                        <v-btn value="all" size="small">全选</v-btn>
-                        <v-btn value="basic" size="small">基础权限</v-btn>
+                      <v-btn-toggle
+                        v-model="selectAllMode"
+                        mandatory
+                        class="mb-3"
+                      >
+                        <v-btn
+                          value="none"
+                          size="small"
+                        >
+                          全不选
+                        </v-btn>
+                        <v-btn
+                          value="all"
+                          size="small"
+                        >
+                          全选
+                        </v-btn>
+                        <v-btn
+                          value="basic"
+                          size="small"
+                        >
+                          基础权限
+                        </v-btn>
                       </v-btn-toggle>
                     </v-col>
                   </v-row>
@@ -158,13 +235,15 @@
         </v-card-text>
 
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn @click="closeBatchDialog">取消</v-btn>
+          <v-spacer />
+          <v-btn @click="closeBatchDialog">
+            取消
+          </v-btn>
           <v-btn
             color="primary"
-            @click="saveBatchPermissions"
             :loading="savingBatch"
             :disabled="!selectedRole || selectedRoutes.length === 0"
+            @click="saveBatchPermissions"
           >
             保存权限
           </v-btn>

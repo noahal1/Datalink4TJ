@@ -14,18 +14,21 @@
         hide-details
         class="search-field mx-4"
         clearable
-      ></v-text-field>
+      />
       
       <v-btn 
         color="primary" 
-        @click="openDialog" 
-        prepend-icon="mdi-plus"
+        prepend-icon="mdi-plus" 
+        @click="openDialog"
       >
         添加事件
       </v-btn>
     </template>
     
-    <loading-overlay :loading="isLoading" message="加载数据中..." />
+    <loading-overlay
+      :loading="isLoading"
+      message="加载数据中..."
+    />
     
     <!-- 数据表格 -->
     <unified-data-table
@@ -49,14 +52,24 @@
       
       <template #item.start_time="{ item }">
         <div class="d-flex align-center">
-          <v-icon size="small" color="primary" class="mr-1">mdi-calendar-start</v-icon>
+          <v-icon
+            size="small"
+            color="primary"
+            class="mr-1"
+          >
+            mdi-calendar-start
+          </v-icon>
           {{ formatDate(item.start_time) }}
         </div>
       </template>
       
       <template #item.end_time="{ item }">
         <div class="d-flex align-center">
-          <v-icon size="small" :color="isEventActive(item) ? 'success' : 'grey'" class="mr-1">
+          <v-icon
+            size="small"
+            :color="isEventActive(item) ? 'success' : 'grey'"
+            class="mr-1"
+          >
             {{ isEventActive(item) ? 'mdi-calendar-clock' : 'mdi-calendar-check' }}
           </v-icon>
           {{ formatDate(item.end_time) }}
@@ -70,8 +83,8 @@
             color="primary"
             variant="text"
             icon="mdi-pencil"
-            @click="openDialog(item)"
             class="mr-1"
+            @click="openDialog(item)"
           />
           <v-btn
             size="small"
@@ -85,9 +98,22 @@
       
       <template #no-data>
         <div class="text-center pa-6">
-          <v-icon size="large" color="grey" class="mb-2">mdi-calendar-remove</v-icon>
-          <div class="text-subtitle-1 text-medium-emphasis">暂无重要事件记录</div>
-          <v-btn color="primary" variant="text" class="mt-2" @click="openDialog">
+          <v-icon
+            size="large"
+            color="grey"
+            class="mb-2"
+          >
+            mdi-calendar-remove
+          </v-icon>
+          <div class="text-subtitle-1 text-medium-emphasis">
+            暂无重要事件记录
+          </div>
+          <v-btn
+            color="primary"
+            variant="text"
+            class="mt-2"
+            @click="openDialog"
+          >
             添加新事件
           </v-btn>
         </div>
@@ -95,16 +121,31 @@
     </unified-data-table>
 
     <!-- 添加/编辑事件对话框 -->
-    <v-dialog v-model="showDialog" max-width="600" persistent>
+    <v-dialog
+      v-model="showDialog"
+      max-width="600"
+      persistent
+    >
       <v-card>
-        <v-toolbar :color="dialogColor" dark flat>
+        <v-toolbar
+          :color="dialogColor"
+          dark
+          flat
+        >
           <v-toolbar-title>{{ dialogTitle }}</v-toolbar-title>
-          <v-spacer></v-spacer>
-          <v-btn icon="mdi-close" variant="text" @click="showDialog = false"></v-btn>
+          <v-spacer />
+          <v-btn
+            icon="mdi-close"
+            variant="text"
+            @click="showDialog = false"
+          />
         </v-toolbar>
         
         <v-card-text class="pt-4">
-          <v-form ref="eventFormRef" @submit.prevent="submitEvent">
+          <v-form
+            ref="eventFormRef"
+            @submit.prevent="submitEvent"
+          >
             <v-container>
               <v-row>
                 <v-col cols="12">
@@ -118,7 +159,10 @@
                     prepend-inner-icon="mdi-format-title"
                   />
                 </v-col>
-                <v-col cols="12" md="6">
+                <v-col
+                  cols="12"
+                  md="6"
+                >
                   <v-text-field
                     v-model="eventForm.department"
                     label="部门"  
@@ -129,7 +173,10 @@
                     prepend-inner-icon="mdi-office-building"
                   />
                 </v-col>
-                <v-col cols="12" md="6">
+                <v-col
+                  cols="12"
+                  md="6"
+                >
                   <v-text-field
                     v-model="eventForm.start_time"
                     label="开始时间"
@@ -140,7 +187,10 @@
                     prepend-inner-icon="mdi-calendar-start"
                   />
                 </v-col>
-                <v-col cols="12" md="6">
+                <v-col
+                  cols="12"
+                  md="6"
+                >
                   <v-text-field
                     v-model="eventForm.end_time"
                     label="结束时间"
@@ -156,12 +206,22 @@
           </v-form>
         </v-card-text>
 
-        <v-divider></v-divider>
+        <v-divider />
         
         <v-card-actions class="pa-4">
           <v-spacer />
-          <v-btn variant="tonal" @click="showDialog = false">取消</v-btn>
-          <v-btn color="primary" variant="elevated" @click="submitEvent" :loading="isSubmitting">
+          <v-btn
+            variant="tonal"
+            @click="showDialog = false"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="primary"
+            variant="elevated"
+            :loading="isSubmitting"
+            @click="submitEvent"
+          >
             {{ eventForm.id ? '保存修改' : '添加事件' }}
           </v-btn>
         </v-card-actions>
@@ -169,19 +229,34 @@
     </v-dialog>
     
     <!-- 删除确认对话框 -->
-    <v-dialog v-model="showDeleteDialog" max-width="400">
+    <v-dialog
+      v-model="showDeleteDialog"
+      max-width="400"
+    >
       <v-card>
-        <v-card-title class="text-h5 bg-error text-white">确认删除</v-card-title>
+        <v-card-title class="text-h5 bg-error text-white">
+          确认删除
+        </v-card-title>
         <v-card-text class="pt-4">
           确定要删除事件 <strong>{{ eventToDelete?.name }}</strong> 吗？此操作不可撤销。
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="grey-darken-1" variant="text" @click="showDeleteDialog = false">
+          <v-spacer />
+          <v-btn
+            color="grey-darken-1"
+            variant="text"
+            @click="showDeleteDialog = false"
+          >
             取消
           </v-btn>
-          <v-btn color="error" variant="tonal" @click="executeDelete">
-            <v-icon class="mr-1">mdi-delete</v-icon>
+          <v-btn
+            color="error"
+            variant="tonal"
+            @click="executeDelete"
+          >
+            <v-icon class="mr-1">
+              mdi-delete
+            </v-icon>
             确认删除
           </v-btn>
         </v-card-actions>

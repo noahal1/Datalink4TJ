@@ -1,18 +1,32 @@
 <template>
-  <v-card class="unified-data-table" :elevation="elevation">
+  <v-card
+    class="unified-data-table"
+    :elevation="elevation"
+  >
     <!-- 表格标题 -->
-    <v-card-title v-if="title || $slots.title" class="unified-data-table-title d-flex align-center">
-      <v-icon v-if="icon" class="mr-2" :color="iconColor">{{ icon }}</v-icon>
-      <slot name="title">{{ title }}</slot>
-      <v-spacer></v-spacer>
-      <slot name="actions"></slot>
+    <v-card-title
+      v-if="title || $slots.title"
+      class="unified-data-table-title d-flex align-center"
+    >
+      <v-icon
+        v-if="icon"
+        class="mr-2"
+        :color="iconColor"
+      >
+        {{ icon }}
+      </v-icon>
+      <slot name="title">
+        {{ title }}
+      </slot>
+      <v-spacer />
+      <slot name="actions" />
     </v-card-title>
     
-    <v-divider v-if="title || $slots.title"></v-divider>
+    <v-divider v-if="title || $slots.title" />
     
     <!-- 表格内容 -->
     <v-card-text :class="contentClass">
-      <slot name="pre-table"></slot>
+      <slot name="pre-table" />
       
       <v-data-table
         :headers="safeHeaders"
@@ -28,37 +42,55 @@
         v-bind="$attrs"
       >
         <!-- 自定义加载器 -->
-        <template v-slot:loading>
+        <template #loading>
           <slot name="loading">
             <v-skeleton-loader
               type="table-row-divider@3"
               class="pa-4"
-            ></v-skeleton-loader>
+            />
           </slot>
         </template>
         
         <!-- 没有数据时的显示 -->
-        <template v-slot:no-data>
+        <template #no-data>
           <slot name="no-data">
             <div class="d-flex flex-column align-center py-6">
-              <v-icon size="48" color="grey-lighten-1" class="mb-2">mdi-database-off</v-icon>
-              <div class="text-subtitle-1 text-medium-emphasis">暂无数据</div>
+              <v-icon
+                size="48"
+                color="grey-lighten-1"
+                class="mb-2"
+              >
+                mdi-database-off
+              </v-icon>
+              <div class="text-subtitle-1 text-medium-emphasis">
+                暂无数据
+              </div>
             </div>
           </slot>
         </template>
         
         <!-- 转发所有插槽 -->
-        <template v-for="(_, name) in $slots" :key="name" v-slot:[name]="slotData">
-          <slot :name="name" v-bind="slotData"></slot>
+        <template
+          v-for="(_, name) in $slots"
+          :key="name"
+          #[name]="slotData"
+        >
+          <slot
+            :name="name"
+            v-bind="slotData"
+          />
         </template>
       </v-data-table>
       
-      <slot name="post-table"></slot>
+      <slot name="post-table" />
     </v-card-text>
     
     <!-- 表格底部 -->
-    <v-card-actions v-if="$slots.footer" class="unified-data-table-footer">
-      <slot name="footer"></slot>
+    <v-card-actions
+      v-if="$slots.footer"
+      class="unified-data-table-footer"
+    >
+      <slot name="footer" />
     </v-card-actions>
   </v-card>
 </template>

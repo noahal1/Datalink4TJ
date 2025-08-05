@@ -2,11 +2,24 @@
   <v-container fluid>
     <v-card elevation="3">
       <v-card-title class="d-flex align-center py-4 px-6">
-        <v-icon class="mr-2" color="primary">mdi-account-key</v-icon>
-        <div class="text-h5 font-weight-medium">角色权限管理</div>
-        <v-spacer></v-spacer>
-        <v-btn color="primary" @click="refreshData" :loading="loading">
-          <v-icon start>mdi-refresh</v-icon>
+        <v-icon
+          class="mr-2"
+          color="primary"
+        >
+          mdi-account-key
+        </v-icon>
+        <div class="text-h5 font-weight-medium">
+          角色权限管理
+        </div>
+        <v-spacer />
+        <v-btn
+          color="primary"
+          :loading="loading"
+          @click="refreshData"
+        >
+          <v-icon start>
+            mdi-refresh
+          </v-icon>
           刷新
         </v-btn>
       </v-card-title>
@@ -14,19 +27,24 @@
       <v-card-text class="pa-6">
         <v-row>
           <!-- 角色列表 -->
-          <v-col cols="12" md="4">
+          <v-col
+            cols="12"
+            md="4"
+          >
             <v-card outlined>
-              <v-card-title class="text-h6">角色列表</v-card-title>
+              <v-card-title class="text-h6">
+                角色列表
+              </v-card-title>
               <v-card-text>
                 <v-list>
                   <v-list-item
                     v-for="role in roles"
                     :key="role.id"
                     :class="{ 'v-list-item--active': selectedRole?.id === role.id }"
-                    @click="selectRole(role)"
                     rounded
+                    @click="selectRole(role)"
                   >
-                    <template v-slot:prepend>
+                    <template #prepend>
                       <v-icon>mdi-account-group</v-icon>
                     </template>
                     <v-list-item-title>{{ role.name }}</v-list-item-title>
@@ -38,27 +56,47 @@
           </v-col>
           
           <!-- 权限分配 -->
-          <v-col cols="12" md="8">
-            <v-card outlined v-if="selectedRole">
+          <v-col
+            cols="12"
+            md="8"
+          >
+            <v-card
+              v-if="selectedRole"
+              outlined
+            >
               <v-card-title class="text-h6">
                 {{ selectedRole.name }} - 权限配置
               </v-card-title>
               <v-card-text>
                 <v-tabs v-model="activeTab">
-                  <v-tab value="routes">路由权限</v-tab>
-                  <v-tab value="permissions">功能权限</v-tab>
+                  <v-tab value="routes">
+                    路由权限
+                  </v-tab>
+                  <v-tab value="permissions">
+                    功能权限
+                  </v-tab>
                 </v-tabs>
                 
-                <v-window v-model="activeTab" class="mt-4">
+                <v-window
+                  v-model="activeTab"
+                  class="mt-4"
+                >
                   <!-- 路由权限标签页 -->
                   <v-window-item value="routes">
                     <v-card outlined>
-                      <v-card-title class="text-subtitle-1">可访问路由</v-card-title>
+                      <v-card-title class="text-subtitle-1">
+                        可访问路由
+                      </v-card-title>
                       <v-card-text>
                         <v-row>
-                          <v-col cols="12" md="6">
+                          <v-col
+                            cols="12"
+                            md="6"
+                          >
                             <v-card outlined>
-                              <v-card-title class="text-subtitle-2">可选路由</v-card-title>
+                              <v-card-title class="text-subtitle-2">
+                                可选路由
+                              </v-card-title>
                               <v-card-text style="max-height: 400px; overflow-y: auto;">
                                 <v-treeview
                                   v-model:selected="selectedRoutes"
@@ -70,35 +108,44 @@
                                   return-object
                                   dense
                                 >
-                                  <template v-slot:prepend="{ item }">
-                                    <v-icon size="small">{{ item.icon || 'mdi-link' }}</v-icon>
+                                  <template #prepend="{ item }">
+                                    <v-icon size="small">
+                                      {{ item.icon || 'mdi-link' }}
+                                    </v-icon>
                                   </template>
                                 </v-treeview>
                               </v-card-text>
                             </v-card>
                           </v-col>
-                          <v-col cols="12" md="6">
+                          <v-col
+                            cols="12"
+                            md="6"
+                          >
                             <v-card outlined>
-                              <v-card-title class="text-subtitle-2">已分配路由</v-card-title>
+                              <v-card-title class="text-subtitle-2">
+                                已分配路由
+                              </v-card-title>
                               <v-card-text style="max-height: 400px; overflow-y: auto;">
                                 <v-list dense>
                                   <v-list-item
                                     v-for="route in assignedRoutes"
                                     :key="route.id"
                                   >
-                                    <template v-slot:prepend>
-                                      <v-icon size="small">{{ route.icon || 'mdi-link' }}</v-icon>
+                                    <template #prepend>
+                                      <v-icon size="small">
+                                        {{ route.icon || 'mdi-link' }}
+                                      </v-icon>
                                     </template>
                                     <v-list-item-title>{{ route.title }}</v-list-item-title>
                                     <v-list-item-subtitle>{{ route.path }}</v-list-item-subtitle>
-                                    <template v-slot:append>
+                                    <template #append>
                                       <v-btn
                                         icon="mdi-delete"
                                         size="small"
                                         variant="text"
                                         color="error"
                                         @click="removeRoutePermission(route)"
-                                      ></v-btn>
+                                      />
                                     </template>
                                   </v-list-item>
                                 </v-list>
@@ -111,11 +158,13 @@
                           <v-col cols="12">
                             <v-btn
                               color="primary"
-                              @click="saveRoutePermissions"
                               :loading="saving"
                               :disabled="!hasRouteChanges"
+                              @click="saveRoutePermissions"
                             >
-                              <v-icon start>mdi-content-save</v-icon>
+                              <v-icon start>
+                                mdi-content-save
+                              </v-icon>
                               保存路由权限
                             </v-btn>
                           </v-col>
@@ -127,16 +176,22 @@
                   <!-- 功能权限标签页 -->
                   <v-window-item value="permissions">
                     <v-card outlined>
-                      <v-card-title class="text-subtitle-1">功能权限</v-card-title>
+                      <v-card-title class="text-subtitle-1">
+                        功能权限
+                      </v-card-title>
                       <v-card-text>
                         <v-row>
                           <v-col
                             v-for="module in permissionModules"
                             :key="module.name"
-                            cols="12" md="6" lg="4"
+                            cols="12"
+                            md="6"
+                            lg="4"
                           >
                             <v-card outlined>
-                              <v-card-title class="text-subtitle-2">{{ module.title }}</v-card-title>
+                              <v-card-title class="text-subtitle-2">
+                                {{ module.title }}
+                              </v-card-title>
                               <v-card-text>
                                 <v-checkbox
                                   v-for="level in module.levels"
@@ -145,7 +200,7 @@
                                   :value="`${module.name}.${level.name}`"
                                   :label="level.title"
                                   density="compact"
-                                ></v-checkbox>
+                                />
                               </v-card-text>
                             </v-card>
                           </v-col>
@@ -155,11 +210,13 @@
                           <v-col cols="12">
                             <v-btn
                               color="primary"
-                              @click="saveFunctionPermissions"
                               :loading="saving"
                               :disabled="!hasPermissionChanges"
+                              @click="saveFunctionPermissions"
                             >
-                              <v-icon start>mdi-content-save</v-icon>
+                              <v-icon start>
+                                mdi-content-save
+                              </v-icon>
                               保存功能权限
                             </v-btn>
                           </v-col>
@@ -171,11 +228,23 @@
               </v-card-text>
             </v-card>
             
-            <v-card outlined v-else>
+            <v-card
+              v-else
+              outlined
+            >
               <v-card-text class="text-center py-8">
-                <v-icon size="64" color="grey">mdi-account-key</v-icon>
-                <div class="text-h6 mt-4">请选择一个角色</div>
-                <div class="text-body-2 text-grey">选择左侧的角色来配置其权限</div>
+                <v-icon
+                  size="64"
+                  color="grey"
+                >
+                  mdi-account-key
+                </v-icon>
+                <div class="text-h6 mt-4">
+                  请选择一个角色
+                </div>
+                <div class="text-body-2 text-grey">
+                  选择左侧的角色来配置其权限
+                </div>
               </v-card-text>
             </v-card>
           </v-col>

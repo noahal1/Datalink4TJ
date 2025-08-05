@@ -50,7 +50,6 @@ declare module 'vue-router/auto-routes' {
     '/PrsKpi': RouteRecordInfo<'/PrsKpi', '/PrsKpi', Record<never, never>, Record<never, never>>,
     '/Quality': RouteRecordInfo<'/Quality', '/Quality', Record<never, never>, Record<never, never>>,
     '/QualityKpi': RouteRecordInfo<'/QualityKpi', '/QualityKpi', Record<never, never>, Record<never, never>>,
-    '/ReactiveTestPage': RouteRecordInfo<'/ReactiveTestPage', '/ReactiveTestPage', Record<never, never>, Record<never, never>>,
     '/RouteDebug': RouteRecordInfo<'/RouteDebug', '/RouteDebug', Record<never, never>, Record<never, never>>,
     '/RouteManagement': RouteRecordInfo<'/RouteManagement', '/RouteManagement', Record<never, never>, Record<never, never>>,
     '/Settings': RouteRecordInfo<'/Settings', '/Settings', Record<never, never>, Record<never, never>>,

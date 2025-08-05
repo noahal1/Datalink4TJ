@@ -1,5 +1,9 @@
 <template>
-  <unified-page-template title="维修指标" icon="mdi-chart-line" color="primary">
+  <unified-page-template
+    title="维修指标"
+    icon="mdi-chart-line"
+    color="primary"
+  >
     <template #header-actions>
       <v-btn 
         color="primary" 
@@ -16,7 +20,9 @@
         <div class="d-flex align-center flex-wrap">
           <!-- 线体选择 -->
           <div class="d-flex align-center me-4 mb-2">
-            <div class="text-subtitle-1 me-2">线体:</div>
+            <div class="text-subtitle-1 me-2">
+              线体:
+            </div>
             <v-btn-toggle
               v-model="selectedLineType"
               color="primary"
@@ -24,7 +30,9 @@
               density="comfortable"
               class="mx-2"
             >
-              <v-btn value="all">全部</v-btn>
+              <v-btn value="all">
+                全部
+              </v-btn>
               <v-btn 
                 v-for="line in lineTypes" 
                 :key="line" 
@@ -38,7 +46,9 @@
           
           <!-- 班次选择 -->
           <div class="d-flex align-center me-4 mb-2">
-            <div class="text-subtitle-1 me-2">班次:</div>
+            <div class="text-subtitle-1 me-2">
+              班次:
+            </div>
             <v-btn-toggle
               v-model="selectedShift"
               color="secondary"
@@ -46,20 +56,28 @@
               density="comfortable"
               class="mx-2"
             >
-              <v-btn value="all">全部</v-btn>
-              <v-btn value="day">白班</v-btn>
-              <v-btn value="night">夜班</v-btn>
+              <v-btn value="all">
+                全部
+              </v-btn>
+              <v-btn value="day">
+                白班
+              </v-btn>
+              <v-btn value="night">
+                夜班
+              </v-btn>
             </v-btn-toggle>
           </div>
           
           <!-- 日期范围 -->
           <div class="d-flex align-center mb-2">
-            <div class="text-subtitle-1 me-2">日期范围:</div>
+            <div class="text-subtitle-1 me-2">
+              日期范围:
+            </div>
             <v-menu
               v-model="datePickerMenu"
               :close-on-content-click="false"
             >
-              <template v-slot:activator="{ props }">
+              <template #activator="{ props }">
                 <v-btn 
                   variant="outlined" 
                   color="primary" 
@@ -108,15 +126,15 @@
                     </v-btn>
                   </div>
                   
-              <v-date-picker
-                v-model="dateRange"
-                range
-                color="primary"
+                  <v-date-picker
+                    v-model="dateRange"
+                    range
+                    color="primary"
                     show-adjacent-months
-              ></v-date-picker>
+                  />
                 </v-card-text>
                 <v-card-actions>
-                  <v-spacer></v-spacer>
+                  <v-spacer />
                   <v-btn 
                     color="primary" 
                     variant="text" 
@@ -129,7 +147,7 @@
             </v-menu>
           </div>
           
-          <v-spacer></v-spacer>
+          <v-spacer />
           
           <!-- 视图切换按钮组 -->
           <v-btn-toggle 
@@ -138,12 +156,18 @@
             density="comfortable"
             class="me-2 mb-2"
           >
-            <v-btn value="dashboard" prepend-icon="mdi-view-dashboard">
+            <v-btn
+              value="dashboard"
+              prepend-icon="mdi-view-dashboard"
+            >
               仪表盘
-          </v-btn>
-            <v-btn value="table" prepend-icon="mdi-table">
+            </v-btn>
+            <v-btn
+              value="table"
+              prepend-icon="mdi-table"
+            >
               数据表
-          </v-btn>
+            </v-btn>
           </v-btn-toggle>  
         </div>
       </v-card-text>
@@ -151,166 +175,261 @@
 
     <!-- 显示仪表盘视图 -->
     <div v-if="activeTab === 'dashboard'">
-    <!-- 筛选标签展示 -->
-    <v-row class="mt-2 mb-4">
-      <v-col cols="12">
-        <div class="filter-tags d-flex align-center flex-wrap">
-          <div class="text-subtitle-2 me-2">当前筛选:</div>
-          <v-chip
-            class="me-2 mb-1"
-            :color="getLineColor(selectedLineType)"
-            size="small"
-            label
-          >
-            {{ selectedLineType === 'all' ? '全部线体' : selectedLineType }}
-          </v-chip>
+      <!-- 筛选标签展示 -->
+      <v-row class="mt-2 mb-4">
+        <v-col cols="12">
+          <div class="filter-tags d-flex align-center flex-wrap">
+            <div class="text-subtitle-2 me-2">
+              当前筛选:
+            </div>
+            <v-chip
+              class="me-2 mb-1"
+              :color="getLineColor(selectedLineType)"
+              size="small"
+              label
+            >
+              {{ selectedLineType === 'all' ? '全部线体' : selectedLineType }}
+            </v-chip>
           
-          <v-chip
-            class="me-2 mb-1"
-            color="secondary"
-            size="small"
-            label
-          >
-            {{ selectedShift === 'all' ? '全部班次' : (selectedShift === 'day' ? '白班' : '夜班') }}
-          </v-chip>
+            <v-chip
+              class="me-2 mb-1"
+              color="secondary"
+              size="small"
+              label
+            >
+              {{ selectedShift === 'all' ? '全部班次' : (selectedShift === 'day' ? '白班' : '夜班') }}
+            </v-chip>
           
-          <v-chip
-            class="me-2 mb-1"
-            color="primary"
-            size="small"
-            label
-          >
-            {{ formatDateRange }}
-          </v-chip>
-        </div>
-      </v-col>
-    </v-row>
+            <v-chip
+              class="me-2 mb-1"
+              color="primary"
+              size="small"
+              label
+            >
+              {{ formatDateRange }}
+            </v-chip>
+          </div>
+        </v-col>
+      </v-row>
     
-    <!-- 统计概览 -->
-    <v-row>
-      <v-col cols="12" md="3" sm="6">
-        <v-card class="mx-auto" height="100%">
-          <v-card-text>
-            <div class="text-overline">MTTR (平均修复时间)</div>
-            <div class="text-h4 text-center my-3" :class="mttrColor">
+      <!-- 统计概览 -->
+      <v-row>
+        <v-col
+          cols="12"
+          md="3"
+          sm="6"
+        >
+          <v-card
+            class="mx-auto"
+            height="100%"
+          >
+            <v-card-text>
+              <div class="text-overline">
+                MTTR (平均修复时间)
+              </div>
+              <div
+                class="text-h4 text-center my-3"
+                :class="mttrColor"
+              >
                 {{ formatTime(metricsOverview.mttr) }}
-            </div>
-            <div class="text-caption text-center">
-              相比上月
-              <span v-if="mttrTrend < 0" class="text-success">
-                <v-icon small>mdi-arrow-down</v-icon> 改善 {{ Math.abs(mttrTrend).toFixed(1) }}%
-              </span>
-              <span v-else-if="mttrTrend > 0" class="text-error">
-                <v-icon small>mdi-arrow-up</v-icon> 恶化 {{ mttrTrend.toFixed(1) }}%
-              </span>
-              <span v-else class="text-grey">
-                <v-icon small>mdi-minus</v-icon> 无变化
-              </span>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
+              </div>
+              <div class="text-caption text-center">
+                相比上月
+                <span
+                  v-if="mttrTrend < 0"
+                  class="text-success"
+                >
+                  <v-icon small>mdi-arrow-down</v-icon> 改善 {{ Math.abs(mttrTrend).toFixed(1) }}%
+                </span>
+                <span
+                  v-else-if="mttrTrend > 0"
+                  class="text-error"
+                >
+                  <v-icon small>mdi-arrow-up</v-icon> 恶化 {{ mttrTrend.toFixed(1) }}%
+                </span>
+                <span
+                  v-else
+                  class="text-grey"
+                >
+                  <v-icon small>mdi-minus</v-icon> 无变化
+                </span>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
       
-      <v-col cols="12" md="3" sm="6">
-        <v-card class="mx-auto" height="100%">
-          <v-card-text>
-            <div class="text-overline">MTBF (平均故障间隔)</div>
-            <div class="text-h4 text-center my-3" :class="mtbfColor">
+        <v-col
+          cols="12"
+          md="3"
+          sm="6"
+        >
+          <v-card
+            class="mx-auto"
+            height="100%"
+          >
+            <v-card-text>
+              <div class="text-overline">
+                MTBF (平均故障间隔)
+              </div>
+              <div
+                class="text-h4 text-center my-3"
+                :class="mtbfColor"
+              >
                 {{ formatTime(metricsOverview.mtbf) }}
-            </div>
-            <div class="text-caption text-center">
-              相比上月
-              <span v-if="mtbfTrend > 0" class="text-success">
-                <v-icon small>mdi-arrow-up</v-icon> 改善 {{ mtbfTrend.toFixed(1) }}%
-              </span>
-              <span v-else-if="mtbfTrend < 0" class="text-error">
-                <v-icon small>mdi-arrow-down</v-icon> 恶化 {{ Math.abs(mtbfTrend).toFixed(1) }}%
-              </span>
-              <span v-else class="text-grey">
-                <v-icon small>mdi-minus</v-icon> 无变化
-              </span>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
+              </div>
+              <div class="text-caption text-center">
+                相比上月
+                <span
+                  v-if="mtbfTrend > 0"
+                  class="text-success"
+                >
+                  <v-icon small>mdi-arrow-up</v-icon> 改善 {{ mtbfTrend.toFixed(1) }}%
+                </span>
+                <span
+                  v-else-if="mtbfTrend < 0"
+                  class="text-error"
+                >
+                  <v-icon small>mdi-arrow-down</v-icon> 恶化 {{ Math.abs(mtbfTrend).toFixed(1) }}%
+                </span>
+                <span
+                  v-else
+                  class="text-grey"
+                >
+                  <v-icon small>mdi-minus</v-icon> 无变化
+                </span>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
       
-      <v-col cols="12" md="3" sm="6">
-        <v-card class="mx-auto" height="100%">
-          <v-card-text>
-            <div class="text-overline">OEE (设备综合效率)</div>
-            <div class="text-h4 text-center my-3" :class="oeeColor">
+        <v-col
+          cols="12"
+          md="3"
+          sm="6"
+        >
+          <v-card
+            class="mx-auto"
+            height="100%"
+          >
+            <v-card-text>
+              <div class="text-overline">
+                OEE (设备综合效率)
+              </div>
+              <div
+                class="text-h4 text-center my-3"
+                :class="oeeColor"
+              >
                 {{ formatPercentage(metricsOverview.oee) }}
-            </div>
-            <div class="text-caption text-center">
-              相比上月
-              <span v-if="oeeTrend > 0" class="text-success">
-                <v-icon small>mdi-arrow-up</v-icon> {{ oeeTrend.toFixed(1) }}%
-              </span>
-              <span v-else-if="oeeTrend < 0" class="text-error">
-                <v-icon small>mdi-arrow-down</v-icon> {{ Math.abs(oeeTrend).toFixed(1) }}%
-              </span>
-              <span v-else class="text-grey">
-                <v-icon small>mdi-minus</v-icon> 0%
-              </span>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
+              </div>
+              <div class="text-caption text-center">
+                相比上月
+                <span
+                  v-if="oeeTrend > 0"
+                  class="text-success"
+                >
+                  <v-icon small>mdi-arrow-up</v-icon> {{ oeeTrend.toFixed(1) }}%
+                </span>
+                <span
+                  v-else-if="oeeTrend < 0"
+                  class="text-error"
+                >
+                  <v-icon small>mdi-arrow-down</v-icon> {{ Math.abs(oeeTrend).toFixed(1) }}%
+                </span>
+                <span
+                  v-else
+                  class="text-grey"
+                >
+                  <v-icon small>mdi-minus</v-icon> 0%
+                </span>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
       
-      <v-col cols="12" md="3" sm="6">
-        <v-card class="mx-auto" height="100%">
-          <v-card-text>
-            <div class="text-overline">设备可动率</div>
-            <div class="text-h4 text-center my-3" :class="availabilityColor">
+        <v-col
+          cols="12"
+          md="3"
+          sm="6"
+        >
+          <v-card
+            class="mx-auto"
+            height="100%"
+          >
+            <v-card-text>
+              <div class="text-overline">
+                设备可动率
+              </div>
+              <div
+                class="text-h4 text-center my-3"
+                :class="availabilityColor"
+              >
                 {{ formatPercentage(metricsOverview.availability) }}
-            </div>
-            <div class="text-caption text-center">
-              相比上月
-              <span v-if="availabilityTrend > 0" class="text-success">
-                <v-icon small>mdi-arrow-up</v-icon> {{ availabilityTrend.toFixed(1) }}%
-              </span>
-              <span v-else-if="availabilityTrend < 0" class="text-error">
-                <v-icon small>mdi-arrow-down</v-icon> {{ Math.abs(availabilityTrend).toFixed(1) }}%
-              </span>
-              <span v-else class="text-grey">
-                <v-icon small>mdi-minus</v-icon> 0%
-              </span>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
+              </div>
+              <div class="text-caption text-center">
+                相比上月
+                <span
+                  v-if="availabilityTrend > 0"
+                  class="text-success"
+                >
+                  <v-icon small>mdi-arrow-up</v-icon> {{ availabilityTrend.toFixed(1) }}%
+                </span>
+                <span
+                  v-else-if="availabilityTrend < 0"
+                  class="text-error"
+                >
+                  <v-icon small>mdi-arrow-down</v-icon> {{ Math.abs(availabilityTrend).toFixed(1) }}%
+                </span>
+                <span
+                  v-else
+                  class="text-grey"
+                >
+                  <v-icon small>mdi-minus</v-icon> 0%
+                </span>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
     
-    <!-- 趋势图表区域 -->
-    <v-row class="mt-4">
-      <v-col cols="12" md="6">
-        <OEETrendChart
-          :chart-data="chartData.oeeAvailability"
-          :loading="loadingCharts.oee"
-        />
-      </v-col>
+      <!-- 趋势图表区域 -->
+      <v-row class="mt-4">
+        <v-col
+          cols="12"
+          md="6"
+        >
+          <OEETrendChart
+            :chart-data="chartData.oeeAvailability"
+            :loading="loadingCharts.oee"
+          />
+        </v-col>
       
-      <v-col cols="12" md="6">
-        <MTTRMTBFChart
-          :chart-data="chartData.mttrMtbf"
-          :loading="loadingCharts.mttrMtbf"
-        />
-      </v-col>
-    </v-row>
+        <v-col
+          cols="12"
+          md="6"
+        >
+          <MTTRMTBFChart
+            :chart-data="chartData.mttrMtbf"
+            :loading="loadingCharts.mttrMtbf"
+          />
+        </v-col>
+      </v-row>
     
-    <!-- 线体对比 -->
-    <v-row class="mt-4">
-      <v-col cols="12">
-        <LineComparisonChart
-          :chart-data="chartData.lineComparison"
-          :loading="loadingMetrics"
-        />
-      </v-col>
-    </v-row>
+      <!-- 线体对比 -->
+      <v-row class="mt-4">
+        <v-col cols="12">
+          <LineComparisonChart
+            :chart-data="chartData.lineComparison"
+            :loading="loadingMetrics"
+          />
+        </v-col>
+      </v-row>
     </div>
     
     <!-- 维修数据列表 -->
-    <v-row v-if="activeTab === 'table'" class="mt-4">
+    <v-row
+      v-if="activeTab === 'table'"
+      class="mt-4"
+    >
       <v-col cols="12">
         <metrics-list
           :metrics="metricsList"
@@ -322,7 +441,7 @@
           @delete-metric="deleteMetric"
           @pagination-change="handlePaginationChange"
           @filter-change="handleFilterChange"
-        ></metrics-list>
+        />
       </v-col>
     </v-row>
     

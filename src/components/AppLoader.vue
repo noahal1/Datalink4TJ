@@ -1,7 +1,14 @@
 <template>
   <div class="app-loader">
-    <v-progress-circular indeterminate color="primary" size="64" width="4"></v-progress-circular>
-    <div class="app-loader-text mt-4">{{ message }}</div>
+    <v-progress-circular
+      indeterminate
+      color="primary"
+      size="64"
+      width="4"
+    />
+    <div class="app-loader-text mt-4">
+      {{ message }}
+    </div>
   </div>
 </template>
 

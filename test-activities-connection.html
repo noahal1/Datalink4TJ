@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>测试Activities API连接</title>
+</head>
+<body>
+    <h1>Activities API 连接测试</h1>
+    
+    <button onclick="testConnection()">测试连接</button>
+    
+    <div id="result"></div>
+    
+    <script>
+        async function testConnection() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '正在测试...';
+            
+            try {
+                // 测试API连接
+                const response = await fetch('http://localhost:8000/api/v1/activities/?limit=5');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <h3>连接成功!</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3 style="color: red;">连接失败!</h3>
+                    <p>错误: ${error.message}</p>
+                    <p>请确保:</p>
+                    <ul>
+                        <li>后端服务运行在 localhost:8000</li>
+                        <li>数据库连接正常</li>
+                        <li>CORS已正确配置</li>
+                    </ul>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

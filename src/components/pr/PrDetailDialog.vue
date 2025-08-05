@@ -1,5 +1,9 @@
 <template>
-  <v-dialog v-model="dialog" max-width="900" persistent>
+  <v-dialog
+    v-model="dialog"
+    max-width="900"
+    persistent
+  >
     <v-card v-if="pr">
       <v-card-title class="d-flex justify-space-between align-center">
         <div>
@@ -13,7 +17,11 @@
             {{ pr.status?.name }}
           </v-chip>
         </div>
-        <v-btn icon="mdi-close" variant="text" @click="close" />
+        <v-btn
+          icon="mdi-close"
+          variant="text"
+          @click="close"
+        />
       </v-card-title>
 
       <v-divider />
@@ -22,10 +30,15 @@
         <v-row>
           <!-- 基本信息 -->
           <v-col cols="12">
-            <h4 class="text-subtitle-1 mb-3">基本信息</h4>
+            <h4 class="text-subtitle-1 mb-3">
+              基本信息
+            </h4>
           </v-col>
 
-          <v-col cols="12" md="6">
+          <v-col
+            cols="12"
+            md="6"
+          >
             <v-text-field
               :model-value="pr.pr_number"
               label="PR编号"
@@ -35,7 +48,10 @@
             />
           </v-col>
 
-          <v-col cols="12" md="6">
+          <v-col
+            cols="12"
+            md="6"
+          >
             <v-text-field
               :model-value="pr.title"
               label="PR标题"
@@ -45,7 +61,10 @@
             />
           </v-col>
 
-          <v-col cols="12" md="6">
+          <v-col
+            cols="12"
+            md="6"
+          >
             <v-text-field
               :model-value="pr.pr_type?.name"
               label="PR类型"
@@ -55,7 +74,10 @@
             />
           </v-col>
 
-          <v-col cols="12" md="6">
+          <v-col
+            cols="12"
+            md="6"
+          >
             <v-text-field
               :model-value="pr.priority?.name"
               label="优先级"
@@ -65,7 +87,10 @@
             />
           </v-col>
 
-          <v-col cols="12" md="6">
+          <v-col
+            cols="12"
+            md="6"
+          >
             <v-text-field
               :model-value="pr.requester?.name"
               label="申请人"
@@ -75,7 +100,10 @@
             />
           </v-col>
 
-          <v-col cols="12" md="6">
+          <v-col
+            cols="12"
+            md="6"
+          >
             <v-text-field
               :model-value="formatDate(pr.requested_date)"
               label="申请日期"
@@ -85,7 +113,10 @@
             />
           </v-col>
 
-          <v-col cols="12" md="6">
+          <v-col
+            cols="12"
+            md="6"
+          >
             <v-text-field
               :model-value="formatDate(pr.required_date)"
               label="需求日期"
@@ -95,7 +126,10 @@
             />
           </v-col>
 
-          <v-col cols="12" md="6">
+          <v-col
+            cols="12"
+            md="6"
+          >
             <v-text-field
               :model-value="formatCurrency(pr.estimated_cost)"
               label="预估成本"
@@ -105,7 +139,10 @@
             />
           </v-col>
 
-          <v-col cols="12" md="6">
+          <v-col
+            cols="12"
+            md="6"
+          >
             <v-text-field
               :model-value="pr.supplier || '-'"
               label="供应商"
@@ -115,7 +152,10 @@
             />
           </v-col>
 
-          <v-col cols="12" v-if="pr.description">
+          <v-col
+            v-if="pr.description"
+            cols="12"
+          >
             <v-textarea
               :model-value="pr.description"
               label="详细描述"
@@ -127,11 +167,20 @@
           </v-col>
 
           <!-- 审批信息 -->
-          <v-col cols="12" v-if="pr.approver || pr.approved_date">
-            <h4 class="text-subtitle-1 mb-3">审批信息</h4>
+          <v-col
+            v-if="pr.approver || pr.approved_date"
+            cols="12"
+          >
+            <h4 class="text-subtitle-1 mb-3">
+              审批信息
+            </h4>
           </v-col>
 
-          <v-col cols="12" md="6" v-if="pr.approver">
+          <v-col
+            v-if="pr.approver"
+            cols="12"
+            md="6"
+          >
             <v-text-field
               :model-value="pr.approver?.name"
               label="审批人"
@@ -141,7 +190,11 @@
             />
           </v-col>
 
-          <v-col cols="12" md="6" v-if="pr.approved_date">
+          <v-col
+            v-if="pr.approved_date"
+            cols="12"
+            md="6"
+          >
             <v-text-field
               :model-value="formatDate(pr.approved_date)"
               label="审批日期"
@@ -151,7 +204,10 @@
             />
           </v-col>
 
-          <v-col cols="12" v-if="pr.approval_comments">
+          <v-col
+            v-if="pr.approval_comments"
+            cols="12"
+          >
             <v-textarea
               :model-value="pr.approval_comments"
               label="审批意见"
@@ -163,11 +219,20 @@
           </v-col>
 
           <!-- 采购信息 -->
-          <v-col cols="12" v-if="pr.purchaser || pr.po_number || pr.ordered_date">
-            <h4 class="text-subtitle-1 mb-3">采购信息</h4>
+          <v-col
+            v-if="pr.purchaser || pr.po_number || pr.ordered_date"
+            cols="12"
+          >
+            <h4 class="text-subtitle-1 mb-3">
+              采购信息
+            </h4>
           </v-col>
 
-          <v-col cols="12" md="6" v-if="pr.purchaser">
+          <v-col
+            v-if="pr.purchaser"
+            cols="12"
+            md="6"
+          >
             <v-text-field
               :model-value="pr.purchaser?.name"
               label="采购员"
@@ -177,7 +242,11 @@
             />
           </v-col>
 
-          <v-col cols="12" md="6" v-if="pr.po_number">
+          <v-col
+            v-if="pr.po_number"
+            cols="12"
+            md="6"
+          >
             <v-text-field
               :model-value="pr.po_number"
               label="采购订单号"
@@ -187,7 +256,11 @@
             />
           </v-col>
 
-          <v-col cols="12" md="6" v-if="pr.ordered_date">
+          <v-col
+            v-if="pr.ordered_date"
+            cols="12"
+            md="6"
+          >
             <v-text-field
               :model-value="formatDate(pr.ordered_date)"
               label="下单日期"
@@ -197,7 +270,11 @@
             />
           </v-col>
 
-          <v-col cols="12" md="6" v-if="pr.expected_delivery_date">
+          <v-col
+            v-if="pr.expected_delivery_date"
+            cols="12"
+            md="6"
+          >
             <v-text-field
               :model-value="formatDate(pr.expected_delivery_date)"
               label="预计到货日期"
@@ -207,7 +284,11 @@
             />
           </v-col>
 
-          <v-col cols="12" md="6" v-if="pr.actual_delivery_date">
+          <v-col
+            v-if="pr.actual_delivery_date"
+            cols="12"
+            md="6"
+          >
             <v-text-field
               :model-value="formatDate(pr.actual_delivery_date)"
               label="实际到货日期"
@@ -217,7 +298,11 @@
             />
           </v-col>
 
-          <v-col cols="12" md="6" v-if="pr.actual_cost">
+          <v-col
+            v-if="pr.actual_cost"
+            cols="12"
+            md="6"
+          >
             <v-text-field
               :model-value="formatCurrency(pr.actual_cost)"
               label="实际成本"
@@ -229,10 +314,15 @@
 
           <!-- PR明细 -->
           <v-col cols="12">
-            <h4 class="text-subtitle-1 mb-3">PR明细</h4>
+            <h4 class="text-subtitle-1 mb-3">
+              PR明细
+            </h4>
           </v-col>
 
-          <v-col cols="12" v-if="pr.items && pr.items.length > 0">
+          <v-col
+            v-if="pr.items && pr.items.length > 0"
+            cols="12"
+          >
             <v-card variant="outlined">
               <v-card-text class="pa-0">
                 <v-table density="compact">
@@ -249,7 +339,10 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="item in pr.items" :key="item.id">
+                    <tr
+                      v-for="item in pr.items"
+                      :key="item.id"
+                    >
                       <td>{{ item.item_name }}</td>
                       <td>{{ item.item_code || '-' }}</td>
                       <td>{{ item.specification || '-' }}</td>
@@ -265,7 +358,10 @@
             </v-card>
           </v-col>
 
-          <v-col cols="12" v-else>
+          <v-col
+            v-else
+            cols="12"
+          >
             <v-alert
               type="info"
               variant="outlined"
@@ -274,12 +370,20 @@
           </v-col>
 
           <!-- 状态更改 -->
-          <v-col cols="12" v-if="canChangeStatus">
+          <v-col
+            v-if="canChangeStatus"
+            cols="12"
+          >
             <v-divider class="my-4" />
-            <h4 class="text-subtitle-1 mb-3">状态更改</h4>
+            <h4 class="text-subtitle-1 mb-3">
+              状态更改
+            </h4>
             
             <v-row>
-              <v-col cols="12" md="6">
+              <v-col
+                cols="12"
+                md="6"
+              >
                 <v-select
                   v-model="newStatusId"
                   :items="statusOptions"
@@ -302,9 +406,9 @@
               <v-col cols="12">
                 <v-btn
                   color="primary"
-                  @click="changeStatus"
                   :disabled="!newStatusId || newStatusId === pr.status_id"
                   :loading="changingStatus"
+                  @click="changeStatus"
                 >
                   更改状态
                 </v-btn>
@@ -318,7 +422,9 @@
 
       <v-card-actions class="pa-4">
         <v-spacer />
-        <v-btn @click="close">关闭</v-btn>
+        <v-btn @click="close">
+          关闭
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

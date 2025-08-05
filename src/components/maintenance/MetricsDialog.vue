@@ -1,8 +1,8 @@
 <template>
   <v-dialog
     :model-value="modelValue"
-    @update:model-value="$emit('update:modelValue', $event)"
     max-width="600px"
+    @update:model-value="$emit('update:modelValue', $event)"
   >
     <v-card>
       <v-card-title>
@@ -18,7 +18,7 @@
             variant="outlined"
             class="mb-4"
             :rules="[v => !!v || '请选择线体']"
-          ></v-select>
+          />
           
           <v-text-field
             v-model="localMetric.shift_date"
@@ -27,7 +27,7 @@
             class="mb-4"
             type="date"
             :rules="[v => !!v || '请选择日期']"
-          ></v-text-field>
+          />
           
           <v-radio-group
             v-model="localMetric.shift_code"
@@ -36,8 +36,14 @@
             :rules="[v => !!v || '请选择班次']"
             inline
           >
-            <v-radio :value="1" label="白班"></v-radio>
-            <v-radio :value="2" label="夜班"></v-radio>
+            <v-radio
+              :value="1"
+              label="白班"
+            />
+            <v-radio
+              :value="2"
+              label="夜班"
+            />
           </v-radio-group>
           
           <v-text-field
@@ -48,10 +54,10 @@
             type="number"
             min="0"
             :rules="[v => v >= 0 || '计划停机时间不能为负数']"
-            @input="updateOEE"
             hint="每班总工作时间为720分钟"
             persistent-hint
-          ></v-text-field>
+            @input="updateOEE"
+          />
           
           <v-text-field
             v-model="localMetric.out_plan_down_time"
@@ -62,7 +68,7 @@
             min="0"
             :rules="[v => v >= 0 || '非计划停机时间不能为负数']"
             @input="updateOEE"
-          ></v-text-field>
+          />
           
           <v-text-field
             v-model="localMetric.issue_count"
@@ -73,7 +79,7 @@
             min="0"
             :rules="[v => v >= 0 || '问题数量不能为负数']"
             @input="updateMTTR"
-          ></v-text-field>
+          />
           
           <v-text-field
             v-model="localMetric.amount"
@@ -83,59 +89,87 @@
             type="number"
             min="0"
             :rules="[v => v >= 0 || '生产数量不能为负数']"
-          ></v-text-field>
+          />
           
-          <v-divider class="my-4"></v-divider>
+          <v-divider class="my-4" />
           
           <div class="d-flex flex-wrap">
-            <v-card variant="outlined" class="mb-2 me-2 pa-2 flex-grow-1">
-              <div class="text-subtitle-2">设备综合效率(OEE)</div>
-              <div class="text-h6">{{ calculatedOEE }}%</div>
+            <v-card
+              variant="outlined"
+              class="mb-2 me-2 pa-2 flex-grow-1"
+            >
+              <div class="text-subtitle-2">
+                设备综合效率(OEE)
+              </div>
+              <div class="text-h6">
+                {{ calculatedOEE }}%
+              </div>
               <v-checkbox
                 v-model="useCalculatedOEE"
                 label="使用计算值"
                 density="compact"
                 hide-details
                 @change="updateOEE"
-              ></v-checkbox>
+              />
             </v-card>
             
-            <v-card variant="outlined" class="mb-2 me-2 pa-2 flex-grow-1">
-              <div class="text-subtitle-2">设备可动率</div>
-              <div class="text-h6">{{ calculatedAvailability }}%</div>
+            <v-card
+              variant="outlined"
+              class="mb-2 me-2 pa-2 flex-grow-1"
+            >
+              <div class="text-subtitle-2">
+                设备可动率
+              </div>
+              <div class="text-h6">
+                {{ calculatedAvailability }}%
+              </div>
               <v-checkbox
                 v-model="useCalculatedAvailability"
                 label="使用计算值"
                 density="compact"
                 hide-details
                 @change="updateAvailability"
-              ></v-checkbox>
+              />
             </v-card>
           </div>
           
           <div class="d-flex flex-wrap mt-2">
-            <v-card variant="outlined" class="mb-2 me-2 pa-2 flex-grow-1">
-              <div class="text-subtitle-2">MTTR (平均修复时间)</div>
-              <div class="text-h6">{{ calculatedMTTR }}分钟</div>
+            <v-card
+              variant="outlined"
+              class="mb-2 me-2 pa-2 flex-grow-1"
+            >
+              <div class="text-subtitle-2">
+                MTTR (平均修复时间)
+              </div>
+              <div class="text-h6">
+                {{ calculatedMTTR }}分钟
+              </div>
               <v-checkbox
                 v-model="useCalculatedMTTR"
                 label="使用计算值"
                 density="compact"
                 hide-details
                 @change="updateMTTR"
-              ></v-checkbox>
+              />
             </v-card>
             
-            <v-card variant="outlined" class="mb-2 me-2 pa-2 flex-grow-1">
-              <div class="text-subtitle-2">MTBF (平均故障间隔时间)</div>
-              <div class="text-h6">{{ calculatedMTBF }}分钟</div>
+            <v-card
+              variant="outlined"
+              class="mb-2 me-2 pa-2 flex-grow-1"
+            >
+              <div class="text-subtitle-2">
+                MTBF (平均故障间隔时间)
+              </div>
+              <div class="text-h6">
+                {{ calculatedMTBF }}分钟
+              </div>
               <v-checkbox
                 v-model="useCalculatedMTBF"
                 label="使用计算值"
                 density="compact"
                 hide-details
                 @change="updateMTTR"
-              ></v-checkbox>
+              />
             </v-card>
           </div>
 
@@ -148,7 +182,9 @@
               icon="mdi-information-outline"
             >
               <strong>计算说明:</strong> 
-              <div class="mt-1">总工作时间: 720分钟 (12小时/班)</div>
+              <div class="mt-1">
+                总工作时间: 720分钟 (12小时/班)
+              </div>
               <div>可用时间 = 总时间(720分钟) - 计划停机时间</div>
               <div>实际运行时间 = 可用时间 - 非计划停机时间</div>
               <div>OEE = 实际运行时间 / 总时间</div>
@@ -161,13 +197,19 @@
       </v-card-text>
       
       <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn color="grey" text @click="$emit('close')">取消</v-btn>
+        <v-spacer />
+        <v-btn
+          color="grey"
+          text
+          @click="$emit('close')"
+        >
+          取消
+        </v-btn>
         <v-btn 
           color="primary" 
-          @click="saveMetric" 
-          :loading="loading"
+          :loading="loading" 
           :disabled="loading"
+          @click="saveMetric"
         >
           保存
         </v-btn>

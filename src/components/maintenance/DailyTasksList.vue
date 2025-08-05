@@ -1,45 +1,80 @@
 <template>
   <v-card class="elevation-2 maintenance-card h-100">
     <v-card-title class="d-flex align-center">
-      <v-icon class="mr-2">mdi-clipboard-text</v-icon>
+      <v-icon class="mr-2">
+        mdi-clipboard-text
+      </v-icon>
       {{ formatDate(date) }} 维修工作
-      <v-spacer></v-spacer>
-      <v-btn color="primary" prepend-icon="mdi-plus" @click="$emit('add-task')" size="small">
+      <v-spacer />
+      <v-btn
+        color="primary"
+        prepend-icon="mdi-plus"
+        size="small"
+        @click="$emit('add-task')"
+      >
         添加工作
       </v-btn>
     </v-card-title>
     
-    <v-divider></v-divider>
+    <v-divider />
     
-    <v-card-text v-if="loading" class="text-center py-8">
-      <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
-      <div class="mt-4 text-subtitle-1">加载中...</div>
+    <v-card-text
+      v-if="loading"
+      class="text-center py-8"
+    >
+      <v-progress-circular
+        indeterminate
+        color="primary"
+        size="64"
+      />
+      <div class="mt-4 text-subtitle-1">
+        加载中...
+      </div>
     </v-card-text>
     
-    <v-card-text v-else-if="tasks.length > 0" class="pt-4">
+    <v-card-text
+      v-else-if="tasks.length > 0"
+      class="pt-4"
+    >
       <v-row>
-        <v-col cols="12" md="6">
-          <div class="text-subtitle-1 font-weight-medium">今日工作完成情况</div>
+        <v-col
+          cols="12"
+          md="6"
+        >
+          <div class="text-subtitle-1 font-weight-medium">
+            今日工作完成情况
+          </div>
           <v-progress-linear
             :model-value="completionRate"
             color="success"
             height="20"
             class="mt-2"
           >
-            <template v-slot:default>
+            <template #default>
               <span class="text-white">{{ completionRate }}%</span>
             </template>
           </v-progress-linear>
         </v-col>
-        <v-col cols="12" md="6">
+        <v-col
+          cols="12"
+          md="6"
+        >
           <div class="d-flex justify-space-between">
             <div class="text-center">
-              <div class="text-h5 font-weight-bold">{{ tasks.length }}</div>
-              <div class="text-caption">总任务数</div>
+              <div class="text-h5 font-weight-bold">
+                {{ tasks.length }}
+              </div>
+              <div class="text-caption">
+                总任务数
+              </div>
             </div>
             <div class="text-center">
-              <div class="text-h5 font-weight-bold">{{ completedTasks }}</div>
-              <div class="text-caption">已完成</div>
+              <div class="text-h5 font-weight-bold">
+                {{ completedTasks }}
+              </div>
+              <div class="text-caption">
+                已完成
+              </div>
             </div>
           </div>
         </v-col>
@@ -52,8 +87,12 @@
           :class="{'completed-task': task.solved}"
           class="task-item"
         >
-          <template v-slot:prepend>
-            <v-checkbox v-model="task.solved" @change="$emit('update-status', task)" density="compact"></v-checkbox>
+          <template #prepend>
+            <v-checkbox
+              v-model="task.solved"
+              density="compact"
+              @change="$emit('update-status', task)"
+            />
           </template>
           
           <v-list-item-title :class="{'text-decoration-line-through': task.solved}">
@@ -72,20 +111,45 @@
             <span>{{ task.wheres }}</span>
           </v-list-item-subtitle>
           
-          <template v-slot:append>
+          <template #append>
             <div class="d-flex align-center">
-              <v-btn icon="mdi-pencil" variant="text" size="small" @click="$emit('edit-task', task)"></v-btn>
-              <v-btn icon="mdi-delete" variant="text" size="small" @click="$emit('delete-task', task)"></v-btn>
+              <v-btn
+                icon="mdi-pencil"
+                variant="text"
+                size="small"
+                @click="$emit('edit-task', task)"
+              />
+              <v-btn
+                icon="mdi-delete"
+                variant="text"
+                size="small"
+                @click="$emit('delete-task', task)"
+              />
             </div>
           </template>
         </v-list-item>
       </v-list>
     </v-card-text>
     
-    <v-card-text v-else class="text-center py-8">
-      <v-icon size="64" color="grey-lighten-1">mdi-calendar-blank</v-icon>
-      <div class="mt-4 text-subtitle-1 text-grey">当天没有维修任务</div>
-      <v-btn color="primary" class="mt-4" prepend-icon="mdi-plus" @click="$emit('add-task')">
+    <v-card-text
+      v-else
+      class="text-center py-8"
+    >
+      <v-icon
+        size="64"
+        color="grey-lighten-1"
+      >
+        mdi-calendar-blank
+      </v-icon>
+      <div class="mt-4 text-subtitle-1 text-grey">
+        当天没有维修任务
+      </div>
+      <v-btn
+        color="primary"
+        class="mt-4"
+        prepend-icon="mdi-plus"
+        @click="$emit('add-task')"
+      >
         添加工作
       </v-btn>
     </v-card-text>

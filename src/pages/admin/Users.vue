@@ -12,9 +12,9 @@
           :items-per-page="10"
           :hide-default-footer="false"
         >
-          <template v-slot:title>
+          <template #title>
             <span>用户管理</span>
-            <v-spacer></v-spacer>
+            <v-spacer />
             <v-text-field
               v-model="search"
               append-icon="mdi-magnify"
@@ -24,62 +24,124 @@
               density="compact"
               class="ml-4"
               style="max-width: 300px"
-            ></v-text-field>
+            />
           </template>
 
-          <template v-slot:item.department="{ item }">
-            <v-chip size="small" color="primary" variant="flat" v-if="item.department?.name">
+          <template #item.department="{ item }">
+            <v-chip
+              v-if="item.department?.name"
+              size="small"
+              color="primary"
+              variant="flat"
+            >
               {{ item.department?.name }}
             </v-chip>
-            <span v-else class="text-caption text-grey">未分配</span>
+            <span
+              v-else
+              class="text-caption text-grey"
+            >未分配</span>
           </template>
 
-          <template v-slot:item.roles="{ item }">
+          <template #item.roles="{ item }">
             <div v-if="item.roles && item.roles.length > 0">
-              <v-chip v-for="(role, i) in item.roles.slice(0, 2)" :key="i" 
-                     size="x-small" class="mr-1" :color="getRoleColor(role.name)" variant="outlined">
+              <v-chip
+                v-for="(role, i) in item.roles.slice(0, 2)"
+                :key="i" 
+                size="x-small"
+                class="mr-1"
+                :color="getRoleColor(role.name)"
+                variant="outlined"
+              >
                 {{ role.name }}
               </v-chip>
-              <v-chip v-if="item.roles.length > 2" size="x-small" color="grey" variant="outlined">
+              <v-chip
+                v-if="item.roles.length > 2"
+                size="x-small"
+                color="grey"
+                variant="outlined"
+              >
                 +{{ item.roles.length - 2 }}
               </v-chip>
             </div>
-            <span v-else class="text-caption text-grey">未分配角色</span>
+            <span
+              v-else
+              class="text-caption text-grey"
+            >未分配角色</span>
           </template>
 
-          <template v-slot:item.is_active="{ item }">
-            <v-chip :color="item.is_active ? 'success' : 'error'" size="small">
+          <template #item.is_active="{ item }">
+            <v-chip
+              :color="item.is_active ? 'success' : 'error'"
+              size="small"
+            >
               {{ item.is_active ? '启用' : '禁用' }}
             </v-chip>
           </template>
 
-          <template v-slot:item.actions="{ item }">
-            <v-btn size="small" variant="text" color="primary" class="mr-1" @click="editUser(item)">
+          <template #item.actions="{ item }">
+            <v-btn
+              size="small"
+              variant="text"
+              color="primary"
+              class="mr-1"
+              @click="editUser(item)"
+            >
               <v-icon>mdi-pencil</v-icon>
               编辑
             </v-btn>
-            <v-btn size="small" variant="text" color="info" class="mr-1" @click="manageUserRoles(item)">
+            <v-btn
+              size="small"
+              variant="text"
+              color="info"
+              class="mr-1"
+              @click="manageUserRoles(item)"
+            >
               <v-icon>mdi-account-key</v-icon>
               角色
             </v-btn>
-            <v-btn size="small" variant="text" color="warning" class="mr-1" @click="resetPassword(item)">
+            <v-btn
+              size="small"
+              variant="text"
+              color="warning"
+              class="mr-1"
+              @click="resetPassword(item)"
+            >
               <v-icon>mdi-lock-reset</v-icon>
               重置密码
             </v-btn>
-            <v-btn size="small" variant="text" :color="item.is_active ? 'error' : 'success'" @click="toggleUserStatus(item)">
+            <v-btn
+              size="small"
+              variant="text"
+              :color="item.is_active ? 'error' : 'success'"
+              @click="toggleUserStatus(item)"
+            >
               <v-icon>{{ item.is_active ? 'mdi-account-off' : 'mdi-account-check' }}</v-icon>
               {{ item.is_active ? '禁用' : '启用' }}
             </v-btn>
           </template>
 
           <template #actions>
-            <v-btn color="primary" prepend-icon="mdi-plus" @click="showUserDialog('add')">
+            <v-btn
+              color="primary"
+              prepend-icon="mdi-plus"
+              @click="showUserDialog('add')"
+            >
               添加用户
             </v-btn>
-            <v-btn class="ml-2" color="secondary" prepend-icon="mdi-refresh" @click="fetchUsers">
+            <v-btn
+              class="ml-2"
+              color="secondary"
+              prepend-icon="mdi-refresh"
+              @click="fetchUsers"
+            >
               刷新
             </v-btn>
-            <v-btn class="ml-2" color="info" prepend-icon="mdi-filter" @click="filterDrawer = true">
+            <v-btn
+              class="ml-2"
+              color="info"
+              prepend-icon="mdi-filter"
+              @click="filterDrawer = true"
+            >
               筛选
             </v-btn>
           </template>
@@ -88,13 +150,19 @@
     </v-row>
 
     <!-- 用户对话框 -->
-    <v-dialog v-model="isShowUserDialog" max-width="500px">
+    <v-dialog
+      v-model="isShowUserDialog"
+      max-width="500px"
+    >
       <v-card>
         <v-card-title class="text-h5 bg-primary text-white">
           {{ userDialogTitle }}
         </v-card-title>
         <v-card-text class="pt-4">
-          <unified-form ref="userFormRef" :showDefaultActions="false">
+          <unified-form
+            ref="userFormRef"
+            :show-default-actions="false"
+          >
             <v-text-field
               v-model="userForm.name"
               label="用户名"
@@ -102,7 +170,7 @@
               variant="outlined"
               density="comfortable"
               :rules="[rules.required]"
-            ></v-text-field>
+            />
             <v-text-field
               v-if="userDialogType === 'add'"
               v-model="userForm.password"
@@ -112,7 +180,7 @@
               variant="outlined"
               density="comfortable"
               :rules="[rules.required]"
-            ></v-text-field>
+            />
             <v-select
               v-model="userForm.department_id"
               :items="departments"
@@ -123,7 +191,7 @@
               variant="outlined"
               density="comfortable"
               :rules="[rules.required]"
-            ></v-select>
+            />
             <v-switch
               v-if="userDialogType === 'edit'"
               v-model="userForm.is_active"
@@ -131,19 +199,34 @@
               color="success"
               hide-details
               class="mt-2"
-            ></v-switch>
+            />
           </unified-form>
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="grey" variant="text" @click="isShowUserDialog = false">取消</v-btn>
-          <v-btn color="primary" @click="saveUser" :loading="saving">确定</v-btn>
+          <v-spacer />
+          <v-btn
+            color="grey"
+            variant="text"
+            @click="isShowUserDialog = false"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="primary"
+            :loading="saving"
+            @click="saveUser"
+          >
+            确定
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
     <!-- 重置密码对话框 -->
-    <v-dialog v-model="isShowResetDialog" max-width="500px">
+    <v-dialog
+      v-model="isShowResetDialog"
+      max-width="500px"
+    >
       <v-card>
         <v-card-title class="text-h5 bg-warning text-white">
           重置密码
@@ -158,7 +241,7 @@
             variant="outlined"
             density="comfortable"
             :rules="[rules.required]"
-          ></v-text-field>
+          />
           <v-text-field
             v-model="resetPasswordForm.confirmPassword"
             label="确认密码"
@@ -167,12 +250,24 @@
             variant="outlined"
             density="comfortable"
             :rules="[rules.required, passwordMatch]"
-          ></v-text-field>
+          />
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="grey" variant="text" @click="isShowResetDialog = false">取消</v-btn>
-          <v-btn color="warning" @click="confirmResetPassword" :loading="resetting">确认重置</v-btn>
+          <v-spacer />
+          <v-btn
+            color="grey"
+            variant="text"
+            @click="isShowResetDialog = false"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="warning"
+            :loading="resetting"
+            @click="confirmResetPassword"
+          >
+            确认重置
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -186,10 +281,21 @@
     >
       <v-card class="h-100">
         <v-card-title class="bg-primary text-white">
-          <v-icon class="mr-2" color="white">mdi-filter</v-icon>
+          <v-icon
+            class="mr-2"
+            color="white"
+          >
+            mdi-filter
+          </v-icon>
           筛选条件
-          <v-spacer></v-spacer>
-          <v-btn icon variant="text" color="white" size="small" @click="filterDrawer = false">
+          <v-spacer />
+          <v-btn
+            icon
+            variant="text"
+            color="white"
+            size="small"
+            @click="filterDrawer = false"
+          >
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </v-card-title>
@@ -202,7 +308,7 @@
               variant="outlined"
               density="comfortable"
               clearable
-            ></v-text-field>
+            />
             
             <v-select
               v-model="filters.department_id"
@@ -213,7 +319,7 @@
               variant="outlined"
               density="comfortable"
               clearable
-            ></v-select>
+            />
             
             <v-text-field
               v-model="filters.role"
@@ -221,7 +327,7 @@
               variant="outlined"
               density="comfortable"
               clearable
-            ></v-text-field>
+            />
             
             <v-select
               v-model="filters.is_active"
@@ -235,16 +341,23 @@
               variant="outlined"
               density="comfortable"
               clearable
-            ></v-select>
+            />
           </unified-form>
         </v-card-text>
         
         <v-card-actions class="py-3">
-          <v-spacer></v-spacer>
-          <v-btn variant="text" color="grey" @click="clearFilters">
+          <v-spacer />
+          <v-btn
+            variant="text"
+            color="grey"
+            @click="clearFilters"
+          >
             清除筛选
           </v-btn>
-          <v-btn color="primary" @click="applyFilters">
+          <v-btn
+            color="primary"
+            @click="applyFilters"
+          >
             应用筛选
           </v-btn>
         </v-card-actions>

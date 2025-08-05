@@ -1,11 +1,15 @@
 <template>
-  <unified-page-template title="停机单管理" icon="mdi-clipboard-text" color="primary">
+  <unified-page-template
+    title="停机单管理"
+    icon="mdi-clipboard-text"
+    color="primary"
+  >
     <template #header-actions>
       <v-btn 
-        color="primary" 
+        v-permission="'MAINT:WRITE'" 
+        color="primary"
         prepend-icon="mdi-plus"
         @click="openNewDowntimeRecord"
-        v-permission="'MAINT:WRITE'"
       >
         新建停机单
       </v-btn>
@@ -13,9 +17,9 @@
         color="success"
         prepend-icon="mdi-file-export"
         class="ml-2"
-        @click="exportToCSV"
         :loading="exporting"
         :disabled="!downtimeRecords.length"
+        @click="exportToCSV"
       >
         导出CSV
       </v-btn>
@@ -27,14 +31,18 @@
         <div class="d-flex align-center flex-wrap">
           <!-- 线体选择 -->
           <div class="d-flex align-center me-4 mb-2">
-            <div class="text-subtitle-1 me-2">线体:</div>
+            <div class="text-subtitle-1 me-2">
+              线体:
+            </div>
             <v-btn-toggle
               v-model="filters.line"
               color="primary"
               density="comfortable"
               class="mx-2"
             >
-              <v-btn value="">全部</v-btn>
+              <v-btn value="">
+                全部
+              </v-btn>
               <v-btn 
                 v-for="line in lineTypes" 
                 :key="line.value" 
@@ -48,27 +56,37 @@
           
           <!-- 班次选择 -->
           <div class="d-flex align-center me-4 mb-2">
-            <div class="text-subtitle-1 me-2">班次:</div>
+            <div class="text-subtitle-1 me-2">
+              班次:
+            </div>
             <v-btn-toggle
               v-model="filters.shift"
               color="secondary"
               density="comfortable"
               class="mx-2"
             >
-              <v-btn value="">全部</v-btn>
-              <v-btn value="白班">白班</v-btn>
-              <v-btn value="夜班">夜班</v-btn>
+              <v-btn value="">
+                全部
+              </v-btn>
+              <v-btn value="白班">
+                白班
+              </v-btn>
+              <v-btn value="夜班">
+                夜班
+              </v-btn>
             </v-btn-toggle>
           </div>
           
           <!-- 日期范围 -->
           <div class="d-flex align-center mb-2">
-            <div class="text-subtitle-1 me-2">日期范围:</div>
+            <div class="text-subtitle-1 me-2">
+              日期范围:
+            </div>
             <v-menu
               v-model="dateMenu"
               :close-on-content-click="false"
             >
-              <template v-slot:activator="{ props }">
+              <template #activator="{ props }">
                 <v-btn 
                   variant="outlined" 
                   color="primary" 
@@ -84,11 +102,11 @@
                 range
                 color="primary"
                 @update:model-value="dateMenu = false"
-              ></v-date-picker>
+              />
             </v-menu>
           </div>
           
-          <v-spacer></v-spacer>
+          <v-spacer />
           
           <div class="d-flex mb-2">
             <v-text-field
@@ -99,15 +117,15 @@
               density="compact"
               class="me-2"
               style="max-width: 200px;"
-            ></v-text-field>
+            />
             
             <v-btn 
               color="primary" 
               variant="outlined"
               class="me-2"
               prepend-icon="mdi-filter"
-              @click="applyFilters"
               :loading="loading"
+              @click="applyFilters"
             >
               应用筛选
             </v-btn>
@@ -129,7 +147,9 @@
     <v-row class="mt-2 mb-4">
       <v-col cols="12">
         <div class="filter-tags d-flex align-center flex-wrap">
-          <div class="text-subtitle-2 me-2">当前筛选:</div>
+          <div class="text-subtitle-2 me-2">
+            当前筛选:
+          </div>
           <v-chip
             class="me-2 mb-1"
             :color="filters.line ? getLineColor(filters.line) : 'grey'"
@@ -159,34 +179,36 @@
           </v-chip>
           
           <v-chip
+            v-if="filters.dateRange && filters.dateRange.length === 2"
             class="me-2 mb-1"
             color="primary"
             size="small"
             label
-            v-if="filters.dateRange && filters.dateRange.length === 2"
           >
             {{ dateRangeText }}
           </v-chip>
           
-          <v-spacer></v-spacer>
+          <v-spacer />
           
           <v-btn
             icon
             variant="text"
             color="primary"
-            @click="applyFilters"
             :loading="loading"
             class="me-2"
+            @click="applyFilters"
           >
             <v-icon>mdi-refresh</v-icon>
-            <v-tooltip activator="parent">刷新数据</v-tooltip>
+            <v-tooltip activator="parent">
+              刷新数据
+            </v-tooltip>
           </v-btn>
           
           <v-chip
+            v-if="downtimeRecords.length > 0"
             color="info"
             size="small"
             class="me-2"
-            v-if="downtimeRecords.length > 0"
           >
             共 {{ downtimeRecords.length }} 条记录
           </v-chip>
@@ -195,35 +217,74 @@
     </v-row>
 
     <!-- 数据统计信息 -->
-    <v-card class="mb-4" v-if="downtimeRecords.length > 0">
+    <v-card
+      v-if="downtimeRecords.length > 0"
+      class="mb-4"
+    >
       <v-card-text class="py-2">
         <v-row>
-          <v-col cols="12" md="4">
+          <v-col
+            cols="12"
+            md="4"
+          >
             <div class="d-flex align-center">
-              <v-icon color="primary" class="me-2">mdi-clock-outline</v-icon>
+              <v-icon
+                color="primary"
+                class="me-2"
+              >
+                mdi-clock-outline
+              </v-icon>
               <div>
-                <div class="text-subtitle-2">总停机时间</div>
-                <div class="text-h6">{{ calculateTotalDowntime() }}</div>
+                <div class="text-subtitle-2">
+                  总停机时间
+                </div>
+                <div class="text-h6">
+                  {{ calculateTotalDowntime() }}
+                </div>
               </div>
             </div>
           </v-col>
           
-          <v-col cols="12" md="4">
+          <v-col
+            cols="12"
+            md="4"
+          >
             <div class="d-flex align-center">
-              <v-icon color="warning" class="me-2">mdi-counter</v-icon>
+              <v-icon
+                color="warning"
+                class="me-2"
+              >
+                mdi-counter
+              </v-icon>
               <div>
-                <div class="text-subtitle-2">停机次数</div>
-                <div class="text-h6">{{ downtimeRecords.length }} 次</div>
+                <div class="text-subtitle-2">
+                  停机次数
+                </div>
+                <div class="text-h6">
+                  {{ downtimeRecords.length }} 次
+                </div>
               </div>
             </div>
           </v-col>
           
-          <v-col cols="12" md="4">
+          <v-col
+            cols="12"
+            md="4"
+          >
             <div class="d-flex align-center">
-              <v-icon color="success" class="me-2">mdi-chart-timeline-variant</v-icon>
+              <v-icon
+                color="success"
+                class="me-2"
+              >
+                mdi-chart-timeline-variant
+              </v-icon>
               <div>
-                <div class="text-subtitle-2">平均每次停机时间</div>
-                <div class="text-h6">{{ calculateAverageDowntime() }}</div>
+                <div class="text-subtitle-2">
+                  平均每次停机时间
+                </div>
+                <div class="text-h6">
+                  {{ calculateAverageDowntime() }}
+                </div>
               </div>
             </div>
           </v-col>
@@ -233,16 +294,19 @@
 
     <!-- 数据表格 -->
     <unified-data-table
+      v-model:selected="selectedItems"
       :headers="headers"
       :items="downtimeRecords"
       :loading="loading"
       :search="search"
       :items-per-page="10"
-      v-model:selected="selectedItems"
       show-select
     >
-      <template v-slot:top>
-        <div class="d-flex align-center mb-3" v-if="selectedItems.length > 0">
+      <template #top>
+        <div
+          v-if="selectedItems.length > 0"
+          class="d-flex align-center mb-3"
+        >
           <v-chip
             color="primary"
             class="mr-2"
@@ -250,19 +314,19 @@
             已选择 {{ selectedItems.length }} 项
           </v-chip>
           <v-btn
+            v-permission="'MAINT:ADMIN'"
             color="error"
             variant="outlined"
             size="small"
             prepend-icon="mdi-delete-sweep"
             @click="confirmBatchDelete"
-            v-permission="'MAINT:ADMIN'"
           >
             批量删除
           </v-btn>
         </div>
       </template>
 
-      <template v-slot:item.line="{ item }">
+      <template #item.line="{ item }">
         <v-chip
           :color="getLineColor(item.line)"
           size="small"
@@ -272,27 +336,27 @@
         </v-chip>
       </template>
 
-      <template v-slot:item.type_name="{ item }">
+      <template #item.type_name="{ item }">
         {{ item.type_name || '-' }}
       </template>
 
-      <template v-slot:item.reason_name="{ item }">
+      <template #item.reason_name="{ item }">
         {{ item.reason_name || '-' }}
       </template>
 
-      <template v-slot:item.start_time="{ item }">
+      <template #item.start_time="{ item }">
         {{ formatDateTime(item.start_time) }}
       </template>
 
-      <template v-slot:item.end_time="{ item }">
+      <template #item.end_time="{ item }">
         {{ formatDateTime(item.end_time) }}
       </template>
 
-      <template v-slot:item.duration="{ item }">
+      <template #item.duration="{ item }">
         {{ calculateDuration(item.start_time, item.end_time) }}
       </template>
 
-      <template v-slot:item.shift="{ item }">
+      <template #item.shift="{ item }">
         <v-chip
           :color="item.shift === '白班' ? 'amber-darken-1' : 'blue-darken-3'"
           size="small"
@@ -302,7 +366,7 @@
         </v-chip>
       </template>
 
-      <template v-slot:item.actions="{ item }">
+      <template #item.actions="{ item }">
         <v-btn
           icon
           variant="text"
@@ -313,22 +377,22 @@
           <v-icon>mdi-eye</v-icon>
         </v-btn>
         <v-btn
+          v-permission="'MAINT:WRITE'"
           icon
           variant="text"
           size="small"
           color="primary"
           @click="editDowntimeRecord(item)"
-          v-permission="'MAINT:WRITE'"
         >
           <v-icon>mdi-pencil</v-icon>
         </v-btn>
         <v-btn
+          v-permission="'MAINT:ADMIN'"
           icon
           variant="text"
           size="small"
           color="error"
           @click="confirmDelete(item)"
-          v-permission="'MAINT:ADMIN'"
         >
           <v-icon>mdi-delete</v-icon>
         </v-btn>
@@ -336,18 +400,27 @@
     </unified-data-table>
 
     <!-- 停机单详情对话框 -->
-    <v-dialog v-model="recordDialog" max-width="800px">
+    <v-dialog
+      v-model="recordDialog"
+      max-width="800px"
+    >
       <v-card>
         <v-card-title class="d-flex align-center">
           <span>{{ dialogTitle }}</span>
-          <v-spacer></v-spacer>
-          <v-btn icon @click="recordDialog = false">
+          <v-spacer />
+          <v-btn
+            icon
+            @click="recordDialog = false"
+          >
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </v-card-title>
 
         <v-card-text>
-          <div v-if="viewMode" class="mb-4 text-body-2">
+          <div
+            v-if="viewMode"
+            class="mb-4 text-body-2"
+          >
             <v-alert
               type="info"
               text
@@ -361,7 +434,10 @@
           
           <v-form ref="recordForm">
             <v-row>
-              <v-col cols="12" md="6">
+              <v-col
+                cols="12"
+                md="6"
+              >
                 <v-select
                   v-model="editedRecord.line"
                   :items="lineTypes"
@@ -372,9 +448,12 @@
                   item-value="value"
                   item-title="title"
                   :return-object="false"
-                ></v-select>
+                />
               </v-col>
-              <v-col cols="12" md="6">
+              <v-col
+                cols="12"
+                md="6"
+              >
                 <v-select
                   v-model="editedRecord.type_code"
                   :items="typeOptions"
@@ -384,14 +463,17 @@
                   variant="outlined"
                   :rules="viewMode ? [] : [v => !!v || '请选择停机类型']"
                   :readonly="viewMode"
-                  @update:model-value="onTypeChange"
                   :return-object="false"
-                ></v-select>
+                  @update:model-value="onTypeChange"
+                />
               </v-col>
             </v-row>
 
             <v-row>
-              <v-col cols="12" md="6">
+              <v-col
+                cols="12"
+                md="6"
+              >
                 <v-select
                   v-model="editedRecord.reason_code"
                   :items="reasonOptions"
@@ -401,22 +483,28 @@
                   variant="outlined"
                   :rules="viewMode ? [] : [v => !!v || '请选择停机原因']"
                   :readonly="viewMode"
-                  @update:model-value="onReasonChange"
                   :return-object="false"
-                ></v-select>
+                  @update:model-value="onReasonChange"
+                />
               </v-col>
-              <v-col cols="12" md="6">
+              <v-col
+                cols="12"
+                md="6"
+              >
                 <v-text-field
                   v-model="editedRecord.remark"
                   label="备注"
                   variant="outlined"
                   :readonly="viewMode"
-                ></v-text-field>
+                />
               </v-col>
             </v-row>
 
             <v-row>
-              <v-col cols="12" md="6">
+              <v-col
+                cols="12"
+                md="6"
+              >
                 <v-text-field
                   v-model="editedRecord.start_time"
                   label="开始时间"
@@ -425,9 +513,12 @@
                   :rules="viewMode ? [] : [v => !!v || '请选择开始时间']"
                   :readonly="viewMode"
                   @update:model-value="onStartTimeChange"
-                ></v-text-field>
+                />
               </v-col>
-              <v-col cols="12" md="6">
+              <v-col
+                cols="12"
+                md="6"
+              >
                 <v-text-field
                   v-model="editedRecord.end_time"
                   label="结束时间"
@@ -438,14 +529,22 @@
                     v => !v || !editedRecord.start_time || new Date(v) > new Date(editedRecord.start_time) || '结束时间必须晚于开始时间'
                   ]"
                   :readonly="viewMode"
-                ></v-text-field>
+                />
               </v-col>
             </v-row>
 
             <v-row v-if="viewMode">
-              <v-col cols="12" md="6">
-                <v-card variant="outlined" class="pa-3">
-                  <div class="text-subtitle-2 mb-1">持续时间</div>
+              <v-col
+                cols="12"
+                md="6"
+              >
+                <v-card
+                  variant="outlined"
+                  class="pa-3"
+                >
+                  <div class="text-subtitle-2 mb-1">
+                    持续时间
+                  </div>
                   <div class="text-h6">
                     {{ calculateDuration(editedRecord.start_time, editedRecord.end_time) }}
                   </div>
@@ -454,7 +553,10 @@
             </v-row>
 
             <v-row>
-              <v-col cols="12" md="6">
+              <v-col
+                cols="12"
+                md="6"
+              >
                 <v-chip
                   class="mt-2"
                   :color="editedRecord.shift === '白班' ? 'amber-darken-1' : 'blue-darken-3'"
@@ -462,7 +564,10 @@
                   label
                 >
                   班次: {{ editedRecord.shift }}
-                  <v-tooltip activator="parent" location="end">
+                  <v-tooltip
+                    activator="parent"
+                    location="end"
+                  >
                     班次根据开始时间自动判断：7:30-19:30为白班，其余为夜班
                   </v-tooltip>
                 </v-chip>
@@ -472,22 +577,28 @@
         </v-card-text>
 
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="grey" text @click="recordDialog = false">{{ viewMode ? '关闭' : '取消' }}</v-btn>
+          <v-spacer />
+          <v-btn
+            color="grey"
+            text
+            @click="recordDialog = false"
+          >
+            {{ viewMode ? '关闭' : '取消' }}
+          </v-btn>
           <v-btn 
             v-if="viewMode" 
-            color="primary" 
+            v-permission="'MAINT:WRITE'" 
+            color="primary"
             @click="viewMode = false"
-            v-permission="'MAINT:WRITE'"
           >
             编辑备注
           </v-btn>
           <v-btn 
             v-else
             color="primary" 
-            @click="saveDowntimeRecord" 
-            :loading="saving"
+            :loading="saving" 
             :disabled="saving"
+            @click="saveDowntimeRecord"
           >
             保存
           </v-btn>
@@ -496,36 +607,64 @@
     </v-dialog>
 
     <!-- 删除确认对话框 -->
-    <v-dialog v-model="deleteDialog" max-width="400">
+    <v-dialog
+      v-model="deleteDialog"
+      max-width="400"
+    >
       <v-card>
-        <v-card-title class="headline">确认删除</v-card-title>
+        <v-card-title class="headline">
+          确认删除
+        </v-card-title>
         <v-card-text>
           您确定要删除这条停机记录吗？此操作不可撤销。
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="grey" text @click="deleteDialog = false">取消</v-btn>
-          <v-btn color="error" text @click="deleteDowntimeRecord">删除</v-btn>
+          <v-spacer />
+          <v-btn
+            color="grey"
+            text
+            @click="deleteDialog = false"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="error"
+            text
+            @click="deleteDowntimeRecord"
+          >
+            删除
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
     <!-- 批量删除确认对话框 -->
-    <v-dialog v-model="batchDeleteDialog" max-width="450">
+    <v-dialog
+      v-model="batchDeleteDialog"
+      max-width="450"
+    >
       <v-card>
-        <v-card-title class="headline">批量删除确认</v-card-title>
+        <v-card-title class="headline">
+          批量删除确认
+        </v-card-title>
         <v-card-text>
           您确定要删除选中的 {{ selectedItems.length }} 条停机记录吗？此操作不可撤销。
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="grey" text @click="batchDeleteDialog = false">取消</v-btn>
+          <v-spacer />
+          <v-btn
+            color="grey"
+            text
+            @click="batchDeleteDialog = false"
+          >
+            取消
+          </v-btn>
           <v-btn 
             color="error" 
             text 
-            @click="batchDeleteDowntimeRecords"
             :loading="batchDeleting"
             :disabled="batchDeleting"
+            @click="batchDeleteDowntimeRecords"
           >
             删除
           </v-btn>

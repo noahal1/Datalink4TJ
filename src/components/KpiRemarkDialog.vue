@@ -1,37 +1,74 @@
 <template>
-  <v-dialog v-model="dialog" max-width="800px" persistent>
+  <v-dialog
+    v-model="dialog"
+    max-width="800px"
+    persistent
+  >
     <v-card>
       <v-card-title class="d-flex align-center">
-        <v-icon class="mr-2" color="warning">mdi-alert-circle</v-icon>
+        <v-icon
+          class="mr-2"
+          color="warning"
+        >
+          mdi-alert-circle
+        </v-icon>
         <span>{{ title }}</span>
       </v-card-title>
       
       <v-card-subtitle class="pb-2">
-        <v-chip color="primary" size="small" class="mr-2">{{ item?.area }}</v-chip>
+        <v-chip
+          color="primary"
+          size="small"
+          class="mr-2"
+        >
+          {{ item?.area }}
+        </v-chip>
         <span class="text-body-2">{{ item?.description }}</span>
       </v-card-subtitle>
 
-      <v-divider></v-divider>
+      <v-divider />
 
       <v-card-text class="pt-4">
         <!-- 数据对比信息 -->
         <v-row class="mb-4">
           <v-col cols="4">
-            <v-card variant="outlined" class="text-center pa-3">
-              <div class="text-caption text-grey">实际值</div>
-              <div class="text-h6 text-primary">{{ formatValue(item?.actual_value) }}</div>
+            <v-card
+              variant="outlined"
+              class="text-center pa-3"
+            >
+              <div class="text-caption text-grey">
+                实际值
+              </div>
+              <div class="text-h6 text-primary">
+                {{ formatValue(item?.actual_value) }}
+              </div>
             </v-card>
           </v-col>
           <v-col cols="4">
-            <v-card variant="outlined" class="text-center pa-3">
-              <div class="text-caption text-grey">目标值</div>
-              <div class="text-h6 text-success">{{ formatValue(item?.target_value) }}</div>
+            <v-card
+              variant="outlined"
+              class="text-center pa-3"
+            >
+              <div class="text-caption text-grey">
+                目标值
+              </div>
+              <div class="text-h6 text-success">
+                {{ formatValue(item?.target_value) }}
+              </div>
             </v-card>
           </v-col>
           <v-col cols="4">
-            <v-card variant="outlined" class="text-center pa-3">
-              <div class="text-caption text-grey">差异</div>
-              <div class="text-h6" :class="getDifferenceColor()">
+            <v-card
+              variant="outlined"
+              class="text-center pa-3"
+            >
+              <div class="text-caption text-grey">
+                差异
+              </div>
+              <div
+                class="text-h6"
+                :class="getDifferenceColor()"
+              >
                 {{ getDifferenceText() }}
               </div>
             </v-card>
@@ -49,7 +86,7 @@
           maxlength="500"
           class="mb-4"
           prepend-inner-icon="mdi-magnify"
-        ></v-textarea>
+        />
 
         <!-- 行动计划 -->
         <v-textarea
@@ -61,13 +98,13 @@
           counter="500"
           maxlength="500"
           prepend-inner-icon="mdi-clipboard-list"
-        ></v-textarea>
+        />
       </v-card-text>
 
-      <v-divider></v-divider>
+      <v-divider />
 
       <v-card-actions class="pa-4">
-        <v-spacer></v-spacer>
+        <v-spacer />
         <v-btn
           variant="text"
           @click="cancel"
@@ -77,8 +114,8 @@
         <v-btn
           color="primary"
           variant="flat"
-          @click="save"
           :disabled="!isValid"
+          @click="save"
         >
           保存
         </v-btn>

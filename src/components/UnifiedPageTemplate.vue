@@ -1,35 +1,65 @@
 <template>
-  <v-container fluid class="unified-page-container pa-0">
-    <v-card class="unified-page-card" elevation="0">
+  <v-container
+    fluid
+    class="unified-page-container pa-0"
+  >
+    <v-card
+      class="unified-page-card"
+      elevation="0"
+    >
       <!-- 页面标题栏 -->
       <v-card-title class="unified-page-header d-flex align-center py-5 px-8">
         <!-- 图标容器 -->
-        <div v-if="icon" class="icon-container mr-3">
-          <v-icon :color="color" size="28" class="page-icon">{{ icon }}</v-icon>
+        <div
+          v-if="icon"
+          class="icon-container mr-3"
+        >
+          <v-icon
+            :color="color"
+            size="28"
+            class="page-icon"
+          >
+            {{ icon }}
+          </v-icon>
         </div>
 
         <!-- 标题容器 -->
         <div class="title-container">
-          <h2 class="page-title">{{ title }}</h2>
-          <div v-if="subtitle" class="page-subtitle">{{ subtitle }}</div>
+          <h2 class="page-title">
+            {{ title }}
+          </h2>
+          <div
+            v-if="subtitle"
+            class="page-subtitle"
+          >
+            {{ subtitle }}
+          </div>
         </div>
 
-        <v-spacer></v-spacer>
+        <v-spacer />
 
         <!-- 操作按钮区域 -->
         <div class="header-actions">
-          <slot name="header-actions"></slot>
+          <slot name="header-actions" />
         </div>
       </v-card-title>
 
       <!-- 页面内容区 -->
       <v-card-text class="unified-page-content pa-8">
         <!-- 面包屑导航 -->
-        <v-breadcrumbs v-if="showBreadcrumbs" :items="breadcrumbs" class="pa-0 mb-6 custom-breadcrumbs">
-          <template v-slot:divider>
-            <v-icon icon="mdi-chevron-right" size="small" class="breadcrumb-divider"></v-icon>
+        <v-breadcrumbs
+          v-if="showBreadcrumbs"
+          :items="breadcrumbs"
+          class="pa-0 mb-6 custom-breadcrumbs"
+        >
+          <template #divider>
+            <v-icon
+              icon="mdi-chevron-right"
+              size="small"
+              class="breadcrumb-divider"
+            />
           </template>
-          <template v-slot:item="{ item }">
+          <template #item="{ item }">
             <v-breadcrumbs-item
               :href="item.href"
               :disabled="item.disabled"
@@ -42,7 +72,7 @@
 
         <!-- 主要内容区 -->
         <div class="page-content-wrapper">
-          <slot></slot>
+          <slot />
         </div>
       </v-card-text>
     </v-card>

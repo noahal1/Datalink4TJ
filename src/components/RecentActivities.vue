@@ -1,57 +1,104 @@
 <template>
-  <v-card height="100%" class="activities-card d-flex flex-column">
+  <v-card
+    height="100%"
+    class="activities-card d-flex flex-column"
+  >
     <v-card-title class="d-flex align-center flex-shrink-0">
-      <v-icon class="mr-2" :color="titleIconColor">{{ titleIcon }}</v-icon>
+      <v-icon
+        class="mr-2"
+        :color="titleIconColor"
+      >
+        {{ titleIcon }}
+      </v-icon>
       {{ title }}
-      <v-spacer></v-spacer>
+      <v-spacer />
       <v-btn
         icon="mdi-refresh"
         variant="text"
         size="small"
-        @click="refreshActivities"
         :disabled="isLoading"
         :loading="isLoading"
         class="refresh-btn"
-      ></v-btn>
+        @click="refreshActivities"
+      />
     </v-card-title>
-    <v-divider class="flex-shrink-0"></v-divider>
+    <v-divider class="flex-shrink-0" />
     <loading-overlay :loading="isLoading" />
     
     <v-card-text class="activities-container flex-grow-1 pa-0">
-      <v-list class="py-0" v-if="filteredActivities.slice(0, limit).length > 0">
+      <v-list
+        v-if="filteredActivities.slice(0, limit).length > 0"
+        class="py-0"
+      >
         <v-list-item 
           v-for="activity in filteredActivities.slice(0, limit)" 
           :key="activity.id" 
-          @click="showActivityDetails(activity)"
           link
           class="activity-item mb-2"
+          @click="showActivityDetails(activity)"
         >
-          <template v-slot:prepend>
-            <v-avatar :color="`${activity.color || 'grey'}-lighten-4`" size="40" class="me-3">
-              <v-icon :icon="activity.icon || 'mdi-history'" :color="activity.color || 'grey'"></v-icon>
+          <template #prepend>
+            <v-avatar
+              :color="`${activity.color || 'grey'}-lighten-4`"
+              size="40"
+              class="me-3"
+            >
+              <v-icon
+                :icon="activity.icon || 'mdi-history'"
+                :color="activity.color || 'grey'"
+              />
             </v-avatar>
           </template>
-          <v-list-item-title class="font-weight-medium activity-title">{{ activity.title || activity.action }}</v-list-item-title>
+          <v-list-item-title class="font-weight-medium activity-title">
+            {{ activity.title || activity.action }}
+          </v-list-item-title>
           <v-list-item-subtitle class="activity-subtitle">
             <span class="text-caption d-flex align-center">
-              <v-icon size="x-small" color="grey" class="mr-1">mdi-account</v-icon>
+              <v-icon
+                size="x-small"
+                color="grey"
+                class="mr-1"
+              >mdi-account</v-icon>
               {{ activity.user }}
             </span>
             <span class="mx-1 d-none d-sm-inline">•</span>
             <span class="text-caption">{{ activity.action || activity.details }}</span>
           </v-list-item-subtitle>
           <v-list-item-subtitle class="text-caption text-grey d-flex align-center">
-            <v-icon size="x-small" color="grey" class="mr-1">mdi-clock-outline</v-icon>
+            <v-icon
+              size="x-small"
+              color="grey"
+              class="mr-1"
+            >
+              mdi-clock-outline
+            </v-icon>
             {{ activity.time }}
             <v-tooltip location="bottom">
-              <template v-slot:activator="{ props }">
-                <v-icon size="x-small" color="grey" class="ml-2" v-bind="props">mdi-calendar</v-icon>
+              <template #activator="{ props }">
+                <v-icon
+                  size="x-small"
+                  color="grey"
+                  class="ml-2"
+                  v-bind="props"
+                >
+                  mdi-calendar
+                </v-icon>
               </template>
               <span>{{ formatFullDateTime(activity.timestamp) }}</span>
             </v-tooltip>
-            <v-tooltip v-if="activity.details" location="bottom">
-              <template v-slot:activator="{ props }">
-                <v-icon size="x-small" color="grey" class="ml-2" v-bind="props">mdi-information-outline</v-icon>
+            <v-tooltip
+              v-if="activity.details"
+              location="bottom"
+            >
+              <template #activator="{ props }">
+                <v-icon
+                  size="x-small"
+                  color="grey"
+                  class="ml-2"
+                  v-bind="props"
+                >
+                  mdi-information-outline
+                </v-icon>
               </template>
               <span>{{ activity.details }}</span>
             </v-tooltip>
@@ -67,10 +114,25 @@
         border="start"
       >
         <div class="text-center">
-          <v-icon size="large" color="error" class="mb-2">mdi-alert-circle</v-icon>
-          <div class="text-subtitle-1">{{ error }}</div>
-          <v-btn color="error" variant="text" class="mt-2" @click="refreshActivities">
-            <v-icon start>mdi-refresh</v-icon>
+          <v-icon
+            size="large"
+            color="error"
+            class="mb-2"
+          >
+            mdi-alert-circle
+          </v-icon>
+          <div class="text-subtitle-1">
+            {{ error }}
+          </div>
+          <v-btn
+            color="error"
+            variant="text"
+            class="mt-2"
+            @click="refreshActivities"
+          >
+            <v-icon start>
+              mdi-refresh
+            </v-icon>
             重试
           </v-btn>
         </div>
@@ -84,114 +146,197 @@
         border="start"
       >
         <div class="text-center">
-          <v-icon size="large" color="info" class="mb-2">mdi-information</v-icon>
-          <div class="text-subtitle-1">暂无活动记录</div>
+          <v-icon
+            size="large"
+            color="info"
+            class="mb-2"
+          >
+            mdi-information
+          </v-icon>
+          <div class="text-subtitle-1">
+            暂无活动记录
+          </div>
         </div>
       </v-alert>
     </v-card-text>
     
     <!-- 活动详情对话框 -->
-    <v-dialog v-model="showDialog" max-width="600">
-      <v-card v-if="selectedActivity" class="activity-details-card">
-        <v-toolbar :color="selectedActivity.color || 'primary'" dark flat>
+    <v-dialog
+      v-model="showDialog"
+      max-width="600"
+    >
+      <v-card
+        v-if="selectedActivity"
+        class="activity-details-card"
+      >
+        <v-toolbar
+          :color="selectedActivity.color || 'primary'"
+          dark
+          flat
+        >
           <v-toolbar-title>活动详情</v-toolbar-title>
-          <v-spacer></v-spacer>
-          <v-btn icon="mdi-close" variant="text" @click="showDialog = false"></v-btn>
+          <v-spacer />
+          <v-btn
+            icon="mdi-close"
+            variant="text"
+            @click="showDialog = false"
+          />
         </v-toolbar>
         <v-card-text class="pt-4">
           <h2 class="text-h5 mb-3 d-flex align-center activity-detail-title">
-            <v-icon :color="selectedActivity.color || 'primary'" class="mr-2">{{ selectedActivity.icon || 'mdi-history' }}</v-icon>
+            <v-icon
+              :color="selectedActivity.color || 'primary'"
+              class="mr-2"
+            >
+              {{ selectedActivity.icon || 'mdi-history' }}
+            </v-icon>
             {{ selectedActivity.title || selectedActivity.action }}
           </h2>
           
           <v-list density="compact">
             <v-list-item>
-              <template v-slot:prepend>
-                <v-icon color="primary">mdi-account</v-icon>
+              <template #prepend>
+                <v-icon color="primary">
+                  mdi-account
+                </v-icon>
               </template>
               <v-list-item-title>操作人员</v-list-item-title>
               <v-list-item-subtitle>{{ selectedActivity.user }}</v-list-item-subtitle>
             </v-list-item>
             
             <v-list-item>
-              <template v-slot:prepend>
-                <v-icon color="primary">mdi-office-building</v-icon>
+              <template #prepend>
+                <v-icon color="primary">
+                  mdi-office-building
+                </v-icon>
               </template>
               <v-list-item-title>所属部门</v-list-item-title>
               <v-list-item-subtitle>{{ selectedActivity.department }}</v-list-item-subtitle>
             </v-list-item>
             
             <v-list-item>
-              <template v-slot:prepend>
-                <v-icon color="primary">mdi-clock-outline</v-icon>
+              <template #prepend>
+                <v-icon color="primary">
+                  mdi-clock-outline
+                </v-icon>
               </template>
               <v-list-item-title>操作时间</v-list-item-title>
               <v-list-item-subtitle>{{ formatFullDateTime(selectedActivity.timestamp) }}</v-list-item-subtitle>
             </v-list-item>
             
             <v-list-item>
-              <template v-slot:prepend>
-                <v-icon color="primary">mdi-tag</v-icon>
+              <template #prepend>
+                <v-icon color="primary">
+                  mdi-tag
+                </v-icon>
               </template>
               <v-list-item-title>操作类型</v-list-item-title>
               <v-list-item-subtitle>
-                <v-chip :color="selectedActivity.color || 'primary'" size="small">{{ selectedActivity.type }}</v-chip>
+                <v-chip
+                  :color="selectedActivity.color || 'primary'"
+                  size="small"
+                >
+                  {{ selectedActivity.type }}
+                </v-chip>
               </v-list-item-subtitle>
             </v-list-item>
             
             <v-list-item v-if="selectedActivity.details">
-              <template v-slot:prepend>
-                <v-icon color="primary">mdi-text-box</v-icon>
+              <template #prepend>
+                <v-icon color="primary">
+                  mdi-text-box
+                </v-icon>
               </template>
               <v-list-item-title>操作描述</v-list-item-title>
               <v-list-item-subtitle>{{ selectedActivity.details }}</v-list-item-subtitle>
             </v-list-item>
             
             <v-list-item v-if="selectedActivity.action && selectedActivity.title && selectedActivity.action !== selectedActivity.title">
-              <template v-slot:prepend>
-                <v-icon color="primary">mdi-text-box-outline</v-icon>
+              <template #prepend>
+                <v-icon color="primary">
+                  mdi-text-box-outline
+                </v-icon>
               </template>
               <v-list-item-title>操作动作</v-list-item-title>
               <v-list-item-subtitle>{{ selectedActivity.action }}</v-list-item-subtitle>
             </v-list-item>
           </v-list>
           
-          <v-divider class="my-3"></v-divider>
+          <v-divider class="my-3" />
           
-          <div v-if="selectedActivity.changes" class="mt-4">
-            <h3 class="text-subtitle-1 mb-2">数据变更记录</h3>
+          <div
+            v-if="selectedActivity.changes"
+            class="mt-4"
+          >
+            <h3 class="text-subtitle-1 mb-2">
+              数据变更记录
+            </h3>
             
-            <v-tabs v-model="activeTab" density="comfortable" class="changes-tabs">
-              <v-tab value="before">变更前</v-tab>
-              <v-tab value="after">变更后</v-tab>
-              <v-tab value="diff">对比</v-tab>
+            <v-tabs
+              v-model="activeTab"
+              density="comfortable"
+              class="changes-tabs"
+            >
+              <v-tab value="before">
+                变更前
+              </v-tab>
+              <v-tab value="after">
+                变更后
+              </v-tab>
+              <v-tab value="diff">
+                对比
+              </v-tab>
             </v-tabs>
             
-            <v-window v-model="activeTab" class="mt-2">
+            <v-window
+              v-model="activeTab"
+              class="mt-2"
+            >
               <v-window-item value="before">
-                <v-card variant="outlined" class="pa-2 changes-card">
+                <v-card
+                  variant="outlined"
+                  class="pa-2 changes-card"
+                >
                   <pre class="text-caption changes-content">{{ formatChanges(selectedActivity.changes).before }}</pre>
                 </v-card>
               </v-window-item>
               
               <v-window-item value="after">
-                <v-card variant="outlined" class="pa-2 changes-card">
+                <v-card
+                  variant="outlined"
+                  class="pa-2 changes-card"
+                >
                   <pre class="text-caption changes-content">{{ formatChanges(selectedActivity.changes).after }}</pre>
                 </v-card>
               </v-window-item>
               
               <v-window-item value="diff">
-                <v-card variant="outlined" class="pa-2 changes-card">
+                <v-card
+                  variant="outlined"
+                  class="pa-2 changes-card"
+                >
                   <div class="d-flex flex-column flex-sm-row">
                     <div class="flex-grow-1 mr-0 mr-sm-2 mb-2 mb-sm-0">
-                      <div class="text-caption text-center mb-1">变更前</div>
-                      <v-card variant="tonal" color="grey-lighten-3" class="pa-2">
+                      <div class="text-caption text-center mb-1">
+                        变更前
+                      </div>
+                      <v-card
+                        variant="tonal"
+                        color="grey-lighten-3"
+                        class="pa-2"
+                      >
                         <pre class="text-caption changes-content">{{ formatChanges(selectedActivity.changes).before }}</pre>
                       </v-card>
                     </div>
                     <div class="flex-grow-1">
-                      <div class="text-caption text-center mb-1">变更后</div>
-                      <v-card variant="tonal" color="primary-lighten-5" class="pa-2">
+                      <div class="text-caption text-center mb-1">
+                        变更后
+                      </div>
+                      <v-card
+                        variant="tonal"
+                        color="primary-lighten-5"
+                        class="pa-2"
+                      >
                         <pre class="text-caption changes-content">{{ formatChanges(selectedActivity.changes).after }}</pre>
                       </v-card>
                     </div>
@@ -202,12 +347,23 @@
           </div>
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="grey-darken-1" variant="text" @click="showDialog = false">
+          <v-spacer />
+          <v-btn
+            color="grey-darken-1"
+            variant="text"
+            @click="showDialog = false"
+          >
             关闭
           </v-btn>
-          <v-btn v-if="selectedActivity.target" color="primary" variant="tonal" :to="selectedActivity.target">
-            <v-icon class="mr-1">mdi-arrow-right</v-icon>
+          <v-btn
+            v-if="selectedActivity.target"
+            color="primary"
+            variant="tonal"
+            :to="selectedActivity.target"
+          >
+            <v-icon class="mr-1">
+              mdi-arrow-right
+            </v-icon>
             前往相关页面
           </v-btn>
         </v-card-actions>

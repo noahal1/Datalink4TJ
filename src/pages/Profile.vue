@@ -6,16 +6,28 @@
     color="primary"
   >
     <v-row>
-      <v-col cols="12" md="4">
-        <v-card class="profile-info-card" elevation="2">
+      <v-col
+        cols="12"
+        md="4"
+      >
+        <v-card
+          class="profile-info-card"
+          elevation="2"
+        >
           <v-card-text class="text-center pa-6">
             <!-- 用户头像 -->
-            <v-avatar size="120" color="primary" class="mb-4">
+            <v-avatar
+              size="120"
+              color="primary"
+              class="mb-4"
+            >
               <span class="text-h3 text-white">{{ userInitials }}</span>
             </v-avatar>
             
             <!-- 用户基本信息 -->
-            <h3 class="text-h5 mb-2">{{ userStore.user || '未知用户' }}</h3>
+            <h3 class="text-h5 mb-2">
+              {{ userStore.user || '未知用户' }}
+            </h3>
             <p class="text-subtitle-1 text-grey-600 mb-1">
               {{ getDepartmentName(userStore.department) }} 部门
             </p>
@@ -36,8 +48,13 @@
         </v-card>
         
         <!-- 快捷操作 -->
-        <v-card class="mt-4" elevation="2">
-          <v-card-title class="text-h6">快捷操作</v-card-title>
+        <v-card
+          class="mt-4"
+          elevation="2"
+        >
+          <v-card-title class="text-h6">
+            快捷操作
+          </v-card-title>
           <v-list density="compact">
             <v-list-item 
               prepend-icon="mdi-lock-reset" 
@@ -59,22 +76,30 @@
       </v-col>
       
       <!-- 右侧：个人信息编辑 -->
-      <v-col cols="12" md="8">
+      <v-col
+        cols="12"
+        md="8"
+      >
         <v-card elevation="2">
           <v-card-title class="text-h6 d-flex align-center">
-            <v-icon class="mr-2">mdi-account-edit</v-icon>
+            <v-icon class="mr-2">
+              mdi-account-edit
+            </v-icon>
             编辑个人信息
           </v-card-title>
-          <v-divider></v-divider>
+          <v-divider />
           
           <v-card-text class="pa-6">
             <unified-form 
               ref="profileFormRef" 
-              :showDefaultActions="false"
+              :show-default-actions="false"
               :loading="saving"
             >
               <v-row>
-                <v-col cols="12" md="6">
+                <v-col
+                  cols="12"
+                  md="6"
+                >
                   <v-text-field
                     v-model="profileForm.name"
                     label="用户名"
@@ -85,7 +110,10 @@
                     :rules="[rules.required]"
                   />
                 </v-col>
-                <v-col cols="12" md="6">
+                <v-col
+                  cols="12"
+                  md="6"
+                >
                   <v-text-field
                     v-model="profileForm.email"
                     label="邮箱地址"
@@ -96,7 +124,10 @@
                     :rules="[rules.email]"
                   />
                 </v-col>
-                <v-col cols="12" md="6">
+                <v-col
+                  cols="12"
+                  md="6"
+                >
                   <v-text-field
                     v-model="profileForm.phone"
                     label="联系电话"
@@ -106,7 +137,10 @@
                     prepend-inner-icon="mdi-phone"
                   />
                 </v-col>
-                <v-col cols="12" md="6">
+                <v-col
+                  cols="12"
+                  md="6"
+                >
                   <v-select
                     v-model="profileForm.department_id"
                     :items="departments"
@@ -135,20 +169,23 @@
               
               <!-- 操作按钮 -->
               <v-row class="mt-4">
-                <v-col cols="12" class="d-flex justify-end">
+                <v-col
+                  cols="12"
+                  class="d-flex justify-end"
+                >
                   <v-btn
                     variant="outlined"
                     color="grey"
                     class="mr-3"
-                    @click="resetForm"
                     :disabled="saving"
+                    @click="resetForm"
                   >
                     重置
                   </v-btn>
                   <v-btn
                     color="primary"
-                    @click="saveProfile"
                     :loading="saving"
+                    @click="saveProfile"
                   >
                     保存更改
                   </v-btn>
@@ -161,13 +198,19 @@
     </v-row>
     
     <!-- 修改密码对话框 -->
-    <v-dialog v-model="showChangePasswordDialog" max-width="500px">
+    <v-dialog
+      v-model="showChangePasswordDialog"
+      max-width="500px"
+    >
       <v-card>
         <v-card-title class="text-h6 bg-primary text-white">
           修改密码
         </v-card-title>
         <v-card-text class="pt-4">
-          <unified-form ref="passwordFormRef" :showDefaultActions="false">
+          <unified-form
+            ref="passwordFormRef"
+            :show-default-actions="false"
+          >
             <v-text-field
               v-model="passwordForm.currentPassword"
               label="当前密码"
@@ -201,18 +244,18 @@
           </unified-form>
         </v-card-text>
         <v-card-actions class="pa-4">
-          <v-spacer></v-spacer>
+          <v-spacer />
           <v-btn
             variant="outlined"
-            @click="closePasswordDialog"
             :disabled="changingPassword"
+            @click="closePasswordDialog"
           >
             取消
           </v-btn>
           <v-btn
             color="primary"
-            @click="changePassword"
             :loading="changingPassword"
+            @click="changePassword"
           >
             确认修改
           </v-btn>

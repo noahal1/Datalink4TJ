@@ -6,12 +6,12 @@
   >
     <template #header-actions>
       <v-btn
+        v-permission="'MAINT:READ'"
         color="info"
         variant="outlined"
         prepend-icon="mdi-file-document-multiple"
         class="me-2"
         to="/pr-management"
-        v-permission="'MAINT:READ'"
       >
         PR管理
       </v-btn>
@@ -25,10 +25,10 @@
         查看维修指标
       </v-btn>
       <v-btn
+        v-permission="'MAINT:WRITE'"
         color="primary"
         prepend-icon="mdi-plus"
         @click="openTaskDialog"
-        v-permission="'MAINT:WRITE'"
       >
         添加任务
       </v-btn>
@@ -36,7 +36,11 @@
 
     <v-row>
       <!-- 日历组件 -->
-      <v-col cols="12" md="5" lg="4">
+      <v-col
+        cols="12"
+        md="5"
+        lg="4"
+      >
         <maintenance-calendar 
           v-model:selected-date="selectedDate"
           v-model:selected-month="selectedMonth"
@@ -45,7 +49,11 @@
       </v-col>
 
       <!-- 日任务列表组件 -->
-      <v-col cols="12" md="7" lg="8">
+      <v-col
+        cols="12"
+        md="7"
+        lg="8"
+      >
         <daily-tasks-list
           :tasks="selectedDayTasks"
           :loading="loadingTasks"
@@ -60,14 +68,20 @@
     
     <!-- 周计划和问题记录 -->
     <v-row class="mt-6 match-height">
-      <v-col cols="12" md="7">
+      <v-col
+        cols="12"
+        md="7"
+      >
         <weekly-plan
           :tasks="weeklyTasks"
           @export="exportWeeklyPlan"
         />
       </v-col>
       
-      <v-col cols="12" md="5">
+      <v-col
+        cols="12"
+        md="5"
+      >
         <issues-list
           :issues="issuesList"
           :loading="loadingIssues"

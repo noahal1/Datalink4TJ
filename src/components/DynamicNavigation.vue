@@ -2,111 +2,162 @@
   <div class="dynamic-nav">
     <!-- 主导航区域 -->
     <div class="nav-content">
-      <v-list class="nav-list" density="compact">
-      <!-- 加载状态显示 -->
-      <div v-if="loading" class="pa-4 d-flex justify-center align-center">
-        <v-progress-circular indeterminate color="primary" size="24"></v-progress-circular>
-        <span class="ml-2 text-body-2">加载导航菜单...</span>
-      </div>
-      
-      <!-- 加载失败显示 -->
-      <div v-else-if="loadError" class="pa-4 text-center">
-        <v-icon color="error" icon="mdi-alert-circle-outline"></v-icon>
-        <div class="text-body-2 text-error mt-2">加载菜单失败</div>
-        <v-btn
-          variant="text"
-          color="primary"
-          size="small"
-          class="mt-2"
-          @click="retryLoadRoutes"
+      <v-list
+        class="nav-list"
+        density="compact"
+      >
+        <!-- 加载状态显示 -->
+        <div
+          v-if="loading"
+          class="pa-4 d-flex justify-center align-center"
         >
-          重试
-        </v-btn>
-      </div>
+          <v-progress-circular
+            indeterminate
+            color="primary"
+            size="24"
+          />
+          <span class="ml-2 text-body-2">加载导航菜单...</span>
+        </div>
       
-      <!-- 搜索结果为空 -->
-      <div v-else-if="searchQuery && filteredNavigationGroups.length === 0" class="pa-4 text-center">
-        <v-icon color="info" icon="mdi-information-outline"></v-icon>
-        <div class="text-body-2 mt-2">未找到匹配的菜单项</div>
-      </div>
-      
-      <!-- 路由分组部分 -->
-      <template v-else v-for="(group, groupIndex) in filteredNavigationGroups" :key="groupIndex">
-        <!-- 分组标题 -->
-        <v-list-subheader v-if="group.title" class="nav-group-title">
-          {{ group.title }}
-        </v-list-subheader>
-        
-        <!-- 组内路由项 -->
-        <template v-for="(route, routeIndex) in group.routes" :key="route.path || routeIndex">
-          <!-- 常规菜单项 -->
-          <v-list-item
-            v-if="!route.children || route.children.length === 0"
-            :to="route.path"
-            :value="route.path"
-            :active="isActiveRoute(route.path)"
-            class="nav-list-item"
-            v-ripple
-            @click="logRouteClick(route)"
+        <!-- 加载失败显示 -->
+        <div
+          v-else-if="loadError"
+          class="pa-4 text-center"
+        >
+          <v-icon
+            color="error"
+            icon="mdi-alert-circle-outline"
+          />
+          <div class="text-body-2 text-error mt-2">
+            加载菜单失败
+          </div>
+          <v-btn
+            variant="text"
+            color="primary"
+            size="small"
+            class="mt-2"
+            @click="retryLoadRoutes"
           >
-            <template v-slot:prepend>
-              <v-icon>{{ route.meta?.icon || 'mdi-link' }}</v-icon>
-            </template>
-            <v-list-item-title>{{ route.meta?.title || route.name || '未命名' }}</v-list-item-title>
-            <template v-slot:append v-if="route.meta?.badge">
-              <v-badge
-                :content="route.meta.badge"
-                :color="route.meta.badgeColor || 'primary'"
-                dot
-                location="top start"
-              ></v-badge>
-            </template>
-          </v-list-item>
-          
-          <!-- 有子菜单的菜单项 -->
-          <div v-else class="nav-group-wrapper">
-            <!-- 父菜单项 -->
+            重试
+          </v-btn>
+        </div>
+      
+        <!-- 搜索结果为空 -->
+        <div
+          v-else-if="searchQuery && filteredNavigationGroups.length === 0"
+          class="pa-4 text-center"
+        >
+          <v-icon
+            color="info"
+            icon="mdi-information-outline"
+          />
+          <div class="text-body-2 mt-2">
+            未找到匹配的菜单项
+          </div>
+        </div>
+      
+        <!-- 路由分组部分 -->
+        <template
+          v-for="(group, groupIndex) in filteredNavigationGroups"
+          v-else
+          :key="groupIndex"
+        >
+          <!-- 分组标题 -->
+          <v-list-subheader
+            v-if="group.title"
+            class="nav-group-title"
+          >
+            {{ group.title }}
+          </v-list-subheader>
+        
+          <!-- 组内路由项 -->
+          <template
+            v-for="(route, routeIndex) in group.routes"
+            :key="route.path || routeIndex"
+          >
+            <!-- 常规菜单项 -->
             <v-list-item
-              @click="toggleGroup(route.path || routeIndex)"
-              :active="isActiveGroupRoute(route)"
-              class="nav-list-item nav-group-header"
+              v-if="!route.children || route.children.length === 0"
               v-ripple
+              :to="route.path"
+              :value="route.path"
+              :active="isActiveRoute(route.path)"
+              class="nav-list-item"
+              @click="logRouteClick(route)"
             >
-              <template v-slot:prepend>
-                <v-icon>{{ route.meta?.icon || 'mdi-folder' }}</v-icon>
+              <template #prepend>
+                <v-icon>{{ route.meta?.icon || 'mdi-link' }}</v-icon>
               </template>
               <v-list-item-title>{{ route.meta?.title || route.name || '未命名' }}</v-list-item-title>
-              <template v-slot:append>
-                <v-icon :icon="openGroups.includes(route.path || routeIndex) ? 'mdi-chevron-up' : 'mdi-chevron-down'" class="transition-icon"></v-icon>
+              <template
+                v-if="route.meta?.badge"
+                #append
+              >
+                <v-badge
+                  :content="route.meta.badge"
+                  :color="route.meta.badgeColor || 'primary'"
+                  dot
+                  location="top start"
+                />
               </template>
             </v-list-item>
+          
+            <!-- 有子菜单的菜单项 -->
+            <div
+              v-else
+              class="nav-group-wrapper"
+            >
+              <!-- 父菜单项 -->
+              <v-list-item
+                v-ripple
+                :active="isActiveGroupRoute(route)"
+                class="nav-list-item nav-group-header"
+                @click="toggleGroup(route.path || routeIndex)"
+              >
+                <template #prepend>
+                  <v-icon>{{ route.meta?.icon || 'mdi-folder' }}</v-icon>
+                </template>
+                <v-list-item-title>{{ route.meta?.title || route.name || '未命名' }}</v-list-item-title>
+                <template #append>
+                  <v-icon
+                    :icon="openGroups.includes(route.path || routeIndex) ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+                    class="transition-icon"
+                  />
+                </template>
+              </v-list-item>
             
-            <!-- 子菜单项 -->
-            <v-expand-transition>
-              <div v-show="openGroups.includes(route.path || routeIndex)" class="nav-child-items">
-                <div class="nav-group-indicator"></div>
-                <v-list-item
-                  v-for="(childRoute, childIndex) in route.children"
-                  :key="childRoute.path || childIndex"
-                  :to="childRoute.path"
-                  :value="childRoute.path"
-                  :active="isActiveRoute(childRoute.path)"
-                  class="nav-list-subitem"
-                  v-ripple
+              <!-- 子菜单项 -->
+              <v-expand-transition>
+                <div
+                  v-show="openGroups.includes(route.path || routeIndex)"
+                  class="nav-child-items"
                 >
-                  <template v-slot:prepend>
-                    <v-icon size="small">{{ childRoute.meta?.icon || 'mdi-link' }}</v-icon>
-                  </template>
-                  <v-list-item-title>{{ childRoute.meta?.title || childRoute.name || '未命名' }}</v-list-item-title>
-                </v-list-item>
-              </div>
-            </v-expand-transition>
-          </div>
+                  <div class="nav-group-indicator" />
+                  <v-list-item
+                    v-for="(childRoute, childIndex) in route.children"
+                    :key="childRoute.path || childIndex"
+                    v-ripple
+                    :to="childRoute.path"
+                    :value="childRoute.path"
+                    :active="isActiveRoute(childRoute.path)"
+                    class="nav-list-subitem"
+                  >
+                    <template #prepend>
+                      <v-icon size="small">
+                        {{ childRoute.meta?.icon || 'mdi-link' }}
+                      </v-icon>
+                    </template>
+                    <v-list-item-title>{{ childRoute.meta?.title || childRoute.name || '未命名' }}</v-list-item-title>
+                  </v-list-item>
+                </div>
+              </v-expand-transition>
+            </div>
+          </template>
+          <v-divider
+            v-if="groupIndex < filteredNavigationGroups.length - 1"
+            class="my-2"
+          />
         </template>
-        <v-divider v-if="groupIndex < filteredNavigationGroups.length - 1" class="my-2"></v-divider>
-      </template>
-      
-
       </v-list>
     </div>
   </div>

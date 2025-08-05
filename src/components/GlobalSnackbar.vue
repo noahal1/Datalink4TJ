@@ -8,12 +8,12 @@
   >
     {{ snackbar.text }}
     
-    <template v-slot:actions>
+    <template #actions>
       <v-btn
         variant="text"
         icon="mdi-close"
         @click="visible = false"
-      ></v-btn>
+      />
     </template>
   </v-snackbar>
 </template>

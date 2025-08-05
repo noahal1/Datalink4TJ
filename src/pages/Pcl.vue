@@ -16,7 +16,9 @@
               variant="tonal"
               class="mt-4"
             >
-              <v-icon class="me-2">mdi-information-outline</v-icon>
+              <v-icon class="me-2">
+                mdi-information-outline
+              </v-icon>
               该功能预计将在下一个版本中完成
             </v-alert>
           </v-card-text>

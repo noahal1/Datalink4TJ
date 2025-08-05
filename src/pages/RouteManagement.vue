@@ -15,8 +15,8 @@
       <v-btn
         color="error"
         prepend-icon="mdi-delete-sweep"
-        @click="batchDeleteSelected"
         :disabled="selectedRoutes.length === 0"
+        @click="batchDeleteSelected"
       >
         批量删除
       </v-btn>
@@ -41,7 +41,10 @@
         <v-card class="mb-4">
           <v-card-text>
             <v-row>
-              <v-col cols="12" md="4">
+              <v-col
+                cols="12"
+                md="4"
+              >
                 <v-text-field
                   v-model="searchText"
                   prepend-inner-icon="mdi-magnify"
@@ -52,9 +55,12 @@
                   clearable
                   hide-details
                   @input="onSearchInput"
-                ></v-text-field>
+                />
               </v-col>
-              <v-col cols="12" md="3">
+              <v-col
+                cols="12"
+                md="3"
+              >
                 <v-select
                   v-model="filterType"
                   :items="[
@@ -67,9 +73,12 @@
                   density="compact"
                   hide-details
                   @update:model-value="applyFilters"
-                ></v-select>
+                />
               </v-col>
-              <v-col cols="12" md="2">
+              <v-col
+                cols="12"
+                md="2"
+              >
                 <v-select
                   v-model="filterPermission"
                   :items="[
@@ -83,9 +92,12 @@
                   density="compact"
                   hide-details
                   @update:model-value="applyFilters"
-                ></v-select>
+                />
               </v-col>
-              <v-col cols="12" md="2">
+              <v-col
+                cols="12"
+                md="2"
+              >
                 <v-select
                   v-model="filterGroup"
                   :items="[
@@ -109,16 +121,19 @@
                   density="compact"
                   hide-details
                   @update:model-value="applyFilters"
-                ></v-select>
+                />
               </v-col>
-              <v-col cols="12" md="2">
+              <v-col
+                cols="12"
+                md="2"
+              >
                 <v-checkbox
                   v-model="showHiddenRoutes"
                   label="显示隐藏路由"
                   density="compact"
                   hide-details
                   @update:model-value="applyFilters"
-                ></v-checkbox>
+                />
               </v-col>
             </v-row>
           </v-card-text>
@@ -129,17 +144,21 @@
           <!-- 表格视图 -->
           <unified-data-table
             v-if="!showTreeView"
+            v-model="selectedRoutes"
             title="路由列表"
             icon="mdi-routes"
             :headers="tableHeaders"
             :items="filteredRoutes"
             :loading="loadingRoutes"
-            v-model="selectedRoutes"
           >
             <!-- 自定义列渲染 -->
             <template #item.meta.title="{ item }">
               <div class="d-flex align-center">
-                <v-icon v-if="item.meta?.icon" size="small" class="mr-2">
+                <v-icon
+                  v-if="item.meta?.icon"
+                  size="small"
+                  class="mr-2"
+                >
                   {{ item.meta.icon }}
                 </v-icon>
                 {{ item.meta?.title || item.name }}
@@ -167,7 +186,10 @@
                 >
                   {{ getGroupLabel(item.meta.group) }}
                 </v-chip>
-                <span v-else class="text-grey">-</span>
+                <span
+                  v-else
+                  class="text-grey"
+                >-</span>
               </div>
             </template>
 
@@ -183,7 +205,10 @@
                 </v-chip>
 
                 <!-- 显示角色列表 -->
-                <div v-if="item.meta?.allowed_roles && item.meta.allowed_roles.length > 0" class="mt-1">
+                <div
+                  v-if="item.meta?.allowed_roles && item.meta.allowed_roles.length > 0"
+                  class="mt-1"
+                >
                   <v-tooltip location="bottom">
                     <template #activator="{ props }">
                       <v-chip-group v-bind="props">
@@ -207,8 +232,14 @@
                       </v-chip-group>
                     </template>
                     <div>
-                      <div class="text-subtitle-2 mb-2">可访问的角色:</div>
-                      <div v-for="roleId in item.meta.allowed_roles" :key="roleId" class="text-caption">
+                      <div class="text-subtitle-2 mb-2">
+                        可访问的角色:
+                      </div>
+                      <div
+                        v-for="roleId in item.meta.allowed_roles"
+                        :key="roleId"
+                        class="text-caption"
+                      >
                         • {{ getRoleName(roleId) }}
                       </div>
                     </div>
@@ -218,21 +249,46 @@
             </template>
 
             <template #item.actions="{ item }">
-              <v-btn-group density="compact" variant="text">
-                <v-btn @click="openModernRouteEditor(item)" icon size="small">
+              <v-btn-group
+                density="compact"
+                variant="text"
+              >
+                <v-btn
+                  icon
+                  size="small"
+                  @click="openModernRouteEditor(item)"
+                >
                   <v-icon>mdi-pencil</v-icon>
-                  <v-tooltip activator="parent" location="bottom">编辑</v-tooltip>
+                  <v-tooltip
+                    activator="parent"
+                    location="bottom"
+                  >
+                    编辑
+                  </v-tooltip>
                 </v-btn>
-                <v-btn @click="deleteRoute(item)" icon size="small" color="error">
+                <v-btn
+                  icon
+                  size="small"
+                  color="error"
+                  @click="deleteRoute(item)"
+                >
                   <v-icon>mdi-delete</v-icon>
-                  <v-tooltip activator="parent" location="bottom">删除</v-tooltip>
+                  <v-tooltip
+                    activator="parent"
+                    location="bottom"
+                  >
+                    删除
+                  </v-tooltip>
                 </v-btn>
               </v-btn-group>
             </template>
           </unified-data-table>
 
           <!-- 树形视图 -->
-          <div v-else class="pa-4">
+          <div
+            v-else
+            class="pa-4"
+          >
             <route-tree-view
               :routes="routeTree"
               @route-selected="openModernRouteEditor"

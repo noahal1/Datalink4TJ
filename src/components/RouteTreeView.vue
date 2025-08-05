@@ -41,14 +41,36 @@
           </v-chip>
 
           <!-- 操作按钮 -->
-          <v-btn-group density="compact" variant="text">
-            <v-btn @click="editRoute(item)" icon size="x-small">
+          <v-btn-group
+            density="compact"
+            variant="text"
+          >
+            <v-btn
+              icon
+              size="x-small"
+              @click="editRoute(item)"
+            >
               <v-icon>mdi-pencil</v-icon>
-              <v-tooltip activator="parent" location="bottom">编辑</v-tooltip>
+              <v-tooltip
+                activator="parent"
+                location="bottom"
+              >
+                编辑
+              </v-tooltip>
             </v-btn>
-            <v-btn @click="deleteRoute(item)" icon size="x-small" color="error">
+            <v-btn
+              icon
+              size="x-small"
+              color="error"
+              @click="deleteRoute(item)"
+            >
               <v-icon>mdi-delete</v-icon>
-              <v-tooltip activator="parent" location="bottom">删除</v-tooltip>
+              <v-tooltip
+                activator="parent"
+                location="bottom"
+              >
+                删除
+              </v-tooltip>
             </v-btn>
           </v-btn-group>
         </div>
@@ -69,7 +91,10 @@
         </div>
         <div class="text-caption text-grey">
           {{ item.path || '无路径' }}
-          <span v-if="item.component" class="ml-2">
+          <span
+            v-if="item.component"
+            class="ml-2"
+          >
             → {{ item.component }}
           </span>
         </div>

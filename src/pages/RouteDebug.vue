@@ -4,7 +4,10 @@
       <v-card-title>路由调试信息</v-card-title>
       <v-card-text>
         <v-row>
-          <v-col cols="12" md="6">
+          <v-col
+            cols="12"
+            md="6"
+          >
             <h3>当前路由信息</h3>
             <v-list density="compact">
               <v-list-item>
@@ -19,7 +22,10 @@
             </v-list>
           </v-col>
           
-          <v-col cols="12" md="6">
+          <v-col
+            cols="12"
+            md="6"
+          >
             <h3>路由统计</h3>
             <v-list density="compact">
               <v-list-item>
@@ -35,7 +41,7 @@
           </v-col>
         </v-row>
         
-        <v-divider class="my-4"></v-divider>
+        <v-divider class="my-4" />
         
         <h3>所有路由列表</h3>
         <v-data-table
@@ -44,32 +50,41 @@
           :items-per-page="10"
           class="elevation-1"
         >
-          <template v-slot:item.component="{ item }">
-            <v-chip size="small" :color="getComponentColor(item.component)">
+          <template #item.component="{ item }">
+            <v-chip
+              size="small"
+              :color="getComponentColor(item.component)"
+            >
               {{ getComponentName(item.component) }}
             </v-chip>
           </template>
           
-          <template v-slot:item.actions="{ item }">
+          <template #item.actions="{ item }">
             <v-btn 
               size="small" 
               variant="text" 
               color="primary"
-              @click="testRoute(item.path)"
               :disabled="!item.path || item.path === $route.path"
+              @click="testRoute(item.path)"
             >
               测试
             </v-btn>
           </template>
         </v-data-table>
         
-        <v-divider class="my-4"></v-divider>
+        <v-divider class="my-4" />
         
         <h3>组件注册状态</h3>
-        <v-card variant="outlined" class="mb-4">
+        <v-card
+          variant="outlined"
+          class="mb-4"
+        >
           <v-card-text>
             <v-row>
-              <v-col cols="12" md="6">
+              <v-col
+                cols="12"
+                md="6"
+              >
                 <v-list density="compact">
                   <v-list-item>
                     <v-list-item-title>注册状态: {{ registrationStatus.isRegistered ? '✅ 已注册' : '❌ 未注册' }}</v-list-item-title>
@@ -82,19 +97,22 @@
                   </v-list-item>
                 </v-list>
               </v-col>
-              <v-col cols="12" md="6">
+              <v-col
+                cols="12"
+                md="6"
+              >
                 <v-btn
                   color="primary"
-                  @click="registerComponents"
                   :loading="registering"
                   class="mr-2"
+                  @click="registerComponents"
                 >
                   重新注册组件
                 </v-btn>
                 <v-btn
                   color="secondary"
-                  @click="refreshRegistrationStatus"
                   :loading="refreshingStatus"
+                  @click="refreshRegistrationStatus"
                 >
                   刷新状态
                 </v-btn>
@@ -105,21 +123,27 @@
 
         <h3>组件映射测试</h3>
         <v-row>
-          <v-col cols="12" md="6">
+          <v-col
+            cols="12"
+            md="6"
+          >
             <v-select
               v-model="selectedComponent"
               :items="componentOptions"
               label="选择组件进行测试"
               variant="outlined"
               density="compact"
-            ></v-select>
+            />
           </v-col>
-          <v-col cols="12" md="6">
+          <v-col
+            cols="12"
+            md="6"
+          >
             <v-btn
               color="primary"
-              @click="testComponentImport"
               :loading="testingComponent"
               :disabled="!selectedComponent"
+              @click="testComponentImport"
             >
               测试组件导入
             </v-btn>

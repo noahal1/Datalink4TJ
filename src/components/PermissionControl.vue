@@ -32,7 +32,7 @@
 <template>
   <div>
     <!-- 有权限时显示默认插槽 -->
-    <slot v-if="hasPermission"></slot>
+    <slot v-if="hasPermission" />
     
     <!-- 无权限时显示unauthorized插槽，如果提供 -->
     <slot 
@@ -40,9 +40,12 @@
       name="unauthorized"
     >
       <!-- 默认无权限提示，仅在showUnauthorized为true时显示 -->
-      <div v-if="showUnauthorized" class="permission-denied">
+      <div
+        v-if="showUnauthorized"
+        class="permission-denied"
+      >
         <div class="permission-denied-icon">
-          <i class="ri-lock-line"></i>
+          <i class="ri-lock-line" />
         </div>
         <div class="permission-denied-text">
           {{ unauthorizedText }}

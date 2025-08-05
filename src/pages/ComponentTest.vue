@@ -3,22 +3,36 @@
     <v-card>
       <v-card-title>组件加载测试</v-card-title>
       <v-card-text>
-        <v-btn @click="testAdminUserComponent" color="primary" class="mr-2">
+        <v-btn
+          color="primary"
+          class="mr-2"
+          @click="testAdminUserComponent"
+        >
           测试 AdminUser 组件加载
         </v-btn>
-        <v-btn @click="testDirectImport" color="secondary" class="mr-2">
+        <v-btn
+          color="secondary"
+          class="mr-2"
+          @click="testDirectImport"
+        >
           测试直接导入
         </v-btn>
-        <v-btn @click="testComponentMap" color="success">
+        <v-btn
+          color="success"
+          @click="testComponentMap"
+        >
           测试组件映射表
         </v-btn>
         
-        <v-divider class="my-4"></v-divider>
+        <v-divider class="my-4" />
         
         <div v-if="testResults.length > 0">
           <h3>测试结果:</h3>
           <v-list>
-            <v-list-item v-for="(result, index) in testResults" :key="index">
+            <v-list-item
+              v-for="(result, index) in testResults"
+              :key="index"
+            >
               <v-list-item-content>
                 <v-list-item-title>{{ result.test }}</v-list-item-title>
                 <v-list-item-subtitle :class="result.success ? 'success--text' : 'error--text'">

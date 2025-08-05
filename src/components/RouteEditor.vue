@@ -1,26 +1,47 @@
 <template>
-  <v-dialog v-model="dialog" max-width="800" persistent>
+  <v-dialog
+    v-model="dialog"
+    max-width="800"
+    persistent
+  >
     <v-card>
       <v-card-title class="d-flex align-center">
-        <v-icon class="mr-2" color="primary">
+        <v-icon
+          class="mr-2"
+          color="primary"
+        >
           {{ isEditing ? 'mdi-pencil' : 'mdi-plus' }}
         </v-icon>
         {{ isEditing ? '编辑路由' : '创建路由' }}
-        <v-spacer></v-spacer>
-        <v-btn icon variant="text" @click="closeDialog" :disabled="saving">
+        <v-spacer />
+        <v-btn
+          icon
+          variant="text"
+          :disabled="saving"
+          @click="closeDialog"
+        >
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-card-title>
 
       <v-card-text>
-        <v-form ref="formRef" v-model="formValid" @submit.prevent="handleSubmit">
+        <v-form
+          ref="formRef"
+          v-model="formValid"
+          @submit.prevent="handleSubmit"
+        >
           <!-- 基本信息 -->
           <v-row>
             <v-col cols="12">
-              <h3 class="text-h6 mb-4">基本信息</h3>
+              <h3 class="text-h6 mb-4">
+                基本信息
+              </h3>
             </v-col>
             
-            <v-col cols="12" md="6">
+            <v-col
+              cols="12"
+              md="6"
+            >
               <v-text-field
                 v-model="formData.name"
                 label="路由名称"
@@ -34,7 +55,12 @@
                 <template #append-inner>
                   <v-tooltip location="bottom">
                     <template #activator="{ props }">
-                      <v-icon v-bind="props" color="grey">mdi-help-circle-outline</v-icon>
+                      <v-icon
+                        v-bind="props"
+                        color="grey"
+                      >
+                        mdi-help-circle-outline
+                      </v-icon>
                     </template>
                     路由的唯一标识符，用于程序内部引用
                   </v-tooltip>
@@ -42,7 +68,10 @@
               </v-text-field>
             </v-col>
             
-            <v-col cols="12" md="6">
+            <v-col
+              cols="12"
+              md="6"
+            >
               <v-text-field
                 v-model="formData.meta.title"
                 label="显示标题"
@@ -56,7 +85,12 @@
                 <template #append-inner>
                   <v-tooltip location="bottom">
                     <template #activator="{ props }">
-                      <v-icon v-bind="props" color="grey">mdi-help-circle-outline</v-icon>
+                      <v-icon
+                        v-bind="props"
+                        color="grey"
+                      >
+                        mdi-help-circle-outline
+                      </v-icon>
                     </template>
                     在菜单和页面标题中显示的名称
                   </v-tooltip>
@@ -64,7 +98,10 @@
               </v-text-field>
             </v-col>
             
-            <v-col cols="12" md="6">
+            <v-col
+              cols="12"
+              md="6"
+            >
               <v-select
                 v-model="routeType"
                 :items="routeTypeOptions"
@@ -72,10 +109,13 @@
                 variant="outlined"
                 density="comfortable"
                 @update:model-value="onRouteTypeChange"
-              ></v-select>
+              />
             </v-col>
             
-            <v-col cols="12" md="6">
+            <v-col
+              cols="12"
+              md="6"
+            >
               <v-select
                 v-model="formData.parentId"
                 :items="parentOptions"
@@ -86,17 +126,22 @@
                 variant="outlined"
                 density="comfortable"
                 clearable
-              ></v-select>
+              />
             </v-col>
           </v-row>
 
           <!-- 路径和组件配置 -->
           <v-row v-if="routeType === 'page'">
             <v-col cols="12">
-              <h3 class="text-h6 mb-4">路径和组件</h3>
+              <h3 class="text-h6 mb-4">
+                路径和组件
+              </h3>
             </v-col>
             
-            <v-col cols="12" md="8">
+            <v-col
+              cols="12"
+              md="8"
+            >
               <v-text-field
                 v-model="formData.path"
                 label="路由路径"
@@ -106,10 +151,13 @@
                 :rules="[rules.required, rules.pathFormat]"
                 :error-messages="getFieldErrors('path')"
                 @input="validateField('path')"
-              ></v-text-field>
+              />
             </v-col>
             
-            <v-col cols="12" md="4">
+            <v-col
+              cols="12"
+              md="4"
+            >
               <v-text-field
                 v-model="formData.sortOrder"
                 label="排序"
@@ -118,7 +166,7 @@
                 density="comfortable"
                 hint="数字越小排序越靠前"
                 persistent-hint
-              ></v-text-field>
+              />
             </v-col>
             
             <v-col cols="12">
@@ -138,11 +186,14 @@
                     icon
                     variant="text"
                     color="secondary"
-                    @click="refreshComponents"
                     :loading="loadingComponents"
+                    @click="refreshComponents"
                   >
                     <v-icon>mdi-refresh</v-icon>
-                    <v-tooltip activator="parent" location="bottom">
+                    <v-tooltip
+                      activator="parent"
+                      location="bottom"
+                    >
                       刷新组件列表
                     </v-tooltip>
                   </v-btn>
@@ -154,10 +205,15 @@
           <!-- 显示配置 -->
           <v-row>
             <v-col cols="12">
-              <h3 class="text-h6 mb-4">显示配置</h3>
+              <h3 class="text-h6 mb-4">
+                显示配置
+              </h3>
             </v-col>
             
-            <v-col cols="12" md="6">
+            <v-col
+              cols="12"
+              md="6"
+            >
               <v-text-field
                 v-model="formData.meta.icon"
                 label="图标"
@@ -166,12 +222,17 @@
                 density="comfortable"
               >
                 <template #prepend-inner>
-                  <v-icon v-if="formData.meta.icon">{{ formData.meta.icon }}</v-icon>
+                  <v-icon v-if="formData.meta.icon">
+                    {{ formData.meta.icon }}
+                  </v-icon>
                 </template>
               </v-text-field>
             </v-col>
 
-            <v-col cols="12" md="6">
+            <v-col
+              cols="12"
+              md="6"
+            >
               <v-select
                 v-model="formData.meta.group"
                 :items="groupOptions"
@@ -182,7 +243,7 @@
                 clearable
                 hint="用于在导航菜单中分组显示"
                 persistent-hint
-              ></v-select>
+              />
             </v-col>
 
             <v-col cols="12">
@@ -193,7 +254,7 @@
                   color="primary"
                   hide-details
                   class="mr-6"
-                ></v-checkbox>
+                />
               </div>
             </v-col>
           </v-row>
@@ -201,10 +262,15 @@
           <!-- 权限配置 -->
           <v-row>
             <v-col cols="12">
-              <h3 class="text-h6 mb-4">权限配置</h3>
+              <h3 class="text-h6 mb-4">
+                权限配置
+              </h3>
             </v-col>
 
-            <v-col cols="12" md="6">
+            <v-col
+              cols="12"
+              md="6"
+            >
               <v-select
                 v-model="accessType"
                 :items="accessTypeOptions"
@@ -212,10 +278,13 @@
                 variant="outlined"
                 density="comfortable"
                 @update:model-value="onAccessTypeChange"
-              ></v-select>
+              />
             </v-col>
 
-            <v-col cols="12" md="6">
+            <v-col
+              cols="12"
+              md="6"
+            >
               <div class="d-flex align-center h-100">
                 <v-checkbox
                   v-model="formData.meta.requiresAuth"
@@ -223,17 +292,28 @@
                   color="primary"
                   :disabled="accessType === 'public'"
                   hide-details
-                ></v-checkbox>
+                />
               </div>
             </v-col>
 
             <!-- 角色权限配置 -->
-            <v-col cols="12" v-if="accessType === 'role_based'">
-              <v-card variant="outlined" class="mt-2">
+            <v-col
+              v-if="accessType === 'role_based'"
+              cols="12"
+            >
+              <v-card
+                variant="outlined"
+                class="mt-2"
+              >
                 <v-card-title class="text-subtitle-1 d-flex align-center">
-                  <v-icon class="mr-2" color="primary">mdi-account-group</v-icon>
+                  <v-icon
+                    class="mr-2"
+                    color="primary"
+                  >
+                    mdi-account-group
+                  </v-icon>
                   角色权限管理
-                  <v-spacer></v-spacer>
+                  <v-spacer />
                   <v-chip
                     :color="selectedRoles.length > 0 ? 'success' : 'warning'"
                     size="small"
@@ -253,7 +333,9 @@
                     <v-icon>mdi-information</v-icon>
                     <div class="ml-3">
                       <strong>暂无可用角色</strong>
-                      <p class="mt-1">请先在角色管理中创建角色，然后刷新此页面。</p>
+                      <p class="mt-1">
+                        请先在角色管理中创建角色，然后刷新此页面。
+                      </p>
                     </div>
                   </v-alert>
 
@@ -269,7 +351,7 @@
                       clearable
                       hide-details
                       class="mb-4"
-                    ></v-text-field>
+                    />
 
                     <!-- 角色列表 -->
                     <v-row dense>
@@ -286,8 +368,8 @@
                             { 'role-selected': isRoleSelected(role.id) }
                           ]"
                           variant="outlined"
-                          @click="toggleRole(role.id)"
                           :color="isRoleSelected(role.id) ? 'primary' : ''"
+                          @click="toggleRole(role.id)"
                         >
                           <v-card-text class="d-flex align-center pa-3">
                             <v-checkbox
@@ -296,7 +378,7 @@
                               hide-details
                               @click.stop
                               @change="toggleRole(role.id)"
-                            ></v-checkbox>
+                            />
                             <div class="ml-3 flex-grow-1">
                               <div class="text-subtitle-2 font-weight-medium">
                                 {{ role.name }}
@@ -318,28 +400,33 @@
                     </v-row>
 
                     <!-- 快速操作 -->
-                    <v-divider class="my-4"></v-divider>
+                    <v-divider class="my-4" />
                     <div class="d-flex align-center">
                       <v-btn
                         size="small"
                         variant="outlined"
-                        @click="selectAllRoles"
                         :disabled="filteredRoles.length === 0"
+                        @click="selectAllRoles"
                       >
                         全选
                       </v-btn>
                       <v-btn
                         size="small"
                         variant="outlined"
-                        @click="clearAllRoles"
                         class="ml-2"
                         :disabled="selectedRoles.length === 0"
+                        @click="clearAllRoles"
                       >
                         清空
                       </v-btn>
-                      <v-spacer></v-spacer>
+                      <v-spacer />
                       <div class="text-caption text-grey">
-                        <v-icon size="small" class="mr-1">mdi-information</v-icon>
+                        <v-icon
+                          size="small"
+                          class="mr-1"
+                        >
+                          mdi-information
+                        </v-icon>
                         选择的角色将能够访问此路由
                       </div>
                     </div>
@@ -349,10 +436,21 @@
             </v-col>
 
             <!-- 当前权限状态显示 -->
-            <v-col cols="12" v-if="isEditing">
-              <v-card variant="outlined" color="info">
+            <v-col
+              v-if="isEditing"
+              cols="12"
+            >
+              <v-card
+                variant="outlined"
+                color="info"
+              >
                 <v-card-title class="text-subtitle-1 d-flex align-center">
-                  <v-icon class="mr-2" color="info">mdi-shield-check</v-icon>
+                  <v-icon
+                    class="mr-2"
+                    color="info"
+                  >
+                    mdi-shield-check
+                  </v-icon>
                   当前权限状态
                 </v-card-title>
                 <v-card-text>
@@ -374,8 +472,13 @@
                   </div>
 
                   <!-- 显示当前有权限的角色 -->
-                  <div v-if="currentRouteRoles.length > 0" class="mt-3">
-                    <div class="text-caption text-grey mb-2">当前可访问的角色:</div>
+                  <div
+                    v-if="currentRouteRoles.length > 0"
+                    class="mt-3"
+                  >
+                    <div class="text-caption text-grey mb-2">
+                      当前可访问的角色:
+                    </div>
                     <v-chip-group>
                       <v-chip
                         v-for="role in currentRouteRoles"
@@ -384,7 +487,12 @@
                         color="success"
                         variant="outlined"
                       >
-                        <v-icon size="small" class="mr-1">mdi-account</v-icon>
+                        <v-icon
+                          size="small"
+                          class="mr-1"
+                        >
+                          mdi-account
+                        </v-icon>
                         {{ role.name }}
                       </v-chip>
                     </v-chip-group>
@@ -397,9 +505,14 @@
           <!-- 实时验证结果 -->
           <v-row v-if="validationResult && !validationResult.isValid">
             <v-col cols="12">
-              <v-card color="error" variant="tonal">
+              <v-card
+                color="error"
+                variant="tonal"
+              >
                 <v-card-title class="text-subtitle-1">
-                  <v-icon class="mr-2">mdi-alert-circle</v-icon>
+                  <v-icon class="mr-2">
+                    mdi-alert-circle
+                  </v-icon>
                   验证错误
                 </v-card-title>
                 <v-card-text>
@@ -410,7 +523,12 @@
                       class="px-0"
                     >
                       <template #prepend>
-                        <v-icon color="error" size="small">mdi-alert-circle</v-icon>
+                        <v-icon
+                          color="error"
+                          size="small"
+                        >
+                          mdi-alert-circle
+                        </v-icon>
                       </template>
                       <v-list-item-title>{{ error }}</v-list-item-title>
                     </v-list-item>
@@ -423,23 +541,25 @@
       </v-card-text>
 
       <v-card-actions>
-        <v-spacer></v-spacer>
+        <v-spacer />
         <v-btn
           color="grey"
           variant="text"
-          @click="closeDialog"
           :disabled="saving"
+          @click="closeDialog"
         >
           取消
         </v-btn>
         
         <v-btn
           color="primary"
-          @click="handleSubmit"
           :loading="saving"
           :disabled="!formValid || (validationResult && !validationResult.isValid)"
+          @click="handleSubmit"
         >
-          <v-icon class="mr-1">mdi-content-save</v-icon>
+          <v-icon class="mr-1">
+            mdi-content-save
+          </v-icon>
           {{ isEditing ? '更新' : '创建' }}
         </v-btn>
       </v-card-actions>

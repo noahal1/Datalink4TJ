@@ -1,31 +1,69 @@
 <template>
   <v-card class="h-100 elevation-2">
     <v-card-title class="d-flex align-center">
-      <v-icon class="mr-2" color="error">mdi-alert-circle</v-icon>
+      <v-icon
+        class="mr-2"
+        color="error"
+      >
+        mdi-alert-circle
+      </v-icon>
       问题记录
-      <v-spacer></v-spacer>
-      <v-btn color="error" size="small" variant="flat" prepend-icon="mdi-plus-circle" @click="$emit('add-issue')">
+      <v-spacer />
+      <v-btn
+        color="error"
+        size="small"
+        variant="flat"
+        prepend-icon="mdi-plus-circle"
+        @click="$emit('add-issue')"
+      >
         记录问题
       </v-btn>
     </v-card-title>
     
-    <v-divider></v-divider>
+    <v-divider />
     
-    <v-card-text v-if="loading" class="text-center py-8">
-      <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
-      <div class="mt-4 text-subtitle-1">加载中...</div>
+    <v-card-text
+      v-if="loading"
+      class="text-center py-8"
+    >
+      <v-progress-circular
+        indeterminate
+        color="primary"
+        size="64"
+      />
+      <div class="mt-4 text-subtitle-1">
+        加载中...
+      </div>
     </v-card-text>
     
-    <v-card-text v-else-if="issues.length > 0" class="pa-2 issues-container">
+    <v-card-text
+      v-else-if="issues.length > 0"
+      class="pa-2 issues-container"
+    >
       <div class="d-flex align-center mb-3">
         <v-chip-group>
-          <v-chip variant="outlined" size="small" :color="filterActive === 'all' ? 'primary' : ''" @click="filterActive = 'all'">
+          <v-chip
+            variant="outlined"
+            size="small"
+            :color="filterActive === 'all' ? 'primary' : ''"
+            @click="filterActive = 'all'"
+          >
             全部 ({{ issues.length }})
           </v-chip>
-          <v-chip variant="outlined" size="small" :color="filterActive === 'open' ? 'error' : ''" @click="filterActive = 'open'">
+          <v-chip
+            variant="outlined"
+            size="small"
+            :color="filterActive === 'open' ? 'error' : ''"
+            @click="filterActive = 'open'"
+          >
             未解决 ({{ openIssuesCount }})
           </v-chip>
-          <v-chip variant="outlined" size="small" :color="filterActive === 'resolved' ? 'success' : ''" @click="filterActive = 'resolved'">
+          <v-chip
+            variant="outlined"
+            size="small"
+            :color="filterActive === 'resolved' ? 'success' : ''"
+            @click="filterActive = 'resolved'"
+          >
             已解决 ({{ resolvedIssuesCount }})
           </v-chip>
         </v-chip-group>
@@ -38,13 +76,19 @@
           :class="{'issue-resolved': issue.resolved}"
           class="mb-2 rounded issue-item"
         >
-          <template v-slot:prepend>
-            <v-icon :color="issue.resolved ? 'success' : 'error'" size="24">
+          <template #prepend>
+            <v-icon
+              :color="issue.resolved ? 'success' : 'error'"
+              size="24"
+            >
               {{ issue.resolved ? 'mdi-check-circle' : 'mdi-alert-circle' }}
             </v-icon>
           </template>
           
-          <v-list-item-title :class="{'text-decoration-line-through': issue.resolved}" class="font-weight-medium">
+          <v-list-item-title
+            :class="{'text-decoration-line-through': issue.resolved}"
+            class="font-weight-medium"
+          >
             {{ issue.description }}
           </v-list-item-title>
           
@@ -60,30 +104,56 @@
             <span class="text-caption">{{ formatDate(issue.date) }}</span>
           </v-list-item-subtitle>
           
-          <template v-slot:append>
+          <template #append>
             <div class="d-flex align-center">
               <v-btn
                 :color="issue.resolved ? 'error' : 'success'"
                 icon
                 variant="text"
                 size="small"
-                @click="$emit('toggle-status', issue)"
                 class="mr-1"
+                @click="$emit('toggle-status', issue)"
               >
                 <v-icon>{{ issue.resolved ? 'mdi-close-circle' : 'mdi-check-circle' }}</v-icon>
               </v-btn>
-              <v-btn icon="mdi-pencil" variant="text" size="small" @click="$emit('edit-issue', issue)"></v-btn>
-              <v-btn icon="mdi-delete" variant="text" size="small" @click="$emit('delete-issue', issue)"></v-btn>
+              <v-btn
+                icon="mdi-pencil"
+                variant="text"
+                size="small"
+                @click="$emit('edit-issue', issue)"
+              />
+              <v-btn
+                icon="mdi-delete"
+                variant="text"
+                size="small"
+                @click="$emit('delete-issue', issue)"
+              />
             </div>
           </template>
         </v-list-item>
       </v-list>
     </v-card-text>
     
-    <v-card-text v-else class="text-center py-8">
-      <v-icon size="64" color="grey-lighten-1">mdi-clipboard-check-outline</v-icon>
-      <div class="mt-4 text-subtitle-1 text-grey">暂无问题记录</div>
-      <v-btn color="error" class="mt-4" variant="flat" prepend-icon="mdi-plus-circle" @click="$emit('add-issue')">
+    <v-card-text
+      v-else
+      class="text-center py-8"
+    >
+      <v-icon
+        size="64"
+        color="grey-lighten-1"
+      >
+        mdi-clipboard-check-outline
+      </v-icon>
+      <div class="mt-4 text-subtitle-1 text-grey">
+        暂无问题记录
+      </div>
+      <v-btn
+        color="error"
+        class="mt-4"
+        variant="flat"
+        prepend-icon="mdi-plus-circle"
+        @click="$emit('add-issue')"
+      >
         记录问题
       </v-btn>
     </v-card-text>

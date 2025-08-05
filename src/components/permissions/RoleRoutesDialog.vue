@@ -1,28 +1,49 @@
 <template>
-  <v-dialog v-model="dialog" max-width="800px" persistent>
+  <v-dialog
+    v-model="dialog"
+    max-width="800px"
+    persistent
+  >
     <v-card>
       <v-card-title class="d-flex align-center">
-        <v-icon class="mr-2">mdi-shield-account</v-icon>
+        <v-icon class="mr-2">
+          mdi-shield-account
+        </v-icon>
         管理角色路由权限
-        <v-spacer></v-spacer>
-        <v-btn icon @click="closeDialog">
+        <v-spacer />
+        <v-btn
+          icon
+          @click="closeDialog"
+        >
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-card-title>
 
       <v-card-text>
-        <v-alert type="info" class="mb-4" v-if="role">
+        <v-alert
+          v-if="role"
+          type="info"
+          class="mb-4"
+        >
           正在为角色 <strong>{{ role.name }}</strong> 配置路由访问权限
         </v-alert>
 
-        <v-alert type="warning" class="mb-4">
+        <v-alert
+          type="warning"
+          class="mb-4"
+        >
           <strong>注意：</strong>当前权限系统已简化，权限规则由系统预定义。此功能主要用于查看和记录权限配置请求。
         </v-alert>
 
         <!-- 路由选择 -->
-        <v-card variant="outlined" class="mb-4">
+        <v-card
+          variant="outlined"
+          class="mb-4"
+        >
           <v-card-title class="text-h6">
-            <v-icon class="mr-2">mdi-routes</v-icon>
+            <v-icon class="mr-2">
+              mdi-routes
+            </v-icon>
             可访问路由
           </v-card-title>
           <v-card-text>
@@ -31,9 +52,9 @@
                 <v-checkbox
                   v-model="selectAll"
                   label="全选/全不选"
-                  @change="toggleSelectAll"
                   color="primary"
-                ></v-checkbox>
+                  @change="toggleSelectAll"
+                />
               </v-col>
             </v-row>
             
@@ -52,16 +73,21 @@
                   :hint="route.path"
                   persistent-hint
                   color="primary"
-                ></v-checkbox>
+                />
               </v-col>
             </v-row>
           </v-card-text>
         </v-card>
 
         <!-- 当前权限预览 -->
-        <v-card variant="outlined" v-if="role">
+        <v-card
+          v-if="role"
+          variant="outlined"
+        >
           <v-card-title class="text-h6">
-            <v-icon class="mr-2">mdi-eye</v-icon>
+            <v-icon class="mr-2">
+              mdi-eye
+            </v-icon>
             当前权限预览
           </v-card-title>
           <v-card-text>
@@ -86,7 +112,10 @@
               </v-chip>
             </v-chip-group>
             
-            <div v-else class="text-grey">
+            <div
+              v-else
+              class="text-grey"
+            >
               未选择任何路由
             </div>
           </v-card-text>
@@ -94,15 +123,15 @@
       </v-card-text>
 
       <v-card-actions>
-        <v-spacer></v-spacer>
+        <v-spacer />
         <v-btn @click="closeDialog">
           取消
         </v-btn>
         <v-btn 
           color="primary" 
-          @click="saveRoutes"
           :loading="loading"
           :disabled="!role"
+          @click="saveRoutes"
         >
           保存
         </v-btn>

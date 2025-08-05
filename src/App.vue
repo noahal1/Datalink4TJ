@@ -1,8 +1,17 @@
 <template>
   <v-app>
-    <div v-if="isLoading" class="loading-overlay">
-      <v-progress-circular indeterminate color="primary" size="64"></v-progress-circular>
-      <div class="mt-4">加载中...</div>
+    <div
+      v-if="isLoading"
+      class="loading-overlay"
+    >
+      <v-progress-circular
+        indeterminate
+        color="primary"
+        size="64"
+      />
+      <div class="mt-4">
+        加载中...
+      </div>
     </div>
     
     <template v-else>
@@ -15,13 +24,17 @@
         class="navigation-drawer"
       >
         <dynamic-navigation 
-          :show-bottom-actions="true" 
+          v-model:drawer="drawer" 
+          :show-bottom-actions="true"
           :show-search="true"
-          v-model:drawer="drawer"
         >
-          <template v-slot:bottom-actions>        
-            <v-list-item @click="forceRefresh" class="refresh-item" rounded="lg">
-              <template v-slot:prepend>
+          <template #bottom-actions>        
+            <v-list-item
+              class="refresh-item"
+              rounded="lg"
+              @click="forceRefresh"
+            >
+              <template #prepend>
                 <v-icon>mdi-refresh</v-icon>
               </template>
               <v-list-item-title>刷新应用</v-list-item-title>
@@ -32,7 +45,10 @@
       
       <v-main>
         <router-view v-slot="{ Component }">
-          <transition :name="pageTransition" mode="out-in">
+          <transition
+            :name="pageTransition"
+            mode="out-in"
+          >
             <component :is="Component" />
           </transition>
         </router-view>

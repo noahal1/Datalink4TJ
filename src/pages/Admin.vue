@@ -1,10 +1,20 @@
 <template>
   <v-container fluid>
-    <v-card class="admin-page-card" elevation="3">
+    <v-card
+      class="admin-page-card"
+      elevation="3"
+    >
       <!-- 页面标题栏 -->
       <v-card-title class="admin-page-header d-flex align-center py-4 px-6">
-        <v-icon class="mr-2" color="secondary">mdi-shield-account</v-icon>
-        <div class="text-h5 font-weight-medium">系统管理</div>
+        <v-icon
+          class="mr-2"
+          color="secondary"
+        >
+          mdi-shield-account
+        </v-icon>
+        <div class="text-h5 font-weight-medium">
+          系统管理
+        </div>
       </v-card-title>
       
       <v-card-text class="admin-page-content pa-6">
@@ -15,28 +25,58 @@
           align-tabs="start"
           class="mb-4"
         >
-          <v-tab :to="'/admin/users'" value="users">
-            <v-icon start>mdi-account-group</v-icon>
+          <v-tab
+            :to="'/admin/users'"
+            value="users"
+          >
+            <v-icon start>
+              mdi-account-group
+            </v-icon>
             用户管理
           </v-tab>
-          <v-tab :to="'/admin/departments'" value="departments">
-            <v-icon start>mdi-domain</v-icon>
+          <v-tab
+            :to="'/admin/departments'"
+            value="departments"
+          >
+            <v-icon start>
+              mdi-domain
+            </v-icon>
             部门管理
           </v-tab>
-          <v-tab :to="'/admin/activities'" value="activities">
-            <v-icon start>mdi-history</v-icon>
+          <v-tab
+            :to="'/admin/activities'"
+            value="activities"
+          >
+            <v-icon start>
+              mdi-history
+            </v-icon>
             操作记录
           </v-tab>
-          <v-tab :to="'/admin/routes'" value="routes">
-            <v-icon start>mdi-routes</v-icon>
+          <v-tab
+            :to="'/admin/routes'"
+            value="routes"
+          >
+            <v-icon start>
+              mdi-routes
+            </v-icon>
             路由管理
           </v-tab>
-          <v-tab :to="'/admin/permissions'" value="permissions">
-            <v-icon start>mdi-shield-account</v-icon>
+          <v-tab
+            :to="'/admin/permissions'"
+            value="permissions"
+          >
+            <v-icon start>
+              mdi-shield-account
+            </v-icon>
             权限管理
           </v-tab>
-          <v-tab :to="'/admin/permission-test'" value="permission-test">
-            <v-icon start>mdi-shield-check</v-icon>
+          <v-tab
+            :to="'/admin/permission-test'"
+            value="permission-test"
+          >
+            <v-icon start>
+              mdi-shield-check
+            </v-icon>
             权限测试
           </v-tab>
         </v-tabs>

@@ -12,20 +12,20 @@
         {{ message }}
       </v-card-text>
       <v-card-actions>
-        <v-spacer></v-spacer>
+        <v-spacer />
         <v-btn
           variant="text"
-          @click="onCancelClick"
           :disabled="loading"
+          @click="onCancelClick"
         >
           取消
         </v-btn>
         <v-btn
           color="primary"
           variant="elevated"
-          @click="onConfirmClick"
           :loading="loading"
           :disabled="loading"
+          @click="onConfirmClick"
         >
           确定
         </v-btn>

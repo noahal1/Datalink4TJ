@@ -23,8 +23,15 @@
           </v-chip-group>
         </div>
         
-        <div id="equipment-comparison" style="height: 350px;">
-          <v-skeleton-loader v-if="loading" type="image" height="350"></v-skeleton-loader>
+        <div
+          id="equipment-comparison"
+          style="height: 350px;"
+        >
+          <v-skeleton-loader
+            v-if="loading"
+            type="image"
+            height="350"
+          />
           <v-chart 
             v-else 
             class="chart" 

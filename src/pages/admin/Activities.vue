@@ -11,9 +11,9 @@
           :search="search"
           :items-per-page="10"
         >
-          <template v-slot:title>
+          <template #title>
             <span>活动日志</span>
-            <v-spacer></v-spacer>
+            <v-spacer />
             <v-text-field
               v-model="search"
               append-icon="mdi-magnify"
@@ -23,28 +23,37 @@
               density="compact"
               class="ml-4"
               style="max-width: 300px"
-            ></v-text-field>
+            />
           </template>
           
-          <template v-slot:item.timestamp="{ item }">
+          <template #item.timestamp="{ item }">
             {{ formatDate(item.timestamp) }}
           </template>
           
-          <template v-slot:item.status="{ item }">
+          <template #item.type="{ item }">
             <v-chip
-              :color="getStatusColor(item.status)"
+              :color="getTypeColor(item.type)"
               size="small"
               class="text-white"
             >
-              {{ item.status }}
+              {{ item.type }}
             </v-chip>
           </template>
           
           <template #actions>
-            <v-btn color="primary" prepend-icon="mdi-filter" @click="filterDrawer = true">
+            <v-btn
+              color="primary"
+              prepend-icon="mdi-filter"
+              @click="filterDrawer = true"
+            >
               筛选
             </v-btn>
-            <v-btn class="ml-2" color="secondary" prepend-icon="mdi-refresh" @click="fetchActivities">
+            <v-btn
+              class="ml-2"
+              color="secondary"
+              prepend-icon="mdi-refresh"
+              @click="fetchActivities"
+            >
               刷新
             </v-btn>
           </template>
@@ -61,10 +70,21 @@
     >
       <v-card class="h-100">
         <v-card-title class="bg-primary text-white">
-          <v-icon class="mr-2" color="white">mdi-filter</v-icon>
+          <v-icon
+            class="mr-2"
+            color="white"
+          >
+            mdi-filter
+          </v-icon>
           筛选条件
-          <v-spacer></v-spacer>
-          <v-btn icon variant="text" color="white" size="small" @click="filterDrawer = false">
+          <v-spacer />
+          <v-btn
+            icon
+            variant="text"
+            color="white"
+            size="small"
+            @click="filterDrawer = false"
+          >
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </v-card-title>
@@ -78,7 +98,7 @@
               variant="outlined"
               density="comfortable"
               clearable
-            ></v-select>
+            />
             
             <v-select
               v-model="filters.action"
@@ -87,16 +107,16 @@
               variant="outlined"
               density="comfortable"
               clearable
-            ></v-select>
+            />
             
             <v-select
-              v-model="filters.status"
-              :items="statuses"
-              label="状态"
+              v-model="filters.type"
+              :items="types"
+              label="类型"
               variant="outlined"
               density="comfortable"
               clearable
-            ></v-select>
+            />
             
             <v-text-field
               v-model="filters.dateFrom"
@@ -105,7 +125,7 @@
               variant="outlined"
               density="comfortable"
               clearable
-            ></v-text-field>
+            />
             
             <v-text-field
               v-model="filters.dateTo"
@@ -114,16 +134,23 @@
               variant="outlined"
               density="comfortable"
               clearable
-            ></v-text-field>
+            />
           </unified-form>
         </v-card-text>
         
         <v-card-actions class="py-3">
-          <v-spacer></v-spacer>
-          <v-btn variant="text" color="grey" @click="clearFilters">
+          <v-spacer />
+          <v-btn
+            variant="text"
+            color="grey"
+            @click="clearFilters"
+          >
             清除筛选
           </v-btn>
-          <v-btn color="primary" @click="applyFilters">
+          <v-btn
+            color="primary"
+            @click="applyFilters"
+          >
             应用筛选
           </v-btn>
         </v-card-actions>
@@ -141,14 +168,15 @@ import api from '../../utils/api'
 
 const { showSuccess, showError } = useNotification()
 
-// 表格列定义
+// 表格列定义 - 匹配后端Activity模型
 const headers = [
   { title: '时间', key: 'timestamp', align: 'start', sortable: true },
-  { title: '用户', key: 'username', align: 'start', sortable: true },
+  { title: '用户', key: 'user', align: 'start', sortable: true },
+  { title: '标题', key: 'title', align: 'start', sortable: true },
   { title: '操作', key: 'action', align: 'start', sortable: true },
   { title: '详情', key: 'details', align: 'start', sortable: false },
-  { title: '状态', key: 'status', align: 'center', sortable: true },
-  { title: 'IP地址', key: 'ip', align: 'end', sortable: false },
+  { title: '类型', key: 'type', align: 'center', sortable: true },
+  { title: '部门', key: 'department', align: 'center', sortable: true },
 ]
 
 // 活动记录数据
@@ -161,13 +189,13 @@ const filterDrawer = ref(false)
 // 过滤选项
 const users = ref([])
 const actions = ref([])
-const statuses = ref(['成功', '失败', '警告', '进行中'])
+const types = ref(['LOGIN', 'LOGOUT', 'CREATE', 'UPDATE', 'DELETE', 'UPLOAD', 'EXPORT'])
 
 // 过滤器
 const filters = ref({
   user: null,
   action: null,
-  status: null,
+  type: null,
   dateFrom: null,
   dateTo: null
 })
@@ -176,25 +204,61 @@ const filters = ref({
 const fetchActivities = async () => {
   loading.value = true
   try {
-    // 构建查询参数
+    // 构建查询参数，匹配后端API参数
     const params = {}
-    if (filters.value.user) params.username = filters.value.user
-    if (filters.value.action) params.action = filters.value.action
-    if (filters.value.status) params.status = filters.value.status
-    if (filters.value.dateFrom) params.date_from = filters.value.dateFrom
-    if (filters.value.dateTo) params.date_to = filters.value.dateTo
+    if (filters.value.user) params.user_name = filters.value.user
+    if (filters.value.action) params.type = filters.value.action
+    if (filters.value.type) params.type = filters.value.type
+    
+    // 计算日期范围 - 后端使用days参数
+    if (filters.value.dateFrom && filters.value.dateTo) {
+      const fromDate = new Date(filters.value.dateFrom)
+      const toDate = new Date(filters.value.dateTo)
+      const diffTime = Math.abs(toDate - fromDate)
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      params.days = diffDays
+    } else if (filters.value.dateFrom) {
+      const fromDate = new Date(filters.value.dateFrom)
+      const now = new Date()
+      const diffTime = Math.abs(now - fromDate)
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      params.days = diffDays
+    }
+    
+    // 设置分页参数
+    params.skip = 0
+    params.limit = 50 // 获取更多记录
     
     // 调用API
     const response = await api.get('/activities/', { params })
     
-    if (response && response.data && Array.isArray(response.data)) {
-      activities.value = response.data
-      allActivities.value = [...response.data]
+    // 处理后端分页响应格式
+    let activityData = []
+    if (response && response.data) {
+      // 如果是分页响应格式 {total: xx, items: []}
+      if (response.data.items && Array.isArray(response.data.items)) {
+        activityData = response.data.items
+      }
+      // 如果是直接数组格式
+      else if (Array.isArray(response.data)) {
+        activityData = response.data
+      }
+    } else if (response && response.items && Array.isArray(response.items)) {
+      // 直接分页响应格式
+      activityData = response.items
     } else if (response && Array.isArray(response)) {
-      activities.value = response
-      allActivities.value = [...response]
+      // 直接数组格式
+      activityData = response
+    }
+    
+    if (activityData.length > 0) {
+      activities.value = activityData
+      allActivities.value = [...activityData]
     } else {
-      console.error('活动数据格式不正确:', response)
+      console.log('未获取到活动数据，使用测试数据')
+      // 没有数据时显示空数组，不使用测试数据
+      activities.value = []
+      allActivities.value = []
       // 使用测试数据
       const testData = [
         { 
@@ -291,7 +355,7 @@ const applyFilters = () => {
         match = false
       }
       
-      if (filters.value.status && activity.status !== filters.value.status) {
+      if (filters.value.type && activity.type !== filters.value.type) {
         match = false
       }
       
@@ -357,16 +421,19 @@ const formatDate = (dateString) => {
   }
 }
 
-// 根据状态获取颜色
-const getStatusColor = (status) => {
-  const statusColors = {
-    '成功': 'success',
-    '失败': 'error',
-    '警告': 'warning',
-    '进行中': 'info'
+// 根据类型获取颜色
+const getTypeColor = (type) => {
+  const typeColors = {
+    'LOGIN': 'success',
+    'LOGOUT': 'warning',
+    'CREATE': 'success',
+    'UPDATE': 'primary',
+    'DELETE': 'error',
+    'UPLOAD': 'info',
+    'EXPORT': 'secondary'
   }
   
-  return statusColors[status] || 'grey'
+  return typeColors[type] || 'grey'
 }
 
 // 初始化

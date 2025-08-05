@@ -8,55 +8,64 @@
     <div class="controls-bar mb-6">
       <v-row class="align-center">
         <!-- 左侧：月份和年份选择器 -->
-        <v-col cols="12" md="6">
+        <v-col
+          cols="12"
+          md="6"
+        >
           <v-row>
-            <v-col cols="6" md="4">
+            <v-col
+              cols="6"
+              md="4"
+            >
               <v-select
                 v-model="selectedMonth"
                 :items="monthOptions"
                 label="选择月份"
                 variant="outlined"
                 density="compact"
-                @update:model-value="loadData"
                 hide-details
                 class="control-select"
-              ></v-select>
+                @update:model-value="loadData"
+              />
             </v-col>
-            <v-col cols="6" md="4">
+            <v-col
+              cols="6"
+              md="4"
+            >
               <v-select
                 v-model="selectedYear"
                 :items="yearOptions"
                 label="选择年份"
                 variant="outlined"
                 density="compact"
-                @update:model-value="loadData"
                 hide-details
                 class="control-select"
-              ></v-select>
+                @update:model-value="loadData"
+              />
             </v-col>
           </v-row>
         </v-col>
 
-        <v-spacer></v-spacer>
+        <v-spacer />
 
         <!-- 右侧：操作按钮 -->
         <v-col cols="auto">
           <v-btn
             color="info"
-            @click="openTargetDialog"
             prepend-icon="mdi-target"
             variant="outlined"
             class="mr-2 action-btn"
+            @click="openTargetDialog"
           >
             设置目标值
           </v-btn>
           <v-btn
             color="secondary"
-            @click="resetData"
             :disabled="!isDataChanged"
             prepend-icon="mdi-refresh"
             variant="outlined"
             class="mr-2 action-btn"
+            @click="resetData"
           >
             重置
           </v-btn>
@@ -65,9 +74,9 @@
             prepend-icon="mdi-content-save"
             :loading="submitting"
             :disabled="!isDataChanged"
-            @click="saveData"
             variant="elevated"
             class="action-btn"
+            @click="saveData"
           >
             保存数据
           </v-btn>
@@ -76,7 +85,10 @@
     </div>
 
     <!-- 加载指示器 -->
-    <loading-overlay :loading="loading" message="加载数据中..." />
+    <loading-overlay
+      :loading="loading"
+      message="加载数据中..."
+    />
 
     <!-- KPI数据表格 -->
     <div class="table-container">
@@ -90,90 +102,138 @@
         :items-per-page="-1"
         hover
       >
-      <template v-slot:item.description="{ item }">
-        <div class="font-weight-medium">
-          {{ item.description }}
-        </div>
-      </template>
-      <template v-slot:item.area="{ item }">
-        <v-chip
-          :color="getAreaColor(item.area)"
-          size="small"
-          variant="flat"
-        >
-          {{ item.area }}
-        </v-chip>
-      </template>
-
-      <template v-slot:item.actual_value="{ item }">
-        <v-text-field
-          v-model.number="item.actual_value"
-          type="number"
-          min="0"
-          step="0.01"
-          variant="outlined"
-          density="compact"
-          hide-details
-          class="text-field-small"
-          @input="handleInput"
-        ></v-text-field>
-      </template>
-
-      <template v-slot:item.target_value="{ item }">
-        <div class="text-center">
+        <template #item.description="{ item }">
+          <div class="font-weight-medium">
+            {{ item.description }}
+          </div>
+        </template>
+        <template #item.area="{ item }">
           <v-chip
-            :color="getTargetColor(item.actual_value, item.target_value, item.description)"
+            :color="getAreaColor(item.area)"
             size="small"
             variant="flat"
           >
-            {{ item.target_value || 0 }}
+            {{ item.area }}
           </v-chip>
-        </div>
-      </template>
+        </template>
 
-      <template v-slot:item.ytd_value="{ item }">
-        <v-text-field
-          v-model.number="item.ytd_value"
-          type="number"
-          min="0"
-          step="0.01"
-          variant="outlined"
-          density="compact"
-          hide-details
-          class="text-field-small"
-          @input="handleInput"
-        ></v-text-field>
-      </template>
-
-      <!-- 原因分析与行动计划 -->
-      <template v-slot:item.remark="{ item }">
-        <div v-if="shouldShowRemark(item)" class="d-flex align-center">
-          <v-btn
-            size="small"
+        <template #item.actual_value="{ item }">
+          <v-text-field
+            v-model.number="item.actual_value"
+            type="number"
+            min="0"
+            step="0.01"
             variant="outlined"
-            color="warning"
-            prepend-icon="mdi-clipboard-edit"
-            @click="openRemarkDialog(item)"
+            density="compact"
+            hide-details
+            class="text-field-small"
+            @input="handleInput"
+          />
+        </template>
+
+        <template #item.target_value="{ item }">
+          <div class="text-center">
+            <v-chip
+              :color="getTargetColor(item.actual_value, item.target_value, item.description)"
+              size="small"
+              variant="flat"
+            >
+              {{ item.target_value || 0 }}
+            </v-chip>
+          </div>
+        </template>
+
+        <template #item.ytd_value="{ item }">
+          <v-text-field
+            v-model.number="item.ytd_value"
+            type="number"
+            min="0"
+            step="0.01"
+            variant="outlined"
+            density="compact"
+            hide-details
+            class="text-field-small"
+            @input="handleInput"
+          />
+        </template>
+
+        <!-- 原因分析与行动计划 -->
+        <template #item.remark="{ item }">
+          <div
+            v-if="shouldShowRemark(item)"
+            class="d-flex align-center"
           >
-            {{ getRemarkButtonText(item) }}
-          </v-btn>
-          <v-icon
-            v-if="hasRemarkContent(item)"
-            color="success"
-            class="ml-2"
-          >
-            mdi-check-circle
-          </v-icon>
-        </div>
-        <span v-else class="text-grey">-</span>
-      </template>
-    </unified-data-table>
+            <v-btn
+              size="small"
+              variant="outlined"
+              color="warning"
+              prepend-icon="mdi-clipboard-edit"
+              @click="openRemarkDialog(item)"
+            >
+              {{ getRemarkButtonText(item) }}
+            </v-btn>
+            <v-icon
+              v-if="hasRemarkContent(item)"
+              color="success"
+              class="ml-2"
+            >
+              mdi-check-circle
+            </v-icon>
+          </div>
+          <span
+            v-else
+            class="text-grey"
+          >-</span>
+        </template>
+      </unified-data-table>
     </div>
+
+    <!-- 数据变更提示 -->
+    <v-snackbar
+      v-model="showChangeAlert"
+      :timeout="3000"
+      color="warning"
+      location="bottom"
+      multi-line
+      class="change-alert"
+    >
+      <v-icon
+        start
+        class="mr-2"
+      >
+        mdi-alert
+      </v-icon>
+      数据已修改，请记得保存
+      <template #actions>
+        <v-btn
+          color="white"
+          variant="text"
+          :loading="submitting"
+          @click="saveData"
+        >
+          保存
+        </v-btn>
+        <v-btn
+          color="white"
+          variant="text"
+          @click="showChangeAlert = false"
+        >
+          关闭
+        </v-btn>
+      </template>
+    </v-snackbar>
+
     <!-- 目标值管理对话框 -->
-    <v-dialog v-model="targetDialog" max-width="1200px" persistent>
+    <v-dialog
+      v-model="targetDialog"
+      max-width="1200px"
+      persistent
+    >
       <v-card>
         <v-card-title class="d-flex align-center">
-          <v-icon class="mr-2">mdi-target</v-icon>
+          <v-icon class="mr-2">
+            mdi-target
+          </v-icon>
           {{ selectedYear }}年 物流KPI 目标值设置
         </v-card-title>
         <v-card-text>
@@ -185,7 +245,7 @@
             hide-default-footer=""
             :items-per-page="-1"
           >
-            <template v-slot:item.area="{ item }">
+            <template #item.area="{ item }">
               <v-chip
                 :color="getAreaColor(item.area)"
                 size="small"
@@ -194,7 +254,7 @@
                 {{ item.area }}
               </v-chip>
             </template>
-            <template v-slot:item.target_value="{ item }">
+            <template #item.target_value="{ item }">
               <v-text-field
                 v-model.number="item.target_value"
                 type="number"
@@ -204,23 +264,23 @@
                 density="compact"
                 hide-details
                 class="text-field-small"
-              ></v-text-field>
+              />
             </template>
           </unified-data-table>
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
+          <v-spacer />
           <v-btn
             variant="text"
-            @click="targetDialog = false"
             :disabled="savingTargets"
+            @click="targetDialog = false"
           >
             取消
           </v-btn>
           <v-btn
             color="primary"
-            @click="saveTargets"
             :loading="savingTargets"
+            @click="saveTargets"
           >
             保存目标值
           </v-btn>

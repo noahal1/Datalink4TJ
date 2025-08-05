@@ -10,36 +10,45 @@
       <div class="controls-bar">
         <v-row class="align-center">
           <!-- 左侧：月份和年份选择器 -->
-          <v-col cols="12" md="6">
+          <v-col
+            cols="12"
+            md="6"
+          >
             <v-row>
-              <v-col cols="6" md="4">
+              <v-col
+                cols="6"
+                md="4"
+              >
                 <v-select
                   v-model="selectedMonth"
                   :items="monthOptions"
                   label="选择月份"
                   variant="outlined"
                   density="compact"
-                  @update:model-value="loadData"
                   hide-details
                   class="control-select"
-                ></v-select>
+                  @update:model-value="loadData"
+                />
               </v-col>
-              <v-col cols="6" md="4">
+              <v-col
+                cols="6"
+                md="4"
+              >
                 <v-select
                   v-model="selectedYear"
                   :items="yearOptions"
                   label="选择年份"
                   variant="outlined"
                   density="compact"
-                  @update:model-value="loadData"
                   hide-details
                   class="control-select"
-                ></v-select>
+                  @update:model-value="loadData"
+                />
               </v-col>
             </v-row>
           </v-col>
 
-          <v-spacer></v-spacer>
+          <v-spacer />
 
           <!-- 右侧：操作按钮 -->
           <v-col cols="auto">
@@ -58,9 +67,9 @@
               prepend-icon="mdi-content-save"
               :loading="submitting"
               :disabled="!isDataChanged"
-              @click="saveData"
               class="action-btn"
               variant="elevated"
+              @click="saveData"
             >
               保存数据
             </v-btn>
@@ -70,25 +79,31 @@
     </div>
 
     <!-- 加载指示器 -->
-    <loading-overlay :loading="loading" message="加载数据中..." />
+    <loading-overlay
+      :loading="loading"
+      message="加载数据中..."
+    />
 
     <!-- 数据变更提醒 -->
     <v-snackbar
       v-model="showChangeAlert"
-      :timeout="0"
+      :timeout="3000"
       color="warning"
       location="bottom"
       multi-line
       class="change-alert"
     >
-      <v-icon icon="mdi-alert" class="mr-2" />
+      <v-icon
+        icon="mdi-alert"
+        class="mr-2"
+      />
       数据已修改，请记得保存！
-      <template v-slot:actions>
+      <template #actions>
         <v-btn
           color="white"
           variant="text"
-          @click="saveData"
           :loading="submitting"
+          @click="saveData"
         >
           保存
         </v-btn>
@@ -116,125 +131,137 @@
         :fixed-header="true"
         :height="'calc(100vh - 280px)'"
       >
-      <!-- KPI描述列 -->
-      <template v-slot:item.description="{ item }">
-        <div class="font-weight-medium">
-          {{ item.description }}
-        </div>
-      </template>
+        <!-- KPI描述列 -->
+        <template #item.description="{ item }">
+          <div class="font-weight-medium">
+            {{ item.description }}
+          </div>
+        </template>
 
-      <!-- 区域列 -->
-      <template v-slot:item.area="{ item }">
-        <v-chip
-          :color="getAreaColor(item.area)"
-          size="small"
-          variant="flat"
-        >
-          {{ item.area }}
-        </v-chip>
-      </template>
-
-      <!-- 实际值输入 -->
-      <template v-slot:item.actual_value="{ item }">
-        <!-- Environmental Performance 使用选择框 -->
-        <v-select
-          v-if="item.description === 'Environmental Performance'"
-          v-model="item.actual_value"
-          :items="environmentalOptions"
-          variant="outlined"
-          density="compact"
-          hide-details
-          class="text-field-small"
-          @update:model-value="handleInput"
-        ></v-select>
-        <!-- 其他KPI使用数值输入 -->
-        <v-text-field
-          v-else
-          v-model.number="item.actual_value"
-          type="number"
-          min="0"
-          step="0.01"
-          variant="outlined"
-          density="compact"
-          hide-details
-          class="text-field-small"
-          @input="handleInput"
-        ></v-text-field>
-      </template>
-
-      <!-- 目标值显示 -->
-      <template v-slot:item.target_value="{ item }">
-        <div class="text-center">
+        <!-- 区域列 -->
+        <template #item.area="{ item }">
           <v-chip
-            :color="item.target_value > 0 ? 'primary' : 'grey'"
+            :color="getAreaColor(item.area)"
             size="small"
             variant="flat"
           >
-            {{ item.description === 'Environmental Performance'
+            {{ item.area }}
+          </v-chip>
+        </template>
+
+        <!-- 实际值输入 -->
+        <template #item.actual_value="{ item }">
+          <!-- Environmental Performance 使用选择框 -->
+          <v-select
+            v-if="item.description === 'Environmental Performance'"
+            v-model="item.actual_value"
+            :items="environmentalOptions"
+            variant="outlined"
+            density="compact"
+            hide-details
+            class="text-field-small"
+            @update:model-value="handleInput"
+          />
+          <!-- 其他KPI使用数值输入 -->
+          <v-text-field
+            v-else
+            v-model.number="item.actual_value"
+            type="number"
+            min="0"
+            step="0.01"
+            variant="outlined"
+            density="compact"
+            hide-details
+            class="text-field-small"
+            @input="handleInput"
+          />
+        </template>
+
+        <!-- 目标值显示 -->
+        <template #item.target_value="{ item }">
+          <div class="text-center">
+            <v-chip
+              :color="item.target_value > 0 ? 'primary' : 'grey'"
+              size="small"
+              variant="flat"
+            >
+              {{ item.description === 'Environmental Performance'
                 ? (environmentalValueToText[item.target_value] || 'Green')
                 : (item.target_value || 0) }}
-          </v-chip>
-        </div>
-      </template>
+            </v-chip>
+          </div>
+        </template>
 
-      <!-- YTD值输入 -->
-      <template v-slot:item.ytd_value="{ item }">
-        <!-- Environmental Performance YTD 使用选择框 -->
-        <v-select
-          v-if="item.description === 'Environmental Performance'"
-          v-model="item.ytd_value"
-          :items="environmentalOptions"
-          variant="outlined"
-          density="compact"
-          hide-details
-          class="text-field-small"
-          @update:model-value="handleInput"
-        ></v-select>
-        <!-- 其他KPI使用数值输入 -->
-        <v-text-field
-          v-else
-          v-model.number="item.ytd_value"
-          type="number"
-          min="0"
-          step="0.01"
-          variant="outlined"
-          density="compact"
-          hide-details
-          class="text-field-small"
-          @input="handleInput"
-        ></v-text-field>
-      </template>
-
-      <!-- 原因分析与行动计划 -->
-      <template v-slot:item.remark="{ item }">
-        <div v-if="shouldShowRemark(item)" class="d-flex align-center">
-          <v-btn
-            size="small"
+        <!-- YTD值输入 -->
+        <template #item.ytd_value="{ item }">
+          <!-- Environmental Performance YTD 使用选择框 -->
+          <v-select
+            v-if="item.description === 'Environmental Performance'"
+            v-model="item.ytd_value"
+            :items="environmentalOptions"
             variant="outlined"
-            color="warning"
-            prepend-icon="mdi-clipboard-edit"
-            @click="openRemarkDialog(item)"
+            density="compact"
+            hide-details
+            class="text-field-small"
+            @update:model-value="handleInput"
+          />
+          <!-- 其他KPI使用数值输入 -->
+          <v-text-field
+            v-else
+            v-model.number="item.ytd_value"
+            type="number"
+            min="0"
+            step="0.01"
+            variant="outlined"
+            density="compact"
+            hide-details
+            class="text-field-small"
+            @input="handleInput"
+          />
+        </template>
+
+        <!-- 原因分析与行动计划 -->
+        <template #item.remark="{ item }">
+          <div
+            v-if="shouldShowRemark(item)"
+            class="d-flex align-center"
           >
-            {{ getRemarkButtonText(item) }}
-          </v-btn>
-          <v-icon
-            v-if="hasRemarkContent(item)"
-            color="success"
-            class="ml-2"
-          >
-            mdi-check-circle
-          </v-icon>
-        </div>
-        <span v-else class="text-grey">-</span>
-      </template>
-    </unified-data-table>
-  </div>
+            <v-btn
+              size="small"
+              variant="outlined"
+              color="warning"
+              prepend-icon="mdi-clipboard-edit"
+              @click="openRemarkDialog(item)"
+            >
+              {{ getRemarkButtonText(item) }}
+            </v-btn>
+            <v-icon
+              v-if="hasRemarkContent(item)"
+              color="success"
+              class="ml-2"
+            >
+              mdi-check-circle
+            </v-icon>
+          </div>
+          <span
+            v-else
+            class="text-grey"
+          >-</span>
+        </template>
+      </unified-data-table>
+    </div>
 
     <!-- 目标值管理对话框 -->
-    <v-dialog v-model="targetDialog" max-width="1200px" persistent>
+    <v-dialog
+      v-model="targetDialog"
+      max-width="1200px"
+      persistent
+    >
       <v-card>
         <v-card-title class="d-flex align-center">
-          <v-icon class="mr-2">mdi-target</v-icon>
+          <v-icon class="mr-2">
+            mdi-target
+          </v-icon>
           {{ selectedYear }}年 EHS KPI 目标值设置
         </v-card-title>
         
@@ -248,7 +275,7 @@
             hide-default-footer
           >
             <!-- 区域列 -->
-            <template v-slot:item.area="{ item }">
+            <template #item.area="{ item }">
               <v-chip
                 :color="getAreaColor(item.area)"
                 size="small"
@@ -259,7 +286,7 @@
             </template>
 
             <!-- 目标值输入 -->
-            <template v-slot:item.target_value="{ item }">
+            <template #item.target_value="{ item }">
               <!-- Environmental Performance 使用选择框 -->
               <v-select
                 v-if="item.description === 'Environmental Performance'"
@@ -269,7 +296,7 @@
                 density="compact"
                 hide-details
                 class="text-field-small environmental-select"
-              ></v-select>
+              />
               <!-- 其他KPI使用数值输入 -->
               <v-text-field
                 v-else
@@ -281,13 +308,13 @@
                 density="compact"
                 hide-details
                 class="text-field-small"
-              ></v-text-field>
+              />
             </template>
           </unified-data-table>
         </v-card-text>
 
         <v-card-actions>
-          <v-spacer></v-spacer>
+          <v-spacer />
           <v-btn
             variant="text"
             @click="targetDialog = false"
@@ -628,7 +655,6 @@ const saveData = async () => {
 
     Message.success('数据保存成功')
     isDataChanged.value = false
-    showChangeAlert.value = false
     originalKpiData.value = JSON.parse(JSON.stringify(kpiData.value))
 
   } catch (error) {

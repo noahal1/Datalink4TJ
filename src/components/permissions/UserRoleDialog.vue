@@ -10,25 +10,48 @@
         <span>为 {{ user.name }} 分配角色</span>
       </v-card-title>
       
-      <v-divider></v-divider>
+      <v-divider />
       
       <v-card-text class="pt-4">
-        <div v-if="loading" class="d-flex justify-center align-center" style="height: 200px;">
-          <v-progress-circular indeterminate color="primary"></v-progress-circular>
+        <div
+          v-if="loading"
+          class="d-flex justify-center align-center"
+          style="height: 200px;"
+        >
+          <v-progress-circular
+            indeterminate
+            color="primary"
+          />
         </div>
         <div v-else>
-          <v-alert v-if="errorMessage" type="error" density="compact" class="mb-4">
+          <v-alert
+            v-if="errorMessage"
+            type="error"
+            density="compact"
+            class="mb-4"
+          >
             {{ errorMessage }}
           </v-alert>
           
-          <v-card class="pa-2 mb-4" variant="outlined">
-            <v-card-title class="text-subtitle-1">用户信息</v-card-title>
+          <v-card
+            class="pa-2 mb-4"
+            variant="outlined"
+          >
+            <v-card-title class="text-subtitle-1">
+              用户信息
+            </v-card-title>
             <v-card-text>
               <v-row dense>
-                <v-col cols="12" sm="6">
+                <v-col
+                  cols="12"
+                  sm="6"
+                >
                   <div><strong>用户名:</strong> {{ user.name }}</div>
                 </v-col>
-                <v-col cols="12" sm="6">
+                <v-col
+                  cols="12"
+                  sm="6"
+                >
                   <div><strong>部门:</strong> {{ user.department?.name || '未分配' }}</div>
                 </v-col>
               </v-row>
@@ -46,17 +69,20 @@
               >
                 {{ role.name }}
               </v-chip>
-              <div v-if="userRoles.length === 0" class="text-grey">
+              <div
+                v-if="userRoles.length === 0"
+                class="text-grey"
+              >
                 未分配任何角色
               </div>
             </v-chip-group>
           </div>
           
-          <v-divider class="my-4"></v-divider>
+          <v-divider class="my-4" />
           
           <v-card-title class="text-subtitle-1 px-0">
             分配角色
-            <v-spacer></v-spacer>
+            <v-spacer />
             <v-text-field
               v-model="search"
               append-icon="mdi-magnify"
@@ -65,10 +91,11 @@
               hide-details
               density="compact"
               style="max-width: 200px;"
-            ></v-text-field>
+            />
           </v-card-title>
           
           <v-data-table
+            v-model="selectedRoleIds"
             :headers="headers"
             :items="roles"
             :search="search"
@@ -77,16 +104,19 @@
             class="elevation-1"
             item-value="id"
             :items-per-page="10"
-            v-model="selectedRoleIds"
             show-select
           >
-            <template v-slot:item.description="{ item }">
-              <div class="text-truncate" style="max-width: 300px;" :title="item.description">
+            <template #item.description="{ item }">
+              <div
+                class="text-truncate"
+                style="max-width: 300px;"
+                :title="item.description"
+              >
                 {{ item.description || '无描述' }}
               </div>
             </template>
             
-            <template v-slot:item.permissions_count="{ item }">
+            <template #item.permissions_count="{ item }">
               <v-chip
                 :color="getPermissionCountColor(item.permissions?.length || 0)"
                 text-color="white"
@@ -99,24 +129,24 @@
         </div>
       </v-card-text>
       
-      <v-divider></v-divider>
+      <v-divider />
       
       <v-card-actions>
         <small class="text-grey">已选择 {{ selectedRoleIds.length }} 个角色</small>
-        <v-spacer></v-spacer>
+        <v-spacer />
         <v-btn
           color="grey-darken-1"
           variant="text"
-          @click="closeDialog"
           :disabled="saving"
+          @click="closeDialog"
         >
           取消
         </v-btn>
         <v-btn
           color="primary"
-          @click="saveUserRoles"
           :loading="saving"
           :disabled="saving"
+          @click="saveUserRoles"
         >
           保存
         </v-btn>

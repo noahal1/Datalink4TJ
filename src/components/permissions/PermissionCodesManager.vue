@@ -1,17 +1,28 @@
 <template>
   <v-card>
     <v-card-title class="d-flex align-center">
-      <v-icon class="mr-2">mdi-code-tags</v-icon>
+      <v-icon class="mr-2">
+        mdi-code-tags
+      </v-icon>
       权限代码管理
-      <v-spacer></v-spacer>
-      <v-btn color="primary" @click="refreshCodes" :loading="loading">
-        <v-icon left>mdi-refresh</v-icon>
+      <v-spacer />
+      <v-btn
+        color="primary"
+        :loading="loading"
+        @click="refreshCodes"
+      >
+        <v-icon left>
+          mdi-refresh
+        </v-icon>
         刷新
       </v-btn>
     </v-card-title>
 
     <v-card-text>
-      <v-alert type="info" class="mb-4">
+      <v-alert
+        type="info"
+        class="mb-4"
+      >
         <strong>简化权限系统：</strong>权限代码基于角色自动分配，系统预定义权限规则。
       </v-alert>
 
@@ -19,7 +30,9 @@
       <v-expansion-panels class="mb-4">
         <v-expansion-panel>
           <v-expansion-panel-title>
-            <v-icon class="mr-2">mdi-information</v-icon>
+            <v-icon class="mr-2">
+              mdi-information
+            </v-icon>
             权限代码说明
           </v-expansion-panel-title>
           <v-expansion-panel-text>
@@ -32,9 +45,17 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="code in permissionCodes" :key="code.code">
+                <tr
+                  v-for="code in permissionCodes"
+                  :key="code.code"
+                >
                   <td>
-                    <v-chip size="small" color="primary">{{ code.code }}</v-chip>
+                    <v-chip
+                      size="small"
+                      color="primary"
+                    >
+                      {{ code.code }}
+                    </v-chip>
                   </td>
                   <td>{{ code.description }}</td>
                   <td>
@@ -59,7 +80,9 @@
       <!-- 角色权限代码矩阵 -->
       <v-card variant="outlined">
         <v-card-title class="text-h6">
-          <v-icon class="mr-2">mdi-matrix</v-icon>
+          <v-icon class="mr-2">
+            mdi-matrix
+          </v-icon>
           角色权限代码矩阵
         </v-card-title>
         <v-card-text>
@@ -72,14 +95,22 @@
             density="compact"
           >
             <!-- 角色名称列 -->
-            <template v-slot:item.roleName="{ item }">
-              <v-chip :color="getRoleColor(item.roleName)" dark size="small">
+            <template #item.roleName="{ item }">
+              <v-chip
+                :color="getRoleColor(item.roleName)"
+                dark
+                size="small"
+              >
                 {{ item.roleName }}
               </v-chip>
             </template>
 
             <!-- 权限代码列 -->
-            <template v-for="code in permissionCodes" :key="code.code" v-slot:[`item.${code.code}`]="{ item }">
+            <template
+              v-for="code in permissionCodes"
+              :key="code.code"
+              #[`item.${code.code}`]="{ item }"
+            >
               <v-icon 
                 :color="item[code.code] ? 'success' : 'error'"
                 size="small"
@@ -93,16 +124,28 @@
 
       <!-- 权限代码统计 -->
       <v-row class="mt-4">
-        <v-col cols="12" md="6">
+        <v-col
+          cols="12"
+          md="6"
+        >
           <v-card variant="outlined">
             <v-card-title class="text-h6">
-              <v-icon class="mr-2">mdi-chart-bar</v-icon>
+              <v-icon class="mr-2">
+                mdi-chart-bar
+              </v-icon>
               权限代码统计
             </v-card-title>
             <v-card-text>
-              <div v-for="code in permissionCodes" :key="code.code" class="d-flex justify-space-between mb-2">
+              <div
+                v-for="code in permissionCodes"
+                :key="code.code"
+                class="d-flex justify-space-between mb-2"
+              >
                 <span>{{ code.code }}</span>
-                <v-chip size="small" color="info">
+                <v-chip
+                  size="small"
+                  color="info"
+                >
                   {{ code.roles.length }} 个角色
                 </v-chip>
               </div>
@@ -110,16 +153,28 @@
           </v-card>
         </v-col>
 
-        <v-col cols="12" md="6">
+        <v-col
+          cols="12"
+          md="6"
+        >
           <v-card variant="outlined">
             <v-card-title class="text-h6">
-              <v-icon class="mr-2">mdi-account-group</v-icon>
+              <v-icon class="mr-2">
+                mdi-account-group
+              </v-icon>
               角色权限统计
             </v-card-title>
             <v-card-text>
-              <div v-for="role in rolesList" :key="role.name" class="d-flex justify-space-between mb-2">
+              <div
+                v-for="role in rolesList"
+                :key="role.name"
+                class="d-flex justify-space-between mb-2"
+              >
                 <span>{{ role.name }}</span>
-                <v-chip size="small" :color="getPermissionCountColor(role.permissionCount)">
+                <v-chip
+                  size="small"
+                  :color="getPermissionCountColor(role.permissionCount)"
+                >
                   {{ role.permissionCount }} 个权限
                 </v-chip>
               </div>

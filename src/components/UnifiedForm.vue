@@ -2,34 +2,51 @@
   <v-form
     ref="formRef"
     v-model="valid"
-    @submit.prevent="handleSubmit"
     class="unified-form"
+    @submit.prevent="handleSubmit"
   >
-    <v-card class="unified-form-card" :elevation="elevation">
+    <v-card
+      class="unified-form-card"
+      :elevation="elevation"
+    >
       <!-- 表单标题 -->
-      <v-card-title v-if="title || $slots.title" class="unified-form-title d-flex align-center">
-        <v-icon v-if="icon" class="mr-2" :color="iconColor">{{ icon }}</v-icon>
-        <slot name="title">{{ title }}</slot>
+      <v-card-title
+        v-if="title || $slots.title"
+        class="unified-form-title d-flex align-center"
+      >
+        <v-icon
+          v-if="icon"
+          class="mr-2"
+          :color="iconColor"
+        >
+          {{ icon }}
+        </v-icon>
+        <slot name="title">
+          {{ title }}
+        </slot>
       </v-card-title>
       
-      <v-divider v-if="title || $slots.title"></v-divider>
+      <v-divider v-if="title || $slots.title" />
       
       <!-- 表单内容 -->
       <v-card-text class="unified-form-content">
-        <slot></slot>
+        <slot />
       </v-card-text>
       
       <!-- 表单操作按钮 -->
-      <v-card-actions v-if="$slots.actions || showDefaultActions" class="unified-form-actions">
+      <v-card-actions
+        v-if="$slots.actions || showDefaultActions"
+        class="unified-form-actions"
+      >
         <slot name="actions">
-          <v-spacer></v-spacer>
+          <v-spacer />
           <v-btn
             v-if="showReset"
             variant="outlined"
             color="grey"
             class="mr-2"
-            @click="handleReset"
             :disabled="loading"
+            @click="handleReset"
           >
             {{ resetText }}
           </v-btn>

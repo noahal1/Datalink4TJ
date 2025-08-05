@@ -1,19 +1,22 @@
 <template>
   <v-dialog
     :model-value="modelValue"
-    @update:model-value="$emit('update:modelValue', $event)"
     max-width="500px"
     transition="dialog-bottom-transition"
+    @update:model-value="$emit('update:modelValue', $event)"
   >
     <v-card>
       <v-card-title class="d-flex align-center pb-2">
-        <v-icon class="mr-2" color="error">
+        <v-icon
+          class="mr-2"
+          color="error"
+        >
           {{ localIssue.id ? 'mdi-pencil-circle' : 'mdi-plus-circle' }}
         </v-icon>
         <span class="text-h5">{{ localIssue.id ? '编辑问题' : '记录问题' }}</span>
       </v-card-title>
       
-      <v-divider></v-divider>
+      <v-divider />
       
       <v-card-text class="pt-4">
         <v-form ref="formRef">
@@ -26,7 +29,7 @@
             :rules="[v => !!v || '请输入问题描述']"
             placeholder="请详细描述问题的情况..."
             autofocus
-          ></v-textarea>
+          />
           
           <v-select
             v-model="localIssue.severity"
@@ -37,27 +40,33 @@
             :item-props="setItemColor"
             density="comfortable"
             prepend-inner-icon="mdi-alert"
-          ></v-select>
+          />
           
           <v-checkbox
             v-model="localIssue.resolved"
             label="已解决"
             hide-details
             color="success"
-          ></v-checkbox>
+          />
         </v-form>
       </v-card-text>
       
       <v-card-actions class="pa-4 pt-0">
-        <v-spacer></v-spacer>
-        <v-btn variant="outlined" color="grey" @click="$emit('close')">取消</v-btn>
+        <v-spacer />
+        <v-btn
+          variant="outlined"
+          color="grey"
+          @click="$emit('close')"
+        >
+          取消
+        </v-btn>
         <v-btn 
           color="primary" 
           variant="elevated"
-          @click="saveIssue" 
-          :loading="loading"
+          :loading="loading" 
           :disabled="loading || !isFormValid"
           append-icon="mdi-check"
+          @click="saveIssue"
         >
           保存
         </v-btn>

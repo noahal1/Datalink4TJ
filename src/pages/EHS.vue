@@ -29,9 +29,9 @@
       />
       <v-btn 
         color="primary" 
-        @click="applyWeekFilter"
         class="ml-2"
         variant="elevated"
+        @click="applyWeekFilter"
       >
         应用筛选
       </v-btn>
@@ -39,7 +39,10 @@
 
     <!-- 统计摘要 -->
     <v-row class="mb-6">
-      <v-col cols="12" md="4">
+      <v-col
+        cols="12"
+        md="4"
+      >
         <unified-stats-card
           title="总 LWD 数量"
           :value="totalLWD"
@@ -47,7 +50,10 @@
           color="primary"
         />
       </v-col>
-      <v-col cols="12" md="4">
+      <v-col
+        cols="12"
+        md="4"
+      >
         <unified-stats-card
           title="平均每周 LWD"
           :value="averageLWD.toFixed(2)"
@@ -55,7 +61,10 @@
           color="success"
         />
       </v-col>
-      <v-col cols="12" md="4">
+      <v-col
+        cols="12"
+        md="4"
+      >
         <unified-stats-card
           title="当前周 LWD"
           :value="currentWeekLWD"
@@ -77,7 +86,11 @@
     >
       <template #pre-table>
         <div style="height: 300px">
-          <v-chart class="chart" :option="chartOption" autoresize />
+          <v-chart
+            class="chart"
+            :option="chartOption"
+            autoresize
+          />
         </div>
       </template>
     </unified-data-table>
@@ -94,10 +107,10 @@
       height="50vh"
       :loading="loading"
     >
-      <template v-slot:item.dateRange="{ item }">
+      <template #item.dateRange="{ item }">
         {{ item.dateRange }}
       </template>
-      <template v-slot:item.lwd="{ item }">
+      <template #item.lwd="{ item }">
         <v-text-field
           v-model.number="item.lwd"
           type="number"
@@ -117,13 +130,18 @@
       dark
       color="primary"
       class="floating-button"
-      @click="confirmChanges"
       :loading="submitting"
+      @click="confirmChanges"
     >
-      <v-icon dark>mdi-content-save</v-icon>
+      <v-icon dark>
+        mdi-content-save
+      </v-icon>
     </v-btn>
     
-    <app-loader v-if="loading" message="加载数据中..." />
+    <app-loader
+      v-if="loading"
+      message="加载数据中..."
+    />
   </unified-page-template>
 </template>
 

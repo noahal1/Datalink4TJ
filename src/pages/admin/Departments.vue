@@ -11,9 +11,9 @@
           :search="search"
           :items-per-page="10"
         >
-          <template v-slot:title>
+          <template #title>
             <span>部门管理</span>
-            <v-spacer></v-spacer>
+            <v-spacer />
             <v-text-field
               v-model="search"
               append-icon="mdi-magnify"
@@ -23,28 +23,53 @@
               density="compact"
               class="ml-4"
               style="max-width: 300px"
-            ></v-text-field>
+            />
           </template>
           
-          <template v-slot:item.actions="{ item }">
-            <v-btn size="small" variant="text" color="primary" class="mr-1" @click="editDepartment(item)">
+          <template #item.actions="{ item }">
+            <v-btn
+              size="small"
+              variant="text"
+              color="primary"
+              class="mr-1"
+              @click="editDepartment(item)"
+            >
               <v-icon>mdi-pencil</v-icon>
               编辑
             </v-btn>
-            <v-btn size="small" variant="text" color="error" @click="confirmDelete(item)">
+            <v-btn
+              size="small"
+              variant="text"
+              color="error"
+              @click="confirmDelete(item)"
+            >
               <v-icon>mdi-delete</v-icon>
               删除
             </v-btn>
           </template>
           
           <template #actions>
-            <v-btn color="primary" prepend-icon="mdi-plus" @click="openAddDialog">
+            <v-btn
+              color="primary"
+              prepend-icon="mdi-plus"
+              @click="openAddDialog"
+            >
               添加部门
             </v-btn>
-            <v-btn class="ml-2" color="secondary" prepend-icon="mdi-refresh" @click="fetchDepartments">
+            <v-btn
+              class="ml-2"
+              color="secondary"
+              prepend-icon="mdi-refresh"
+              @click="fetchDepartments"
+            >
               刷新
             </v-btn>
-            <v-btn class="ml-2" color="info" prepend-icon="mdi-filter" @click="filterDrawer = true">
+            <v-btn
+              class="ml-2"
+              color="info"
+              prepend-icon="mdi-filter"
+              @click="filterDrawer = true"
+            >
               筛选
             </v-btn>
           </template>
@@ -53,13 +78,19 @@
     </v-row>
     
     <!-- 部门对话框 -->
-    <v-dialog v-model="dialog" max-width="500px">
+    <v-dialog
+      v-model="dialog"
+      max-width="500px"
+    >
       <v-card>
         <v-card-title class="text-h5 bg-primary text-white">
           {{ formTitle }}
         </v-card-title>
         <v-card-text class="pt-4">
-          <unified-form ref="formRef" :showDefaultActions="false">
+          <unified-form
+            ref="formRef"
+            :show-default-actions="false"
+          >
             <v-text-field
               v-model="editedItem.id"
               label="部门代码"
@@ -68,7 +99,7 @@
               density="comfortable"
               :disabled="editedIndex !== -1"
               :rules="[rules.required]"
-            ></v-text-field>
+            />
             <v-text-field
               v-model="editedItem.name"
               label="部门名称"
@@ -76,7 +107,7 @@
               variant="outlined"
               density="comfortable"
               :rules="[rules.required]"
-            ></v-text-field>
+            />
             <v-textarea
               v-model="editedItem.description"
               label="部门描述"
@@ -84,29 +115,60 @@
               variant="outlined"
               density="comfortable"
               rows="3"
-            ></v-textarea>
+            />
           </unified-form>
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="grey" variant="text" @click="closeDialog">取消</v-btn>
-          <v-btn color="primary" @click="saveDepartment" :loading="saving">确定</v-btn>
+          <v-spacer />
+          <v-btn
+            color="grey"
+            variant="text"
+            @click="closeDialog"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="primary"
+            :loading="saving"
+            @click="saveDepartment"
+          >
+            确定
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
     
     <!-- 删除确认对话框 -->
-    <v-dialog v-model="deleteDialog" max-width="500px">
+    <v-dialog
+      v-model="deleteDialog"
+      max-width="500px"
+    >
       <v-card>
-        <v-card-title class="text-h5 bg-error text-white">确认删除</v-card-title>
+        <v-card-title class="text-h5 bg-error text-white">
+          确认删除
+        </v-card-title>
         <v-card-text class="pt-4">
           <p>您确定要删除部门 <strong>{{ editedItem.name }}</strong> 吗？此操作不可撤销。</p>
-          <p class="text-caption text-grey">部门ID: {{ editedItem.id }}</p>
+          <p class="text-caption text-grey">
+            部门ID: {{ editedItem.id }}
+          </p>
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="grey" variant="text" @click="deleteDialog = false">取消</v-btn>
-          <v-btn color="error" @click="deleteDepartment" :loading="deleting">删除</v-btn>
+          <v-spacer />
+          <v-btn
+            color="grey"
+            variant="text"
+            @click="deleteDialog = false"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="error"
+            :loading="deleting"
+            @click="deleteDepartment"
+          >
+            删除
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -120,10 +182,21 @@
     >
       <v-card class="h-100">
         <v-card-title class="bg-primary text-white">
-          <v-icon class="mr-2" color="white">mdi-filter</v-icon>
+          <v-icon
+            class="mr-2"
+            color="white"
+          >
+            mdi-filter
+          </v-icon>
           筛选条件
-          <v-spacer></v-spacer>
-          <v-btn icon variant="text" color="white" size="small" @click="filterDrawer = false">
+          <v-spacer />
+          <v-btn
+            icon
+            variant="text"
+            color="white"
+            size="small"
+            @click="filterDrawer = false"
+          >
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </v-card-title>
@@ -136,7 +209,7 @@
               variant="outlined"
               density="comfortable"
               clearable
-            ></v-text-field>
+            />
             
             <v-text-field
               v-model="filters.name"
@@ -144,7 +217,7 @@
               variant="outlined"
               density="comfortable"
               clearable
-            ></v-text-field>
+            />
             
             <v-text-field
               v-model="filters.description"
@@ -152,16 +225,23 @@
               variant="outlined"
               density="comfortable"
               clearable
-            ></v-text-field>
+            />
           </unified-form>
         </v-card-text>
         
         <v-card-actions class="py-3">
-          <v-spacer></v-spacer>
-          <v-btn variant="text" color="grey" @click="clearFilters">
+          <v-spacer />
+          <v-btn
+            variant="text"
+            color="grey"
+            @click="clearFilters"
+          >
             清除筛选
           </v-btn>
-          <v-btn color="primary" @click="applyFilters">
+          <v-btn
+            color="primary"
+            @click="applyFilters"
+          >
             应用筛选
           </v-btn>
         </v-card-actions>

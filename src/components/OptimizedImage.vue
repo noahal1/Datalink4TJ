@@ -12,19 +12,34 @@
       :width="width"
       :height="height"
       :style="imgStyle"
+      v-bind="$attrs"
       @load="onImageLoaded"
       @error="onImageError"
-      v-bind="$attrs"
-    />
+    >
     
     <!-- 加载态 -->
-    <div v-if="loading" class="image-loading">
-      <v-progress-circular size="32" indeterminate color="primary"></v-progress-circular>
+    <div
+      v-if="loading"
+      class="image-loading"
+    >
+      <v-progress-circular
+        size="32"
+        indeterminate
+        color="primary"
+      />
     </div>
     
     <!-- 错误态 -->
-    <div v-if="error" class="image-error">
-      <v-icon size="large" color="error">mdi-alert-circle</v-icon>
+    <div
+      v-if="error"
+      class="image-error"
+    >
+      <v-icon
+        size="large"
+        color="error"
+      >
+        mdi-alert-circle
+      </v-icon>
       <span>{{ errorText }}</span>
     </div>
   </div>

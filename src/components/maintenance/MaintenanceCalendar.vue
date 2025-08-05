@@ -1,7 +1,12 @@
 <template>
-  <v-card class="elevation-2" style="height: 100%;">
+  <v-card
+    class="elevation-2"
+    style="height: 100%;"
+  >
     <v-card-title class="d-flex align-center">
-      <v-icon class="mr-2">mdi-calendar</v-icon>
+      <v-icon class="mr-2">
+        mdi-calendar
+      </v-icon>
       设备维修日历
     </v-card-title>
     <v-card-text>
@@ -14,14 +19,22 @@
           density="compact"
           hide-details
           class="mb-4"
-        ></v-select>
+        />
         
         <v-sheet class="calendar-grid">
-          <div class="calendar-header" v-for="day in ['日', '一', '二', '三', '四', '五', '六']" :key="day">
+          <div
+            v-for="day in ['日', '一', '二', '三', '四', '五', '六']"
+            :key="day"
+            class="calendar-header"
+          >
             {{ day }}
           </div>
           
-          <div class="calendar-day empty" v-for="n in firstDayOfMonth" :key="`empty-${n}`"></div>
+          <div
+            v-for="n in firstDayOfMonth"
+            :key="`empty-${n}`"
+            class="calendar-day empty"
+          />
           
           <v-btn
             v-for="day in daysInMonth"

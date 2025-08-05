@@ -2,24 +2,38 @@
   <div class="page-header">
     <div class="header-content">
       <div class="title-area">
-        <h1 class="text-h4 font-weight-bold">{{ title }}</h1>
-        <p v-if="subtitle" class="text-subtitle-1 text-medium-emphasis">{{ subtitle }}</p>
+        <h1 class="text-h4 font-weight-bold">
+          {{ title }}
+        </h1>
+        <p
+          v-if="subtitle"
+          class="text-subtitle-1 text-medium-emphasis"
+        >
+          {{ subtitle }}
+        </p>
       </div>
       
       <div class="actions-area">
-        <slot name="actions"></slot>
+        <slot name="actions" />
       </div>
     </div>
     
-    <v-breadcrumbs v-if="showBreadcrumbs" :items="breadcrumbs" class="pa-0 mb-4">
-      <template v-slot:divider>
-        <v-icon icon="mdi-chevron-right" size="small"></v-icon>
+    <v-breadcrumbs
+      v-if="showBreadcrumbs"
+      :items="breadcrumbs"
+      class="pa-0 mb-4"
+    >
+      <template #divider>
+        <v-icon
+          icon="mdi-chevron-right"
+          size="small"
+        />
       </template>
-      <template v-slot:title="{ item }">
+      <template #title="{ item }">
         <v-breadcrumbs-item
           :title="item.title"
           :href="item.href"
-        ></v-breadcrumbs-item>
+        />
       </template>
     </v-breadcrumbs>
   </div>

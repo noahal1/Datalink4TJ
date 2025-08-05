@@ -288,11 +288,11 @@ onMounted(async () => {
       <v-btn
         prepend-icon="mdi-refresh"
         variant="outlined"
-        @click="refreshAllData"
         :disabled="isLoading"
         :loading="isLoading"
         class="mr-2 refresh-btn"
         color="primary"
+        @click="refreshAllData"
       >
         刷新数据
       </v-btn>
@@ -309,14 +309,29 @@ onMounted(async () => {
     </template>
     
     <!-- 加载指示器 -->
-    <loading-overlay :loading="isLoading" message="加载数据中..." />
+    <loading-overlay
+      :loading="isLoading"
+      message="加载数据中..."
+    />
     
     <v-row class="fill-height">
       <!-- 左侧面板 -->
-      <v-col cols="12" md="8" order="4" order-md="1" class="d-flex flex-column">
+      <v-col
+        cols="12"
+        md="8"
+        order="4"
+        order-md="1"
+        class="d-flex flex-column"
+      >
         <!-- 统计卡片 -->
         <v-row class="match-height">
-          <v-col cols="12" sm="4" lg="3" v-for="card in statsCards" :key="card.title">
+          <v-col
+            v-for="card in statsCards"
+            :key="card.title"
+            cols="12"
+            sm="4"
+            lg="3"
+          >
             <unified-stats-card
               :title="card.title"
               :value="card.value"
@@ -348,15 +363,30 @@ onMounted(async () => {
                   class="pt-1"
                   @update:model-value="handlePeriodChange"
                 >
-                  <v-btn value="day">日</v-btn>
-                  <v-btn value="week">周</v-btn>
-                  <v-btn value="month" selected>月</v-btn>
-                  <v-btn value="year">年</v-btn>
+                  <v-btn value="day">
+                    日
+                  </v-btn>
+                  <v-btn value="week">
+                    周
+                  </v-btn>
+                  <v-btn
+                    value="month"
+                    selected
+                  >
+                    月
+                  </v-btn>
+                  <v-btn value="year">
+                    年
+                  </v-btn>
                 </v-btn-toggle>
               </template>
               
               <loading-overlay :loading="isLoadingTrendData" />
-              <v-chart class="chart" :option="chartOption" autoresize />
+              <v-chart
+                class="chart"
+                :option="chartOption"
+                autoresize
+              />
             </unified-data-table>
           </v-col>
         </v-row>
@@ -371,7 +401,7 @@ onMounted(async () => {
               content-class="data-overview"
             >
               <template #actions>
-                <v-spacer></v-spacer>
+                <v-spacer />
                 <v-btn
                   variant="text"
                   size="small"
@@ -379,14 +409,20 @@ onMounted(async () => {
                   color="primary"
                 >
                   查看详情
-                  <v-icon end>mdi-chevron-right</v-icon>
+                  <v-icon end>
+                    mdi-chevron-right
+                  </v-icon>
                 </v-btn>
               </template>
               
               <loading-overlay :loading="isLoadingQualityData" />
               <div class="quality-overview-wrapper">
                 <v-row class="quality-stats-row g-1">
-                  <v-col cols="12" sm="6" md="3">
+                  <v-col
+                    cols="12"
+                    sm="6"
+                    md="3"
+                  >
                     <unified-stats-card
                       title="本月焊接GP12总数"
                       :value="totalWelding"
@@ -395,7 +431,11 @@ onMounted(async () => {
                       subtitle="SWI, RWH, W01"
                     />
                   </v-col>
-                  <v-col cols="12" sm="6" md="3">
+                  <v-col
+                    cols="12"
+                    sm="6"
+                    md="3"
+                  >
                     <unified-stats-card
                       title="本月冲压GP12总数"
                       :value="totalStamping"
@@ -404,7 +444,11 @@ onMounted(async () => {
                       subtitle="HF, LC"
                     />
                   </v-col>
-                  <v-col cols="12" sm="6" md="3">
+                  <v-col
+                    cols="12"
+                    sm="6"
+                    md="3"
+                  >
                     <unified-stats-card
                       title="报废率"
                       :value="scrapRate + '%'"
@@ -413,7 +457,11 @@ onMounted(async () => {
                       subtitle="本月累计"
                     />
                   </v-col>
-                  <v-col cols="12" sm="6" md="3">
+                  <v-col
+                    cols="12"
+                    sm="6"
+                    md="3"
+                  >
                     <unified-stats-card
                       title="本月GP12总数"
                       :value="totalGP12"
@@ -430,7 +478,10 @@ onMounted(async () => {
         
         <!-- 最近活动 -->
         <v-row class="mt-4 flex-grow-1">
-          <v-col cols="12" class="d-flex">
+          <v-col
+            cols="12"
+            class="d-flex"
+          >
             <recent-activities 
               title="最近活动"
               :limit="5"
@@ -443,7 +494,14 @@ onMounted(async () => {
       </v-col>
       
       <!-- 右侧面板 -->
-      <v-col cols="12" md="4" lg="4" order="1" order-md="2" class="d-flex flex-column">
+      <v-col
+        cols="12"
+        md="4"
+        lg="4"
+        order="1"
+        order-md="2"
+        class="d-flex flex-column"
+      >
         <!-- 即将开始的重要事件 -->
         <div class="mb-4">
           <dashboard-upcoming-events :limit="5" />
@@ -470,7 +528,7 @@ onMounted(async () => {
                 class="mb-4"
                 border="start"
                 density="comfortable"
-              ></v-alert>
+              />
               
               <v-alert
                 color="success"
@@ -480,7 +538,7 @@ onMounted(async () => {
                 variant="tonal"
                 border="start"
                 density="comfortable"
-              ></v-alert>
+              />
             </div>
           </template>
         </unified-data-table>

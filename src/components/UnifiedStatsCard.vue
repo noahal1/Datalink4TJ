@@ -1,23 +1,47 @@
 <template>
-  <v-card class="unified-stats-card h-100" :elevation="elevation" :color="bgColor">
+  <v-card
+    class="unified-stats-card h-100"
+    :elevation="elevation"
+    :color="bgColor"
+  >
     <v-card-text class="d-flex flex-column h-100">
       <!-- 标题和图标 -->
       <div class="d-flex align-center mb-2">
-        <div v-if="icon" class="unified-stats-icon" :class="`bg-${color}-light`">
-          <v-icon :color="iconColor" size="24">{{ icon }}</v-icon>
+        <div
+          v-if="icon"
+          class="unified-stats-icon"
+          :class="`bg-${color}-light`"
+        >
+          <v-icon
+            :color="iconColor"
+            size="24"
+          >
+            {{ icon }}
+          </v-icon>
         </div>
-        <div class="unified-stats-title">{{ title }}</div>
+        <div class="unified-stats-title">
+          {{ title }}
+        </div>
       </div>
       
       <!-- 数值 -->
       <div class="unified-stats-value-container my-2 d-flex align-center">
         <div class="unified-stats-value">
-          <slot name="value">{{ value }}</slot>
+          <slot name="value">
+            {{ value }}
+          </slot>
         </div>
         
         <!-- 变化指标 -->
-        <div v-if="showChange && change !== null" class="unified-stats-change ms-3" :class="changeColorClass">
-          <v-icon size="small" class="mr-1">
+        <div
+          v-if="showChange && change !== null"
+          class="unified-stats-change ms-3"
+          :class="changeColorClass"
+        >
+          <v-icon
+            size="small"
+            class="mr-1"
+          >
             {{ change >= 0 ? 'mdi-arrow-up' : 'mdi-arrow-down' }}
           </v-icon>
           <span>{{ formatChange(change) }}</span>
@@ -25,18 +49,26 @@
       </div>
       
       <!-- 进度条 -->
-      <div v-if="showProgress && typeof value === 'string' && value.includes('%')" class="progress-container mb-2">
+      <div
+        v-if="showProgress && typeof value === 'string' && value.includes('%')"
+        class="progress-container mb-2"
+      >
         <v-progress-linear
           :model-value="parseFloat(value)"
           :color="color"
           height="6"
           rounded
-        ></v-progress-linear>
+        />
       </div>
       
       <!-- 副标题 -->
-      <div v-if="subtitle || $slots.subtitle" class="unified-stats-subtitle mt-auto">
-        <slot name="subtitle">{{ subtitle }}</slot>
+      <div
+        v-if="subtitle || $slots.subtitle"
+        class="unified-stats-subtitle mt-auto"
+      >
+        <slot name="subtitle">
+          {{ subtitle }}
+        </slot>
       </div>
     </v-card-text>
   </v-card>

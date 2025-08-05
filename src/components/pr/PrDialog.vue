@@ -1,19 +1,32 @@
 <template>
-  <v-dialog v-model="dialog" max-width="800" persistent>
+  <v-dialog
+    v-model="dialog"
+    max-width="800"
+    persistent
+  >
     <v-card>
       <v-card-title class="d-flex justify-space-between align-center">
         <span>{{ isNew ? '新建PR' : '编辑PR' }}</span>
-        <v-btn icon="mdi-close" variant="text" @click="close" />
+        <v-btn
+          icon="mdi-close"
+          variant="text"
+          @click="close"
+        />
       </v-card-title>
 
       <v-divider />
 
       <v-card-text class="pa-6">
-        <v-form ref="formRef" v-model="valid">
+        <v-form
+          ref="formRef"
+          v-model="valid"
+        >
           <v-row>
             <!-- 基本信息 -->
             <v-col cols="12">
-              <h4 class="text-subtitle-1 mb-3">基本信息</h4>
+              <h4 class="text-subtitle-1 mb-3">
+                基本信息
+              </h4>
             </v-col>
 
             <v-col cols="12">
@@ -26,7 +39,10 @@
               />
             </v-col>
 
-            <v-col cols="12" md="6">
+            <v-col
+              cols="12"
+              md="6"
+            >
               <v-select
                 v-model="localPr.pr_type_id"
                 :items="typeOptions"
@@ -39,7 +55,10 @@
               />
             </v-col>
 
-            <v-col cols="12" md="6">
+            <v-col
+              cols="12"
+              md="6"
+            >
               <v-select
                 v-model="localPr.priority_id"
                 :items="priorityOptions"
@@ -52,7 +71,10 @@
               />
             </v-col>
 
-            <v-col cols="12" md="6">
+            <v-col
+              cols="12"
+              md="6"
+            >
               <v-text-field
                 v-model="localPr.required_date"
                 label="需求日期"
@@ -62,7 +84,10 @@
               />
             </v-col>
 
-            <v-col cols="12" md="6">
+            <v-col
+              cols="12"
+              md="6"
+            >
               <v-text-field
                 v-model.number="localPr.estimated_cost"
                 label="预估成本"
@@ -97,7 +122,9 @@
             <!-- PR明细 -->
             <v-col cols="12">
               <div class="d-flex justify-space-between align-center mb-3">
-                <h4 class="text-subtitle-1">PR明细</h4>
+                <h4 class="text-subtitle-1">
+                  PR明细
+                </h4>
                 <v-btn
                   color="primary"
                   variant="outlined"
@@ -110,7 +137,10 @@
               </div>
             </v-col>
 
-            <v-col cols="12" v-if="localPr.items && localPr.items.length > 0">
+            <v-col
+              v-if="localPr.items && localPr.items.length > 0"
+              cols="12"
+            >
               <v-card variant="outlined">
                 <v-card-text class="pa-0">
                   <v-table density="compact">
@@ -122,11 +152,16 @@
                         <th>单位</th>
                         <th>单价</th>
                         <th>总价</th>
-                        <th width="80">操作</th>
+                        <th width="80">
+                          操作
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="(item, index) in localPr.items" :key="index">
+                      <tr
+                        v-for="(item, index) in localPr.items"
+                        :key="index"
+                      >
                         <td>
                           <v-text-field
                             v-model="item.item_name"
@@ -198,7 +233,10 @@
               </v-card>
             </v-col>
 
-            <v-col cols="12" v-else>
+            <v-col
+              v-else
+              cols="12"
+            >
               <v-alert
                 type="info"
                 variant="outlined"
@@ -213,12 +251,14 @@
 
       <v-card-actions class="pa-4">
         <v-spacer />
-        <v-btn @click="close">取消</v-btn>
+        <v-btn @click="close">
+          取消
+        </v-btn>
         <v-btn
           color="primary"
-          @click="save"
           :loading="loading"
           :disabled="!valid"
+          @click="save"
         >
           {{ isNew ? '创建' : '更新' }}
         </v-btn>

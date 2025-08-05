@@ -1,8 +1,8 @@
 <template>
   <v-dialog
     :model-value="modelValue"
-    @update:model-value="$emit('update:modelValue', $event)"
     max-width="600px"
+    @update:model-value="$emit('update:modelValue', $event)"
   >
     <v-card>
       <v-card-title>
@@ -17,7 +17,7 @@
             variant="outlined"
             class="mb-4"
             :rules="[v => !!v || '请输入任务标题']"
-          ></v-text-field>
+          />
           
           <v-text-field
             v-model="localTask.wheres"
@@ -25,7 +25,7 @@
             variant="outlined"
             class="mb-4"
             :rules="[v => !!v || '请输入设备或位置']"
-          ></v-text-field>
+          />
           
           <v-select
             v-model="localTask.type"
@@ -36,7 +36,7 @@
             variant="outlined"
             class="mb-4"
             :rules="[v => !!v || '请选择任务类型']"
-          ></v-select>
+          />
           
           <v-textarea
             v-model="localTask.content_daily"
@@ -45,24 +45,30 @@
             class="mb-4"
             rows="3"
             :rules="[v => !!v || '请输入工作内容']"
-          ></v-textarea>
+          />
           
           <v-checkbox
             v-model="localTask.solved"
             label="标记为已完成"
             hide-details
-          ></v-checkbox>
+          />
         </v-form>
       </v-card-text>
       
       <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn color="grey" text @click="$emit('close')">取消</v-btn>
+        <v-spacer />
+        <v-btn
+          color="grey"
+          text
+          @click="$emit('close')"
+        >
+          取消
+        </v-btn>
         <v-btn 
           color="primary" 
-          @click="saveTask" 
-          :loading="loading"
+          :loading="loading" 
           :disabled="loading"
+          @click="saveTask"
         >
           保存
         </v-btn>

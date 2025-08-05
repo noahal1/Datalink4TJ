@@ -2,13 +2,16 @@
   <unified-page-template 
     title="KPI数据导出"
     icon="mdi-export"
-    color="success">
+    color="success"
+  >
     <!-- 导出控制面板 -->
     <div class="export-controls-container">
       <v-card class="export-config-card elevation-2">
         <v-card-title class="export-config-header">
           <div class="config-title-content">
-            <v-icon class="config-icon">mdi-cog</v-icon>
+            <v-icon class="config-icon">
+              mdi-cog
+            </v-icon>
             <span class="config-title-text">导出配置</span>
           </div>
         </v-card-title>
@@ -18,25 +21,31 @@
           <div class="config-group">
             <div class="group-header">
               <div class="group-header-content">
-                <v-icon class="group-icon">mdi-calendar-range</v-icon>
+                <v-icon class="group-icon">
+                  mdi-calendar-range
+                </v-icon>
                 <span class="group-title">时间范围</span>
               </div>
-              <v-divider class="group-divider"></v-divider>
+              <v-divider class="group-divider" />
             </div>
             
             <div class="group-content">
               <!-- 时间范围选择模式 -->
-              <v-radio-group v-model="timeRangeMode" density="compact" class="time-mode-group">
+              <v-radio-group
+                v-model="timeRangeMode"
+                density="compact"
+                class="time-mode-group"
+              >
                 <v-radio 
                   label="按月导出" 
                   value="month"
                   color="primary"
-                ></v-radio>
+                />
                 <v-radio 
                   label="全年导出" 
                   value="year"
                   color="primary"
-                ></v-radio>
+                />
               </v-radio-group>
               
               <v-row class="time-selectors">
@@ -49,9 +58,12 @@
                     density="compact"
                     hide-details
                     class="time-select"
-                  ></v-select>
+                  />
                 </v-col>
-                <v-col cols="6" v-if="timeRangeMode === 'month'">
+                <v-col
+                  v-if="timeRangeMode === 'month'"
+                  cols="6"
+                >
                   <v-select
                     v-model="selectedMonth"
                     :items="monthOptions"
@@ -60,16 +72,21 @@
                     density="compact"
                     hide-details
                     class="time-select"
-                  ></v-select>
+                  />
                 </v-col>
-                <v-col cols="6" v-else>
+                <v-col
+                  v-else
+                  cols="6"
+                >
                   <div class="year-indicator">
                     <v-chip 
                       color="success" 
                       variant="elevated"
                       class="full-year-chip"
                     >
-                      <v-icon start>mdi-calendar-check</v-icon>
+                      <v-icon start>
+                        mdi-calendar-check
+                      </v-icon>
                       全年数据 (1-12月)
                     </v-chip>
                   </div>
@@ -82,7 +99,9 @@
           <div class="config-group">
             <div class="group-header">
               <div class="group-header-content">
-                <v-icon class="group-icon">mdi-chart-line</v-icon>
+                <v-icon class="group-icon">
+                  mdi-chart-line
+                </v-icon>
                 <span class="group-title">KPI类型选择</span>
               </div>
               <v-chip 
@@ -92,18 +111,18 @@
               >
                 已选择 {{ selectedKpiTypes.length }}/{{ kpiTypes.length }}
               </v-chip>
-              <v-divider class="group-divider"></v-divider>
+              <v-divider class="group-divider" />
             </div>
             
             <div class="group-content">
               <div class="kpi-selection-controls">
                 <v-checkbox-btn
                   v-model="selectAll"
-                  @update:model-value="toggleSelectAll"
                   label="全选"
                   color="primary"
                   class="select-all-checkbox"
-                ></v-checkbox-btn>
+                  @update:model-value="toggleSelectAll"
+                />
               </div>
               
               <div class="kpi-types-grid">
@@ -112,11 +131,15 @@
                   :key="kpiType.key"
                   class="kpi-type-item"
                   :class="{ 'selected': selectedKpiTypes.includes(kpiType.key) }"
-                  @click="toggleKpiType(kpiType.key)"
                   variant="outlined"
+                  @click="toggleKpiType(kpiType.key)"
                 >
                   <v-card-text class="kpi-type-content">
-                    <v-icon :icon="kpiType.icon" class="kpi-type-icon" size="20"></v-icon>
+                    <v-icon
+                      :icon="kpiType.icon"
+                      class="kpi-type-icon"
+                      size="20"
+                    />
                     <span class="kpi-type-name">{{ kpiType.name }}</span>
                     <v-checkbox-btn
                       v-model="selectedKpiTypes"
@@ -125,7 +148,7 @@
                       density="compact"
                       class="kpi-type-checkbox"
                       @click.stop
-                    ></v-checkbox-btn>
+                    />
                   </v-card-text>
                 </v-card>
               </div>
@@ -136,13 +159,19 @@
           <div class="config-group">
             <div class="group-header">
               <div class="group-header-content">
-                <v-icon class="group-icon">mdi-file-export</v-icon>
+                <v-icon class="group-icon">
+                  mdi-file-export
+                </v-icon>
                 <span class="group-title">导出格式</span>
               </div>
-              <v-chip color="info" variant="outlined" size="small">
+              <v-chip
+                color="info"
+                variant="outlined"
+                size="small"
+              >
                 {{ exportFormats.find(f => f.key === selectedFormat)?.name || '未选择' }}
               </v-chip>
-              <v-divider class="group-divider"></v-divider>
+              <v-divider class="group-divider" />
             </div>
             
             <div class="group-content">
@@ -152,14 +181,22 @@
                   :key="format.key"
                   class="format-option"
                   :class="{ 'selected': selectedFormat === format.key }"
-                  @click="selectedFormat = format.key"
                   variant="outlined"
+                  @click="selectedFormat = format.key"
                 >
                   <v-card-text class="format-content">
-                    <v-icon :icon="format.icon" class="format-icon" size="24"></v-icon>
+                    <v-icon
+                      :icon="format.icon"
+                      class="format-icon"
+                      size="24"
+                    />
                     <div class="format-info">
-                      <div class="format-name">{{ format.name }}</div>
-                      <div class="format-desc">{{ getFormatDescription(format.key) }}</div>
+                      <div class="format-name">
+                        {{ format.name }}
+                      </div>
+                      <div class="format-desc">
+                        {{ getFormatDescription(format.key) }}
+                      </div>
                     </div>
                     <v-radio
                       v-model="selectedFormat"
@@ -167,7 +204,7 @@
                       color="primary"
                       class="format-radio"
                       @click.stop
-                    ></v-radio>
+                    />
                   </v-card-text>
                 </v-card>
               </div>
@@ -178,29 +215,34 @@
         <!-- 导出按钮区域 -->
         <v-card-actions class="export-actions">
           <div class="export-summary">
-            <v-icon class="summary-icon">mdi-information</v-icon>
+            <v-icon class="summary-icon">
+              mdi-information
+            </v-icon>
             <div class="summary-text">
-              <div class="summary-main">准备导出 {{ selectedKpiTypes.length }} 种KPI类型</div>
-              <div class="summary-sub">{{ getTimeRangeText() }} • {{ exportFormats.find(f => f.key === selectedFormat)?.name }}</div>
+              <div class="summary-main">
+                准备导出 {{ selectedKpiTypes.length }} 种KPI类型
+              </div>
+              <div class="summary-sub">
+                {{ getTimeRangeText() }} • {{ exportFormats.find(f => f.key === selectedFormat)?.name }}
+              </div>
             </div>
           </div>
           
-          <v-spacer></v-spacer>
+          <v-spacer />
           
           <div class="export-buttons">
             <v-btn
-              @click="previewData.length = 0"
               v-if="previewData.length > 0"
               color="default"
               variant="outlined"
               prepend-icon="mdi-refresh"
               class="mr-3"
+              @click="previewData.length = 0"
             >
               重置预览
             </v-btn>
             
             <v-btn
-              @click="exportAllKpiData"
               :loading="exporting"
               :disabled="selectedKpiTypes.length === 0"
               color="success"
@@ -208,6 +250,7 @@
               prepend-icon="mdi-download"
               variant="elevated"
               class="export-btn"
+              @click="exportAllKpiData"
             >
               <template v-if="exporting">
                 正在导出...
@@ -222,10 +265,15 @@
     </div>
 
     <!-- 数据预览区域 -->
-    <div v-if="previewData.length > 0" class="preview-container">
+    <div
+      v-if="previewData.length > 0"
+      class="preview-container"
+    >
       <v-card class="pa-4">
         <v-card-title class="text-h6 mb-4">
-          <v-icon class="mr-2">mdi-eye</v-icon>
+          <v-icon class="mr-2">
+            mdi-eye
+          </v-icon>
           数据预览 ({{ previewData.length }} 条记录)
         </v-card-title>
         
@@ -237,7 +285,7 @@
           :items-per-page="-1"
           class="preview-table"
         >
-          <template v-slot:item.achievement_rate="{ item }">
+          <template #item.achievement_rate="{ item }">
             <v-chip
               :color="getAchievementColor(item.achievement_rate)"
               size="small"
@@ -251,10 +299,15 @@
     </div>
 
     <!-- 导出历史 -->
-    <div v-if="exportHistory.length > 0" class="history-container mt-4">
+    <div
+      v-if="exportHistory.length > 0"
+      class="history-container mt-4"
+    >
       <v-card class="pa-4">
         <v-card-title class="text-h6 mb-4">
-          <v-icon class="mr-2">mdi-history</v-icon>
+          <v-icon class="mr-2">
+            mdi-history
+          </v-icon>
           导出历史
         </v-card-title>
         
@@ -264,7 +317,7 @@
             :key="index"
             class="mb-2"
           >
-            <template v-slot:prepend>
+            <template #prepend>
               <v-icon :color="record.status === 'success' ? 'success' : 'error'">
                 {{ record.status === 'success' ? 'mdi-check-circle' : 'mdi-alert-circle' }}
               </v-icon>
@@ -278,13 +331,16 @@
               {{ record.date }} - {{ record.types.join(', ') }} - {{ record.format.toUpperCase() }}
             </v-list-item-subtitle>
             
-            <template v-slot:append v-if="record.status === 'success'">
+            <template
+              v-if="record.status === 'success'"
+              #append
+            >
               <v-btn
-                @click="downloadFile(record)"
                 icon="mdi-download"
                 size="small"
                 variant="text"
-              ></v-btn>
+                @click="downloadFile(record)"
+              />
             </template>
           </v-list-item>
         </v-list>

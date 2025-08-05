@@ -8,36 +8,64 @@
     <div class="controls-bar mb-4">
       <!-- 左侧：日期选择器 -->
       <v-row class="align-center">
-        <v-col cols="12" md="4">
+        <v-col
+          cols="12"
+          md="4"
+        >
           <v-text-field
             v-model="selectedDate"
             type="date"
             variant="outlined"
             density="compact"
             label="选择日期"
-            @update:model-value="loadData"
             hide-details
+            @update:model-value="loadData"
           />
         </v-col>
         
-        <v-spacer></v-spacer>
+        <v-spacer />
         
         <!-- 右侧：工具栏 -->
         <v-col cols="auto">
-          <v-btn-toggle v-model="selectedCategory" density="comfortable" color="info" mandatory>
-            <v-btn value="all" prepend-icon="mdi-view-grid">全部</v-btn>
-            <v-btn value="原材料" prepend-icon="mdi-cube-outline">原材料</v-btn>
-            <v-btn value="半成品" prepend-icon="mdi-package">半成品</v-btn>
-            <v-btn value="成品" prepend-icon="mdi-package-variant-closed">成品</v-btn>
+          <v-btn-toggle
+            v-model="selectedCategory"
+            density="comfortable"
+            color="info"
+            mandatory
+          >
+            <v-btn
+              value="all"
+              prepend-icon="mdi-view-grid"
+            >
+              全部
+            </v-btn>
+            <v-btn
+              value="原材料"
+              prepend-icon="mdi-cube-outline"
+            >
+              原材料
+            </v-btn>
+            <v-btn
+              value="半成品"
+              prepend-icon="mdi-package"
+            >
+              半成品
+            </v-btn>
+            <v-btn
+              value="成品"
+              prepend-icon="mdi-package-variant-closed"
+            >
+              成品
+            </v-btn>
           </v-btn-toggle>
           
           <v-btn 
             prepend-icon="mdi-content-save"
             color="primary"
             class="ml-2"
-            @click="saveData"
             :loading="isSaving"
             :disabled="!isDataChanged"
+            @click="saveData"
           >
             保存
           </v-btn>
@@ -46,8 +74,8 @@
             prepend-icon="mdi-refresh"
             variant="text"
             class="ml-2"
-            @click="refreshData"
             :loading="isLoading"
+            @click="refreshData"
           >
             刷新
           </v-btn>
@@ -67,7 +95,10 @@
     </div>
     
     <!-- 加载指示器 -->
-    <loading-overlay :loading="isLoading" message="加载数据中..." />
+    <loading-overlay
+      :loading="isLoading"
+      message="加载数据中..."
+    />
     
     <!-- 数据表格容器 -->
     <div class="table-container">
@@ -78,10 +109,12 @@
         class="mt-4 doh-table doh-data-table"
         hover
       >
-        
-        <template v-slot:item="{ item }">
+        <template #item="{ item }">
           <tr>
-            <td class="text-center font-weight-medium" style="min-width: 120px">
+            <td
+              class="text-center font-weight-medium"
+              style="min-width: 120px"
+            >
               <v-chip
                 :color="getCategoryColor(item.category)"
                 size="small"
@@ -90,9 +123,19 @@
                 {{ item.category }}
               </v-chip>
             </td>
-            <td class="text-center" style="min-width: 120px">{{ item.product_code }}</td>
-            <td style="min-width: 200px">{{ item.product_name }}</td>
-            <td style="min-width: 140px" class="editable-cell">
+            <td
+              class="text-center"
+              style="min-width: 120px"
+            >
+              {{ item.product_code }}
+            </td>
+            <td style="min-width: 200px">
+              {{ item.product_name }}
+            </td>
+            <td
+              style="min-width: 140px"
+              class="editable-cell"
+            >
               <v-text-field
                 v-model="item.doh_value"
                 variant="outlined"
@@ -106,14 +149,20 @@
                 @input="handleInput(item)"
               />
             </td>
-            <td class="text-center" style="min-width: 160px">
+            <td
+              class="text-center"
+              style="min-width: 160px"
+            >
               <div class="safety-range">
                 <small class="text-grey-600">
                   {{ item.min_safety_days || 0 }} - {{ item.max_safety_days || 0 }} 天
                 </small>
               </div>
             </td>
-            <td class="text-center" style="min-width: 100px">
+            <td
+              class="text-center"
+              style="min-width: 100px"
+            >
               <v-chip
                 :color="getStatusColor(item.status)"
                 size="small"
@@ -122,13 +171,16 @@
                 {{ getStatusText(item.status) }}
               </v-chip>
             </td>
-            <td class="text-center" style="min-width: 120px">
+            <td
+              class="text-center"
+              style="min-width: 120px"
+            >
               <v-btn
                 icon="mdi-cog"
                 size="small"
                 variant="text"
-                @click="openSafetyStockDialog(item)"
                 title="设置安全库存"
+                @click="openSafetyStockDialog(item)"
               />
             </td>
           </tr>
@@ -144,14 +196,17 @@
       location="bottom"
       multi-line
     >
-      <v-icon icon="mdi-alert" class="mr-2" />
+      <v-icon
+        icon="mdi-alert"
+        class="mr-2"
+      />
       数据已修改，请记得保存！
-      <template v-slot:actions>
+      <template #actions>
         <v-btn
           color="white"
           variant="text"
-          @click="saveData"
           :loading="isSaving"
+          @click="saveData"
         >
           保存
         </v-btn>
@@ -166,10 +221,16 @@
     </v-snackbar>
 
     <!-- 安全库存设置对话框 -->
-    <v-dialog v-model="safetyStockDialog" max-width="500px">
+    <v-dialog
+      v-model="safetyStockDialog"
+      max-width="500px"
+    >
       <v-card>
         <v-card-title class="text-h6">
-          <v-icon icon="mdi-cog" class="mr-2" />
+          <v-icon
+            icon="mdi-cog"
+            class="mr-2"
+          />
           设置安全库存
         </v-card-title>
 
@@ -231,8 +292,8 @@
           </v-btn>
           <v-btn
             color="primary"
-            @click="saveSafetyStock"
             :loading="isSavingSafety"
+            @click="saveSafetyStock"
           >
             保存
           </v-btn>
@@ -241,15 +302,26 @@
     </v-dialog>
 
     <!-- Excel导入对话框 -->
-    <v-dialog v-model="importDialog" max-width="600px" persistent>
+    <v-dialog
+      v-model="importDialog"
+      max-width="600px"
+      persistent
+    >
       <v-card>
         <v-card-title class="text-h6">
-          <v-icon icon="mdi-file-excel" class="mr-2" color="success" />
+          <v-icon
+            icon="mdi-file-excel"
+            class="mr-2"
+            color="success"
+          />
           Excel数据导入
         </v-card-title>
 
         <v-card-text>
-          <v-stepper v-model="importStep" alt-labels>
+          <v-stepper
+            v-model="importStep"
+            alt-labels
+          >
             <v-stepper-header>
               <v-stepper-item
                 title="选择文件"
@@ -307,7 +379,11 @@
                   />
 
                   <!-- 模板下载 -->
-                  <v-alert type="info" variant="tonal" class="mb-4">
+                  <v-alert
+                    type="info"
+                    variant="tonal"
+                    class="mb-4"
+                  >
                     <div class="d-flex align-center">
                       <div class="flex-grow-1">
                         <strong>需要导入模板？</strong><br>
@@ -317,8 +393,8 @@
                         color="info"
                         variant="outlined"
                         size="small"
-                        @click="downloadTemplate"
                         :loading="isDownloadingTemplate"
+                        @click="downloadTemplate"
                       >
                         下载模板
                       </v-btn>
@@ -326,10 +402,16 @@
                   </v-alert>
 
                   <!-- 支持的格式说明 -->
-                  <v-expansion-panels variant="accordion" class="mb-4">
+                  <v-expansion-panels
+                    variant="accordion"
+                    class="mb-4"
+                  >
                     <v-expansion-panel>
                       <v-expansion-panel-title>
-                        <v-icon icon="mdi-information" class="mr-2" />
+                        <v-icon
+                          icon="mdi-information"
+                          class="mr-2"
+                        />
                         支持的表头格式
                       </v-expansion-panel-title>
                       <v-expansion-panel-text>
@@ -339,7 +421,9 @@
                             <li>库存天数/DOH/doh/天数 - DOH数值</li>
                             <li>产品编码/编码/product_code 或 产品名称/名称/product_name - 至少一个</li>
                           </ul>
-                          <p class="mt-2"><strong>可选列：</strong></p>
+                          <p class="mt-2">
+                            <strong>可选列：</strong>
+                          </p>
                           <ul>
                             <li>分类/类别/category - 产品分类</li>
                             <li>备注/说明/remark - 备注信息</li>
@@ -354,9 +438,18 @@
               <!-- 步骤2: 数据验证 -->
               <v-stepper-window-item :value="2">
                 <div class="pa-4">
-                  <div v-if="isValidating" class="text-center py-8">
-                    <v-progress-circular indeterminate color="primary" size="64" />
-                    <p class="mt-4">正在验证数据...</p>
+                  <div
+                    v-if="isValidating"
+                    class="text-center py-8"
+                  >
+                    <v-progress-circular
+                      indeterminate
+                      color="primary"
+                      size="64"
+                    />
+                    <p class="mt-4">
+                      正在验证数据...
+                    </p>
                   </div>
 
                   <div v-else-if="validationResult">
@@ -384,18 +477,32 @@
                     </v-alert>
 
                     <!-- 错误信息 -->
-                    <div v-if="validationResult.errors?.length > 0" class="mb-4">
-                      <v-alert type="error" variant="tonal" class="mb-2">
+                    <div
+                      v-if="validationResult.errors?.length > 0"
+                      class="mb-4"
+                    >
+                      <v-alert
+                        type="error"
+                        variant="tonal"
+                        class="mb-2"
+                      >
                         <strong>发现 {{ validationResult.errors.length }} 个错误：</strong>
                       </v-alert>
-                      <v-list density="compact" class="bg-error-lighten-5 rounded">
+                      <v-list
+                        density="compact"
+                        class="bg-error-lighten-5 rounded"
+                      >
                         <v-list-item
                           v-for="(error, index) in validationResult.errors"
                           :key="index"
                           class="text-error"
                         >
                           <v-list-item-title>
-                            <v-icon icon="mdi-alert-circle" size="small" class="mr-2" />
+                            <v-icon
+                              icon="mdi-alert-circle"
+                              size="small"
+                              class="mr-2"
+                            />
                             {{ error }}
                           </v-list-item-title>
                         </v-list-item>
@@ -403,18 +510,32 @@
                     </div>
 
                     <!-- 警告信息 -->
-                    <div v-if="validationResult.warnings?.length > 0" class="mb-4">
-                      <v-alert type="warning" variant="tonal" class="mb-2">
+                    <div
+                      v-if="validationResult.warnings?.length > 0"
+                      class="mb-4"
+                    >
+                      <v-alert
+                        type="warning"
+                        variant="tonal"
+                        class="mb-2"
+                      >
                         <strong>{{ validationResult.warnings.length }} 个警告：</strong>
                       </v-alert>
-                      <v-list density="compact" class="bg-warning-lighten-5 rounded">
+                      <v-list
+                        density="compact"
+                        class="bg-warning-lighten-5 rounded"
+                      >
                         <v-list-item
                           v-for="(warning, index) in validationResult.warnings"
                           :key="index"
                           class="text-warning"
                         >
                           <v-list-item-title>
-                            <v-icon icon="mdi-alert" size="small" class="mr-2" />
+                            <v-icon
+                              icon="mdi-alert"
+                              size="small"
+                              class="mr-2"
+                            />
                             {{ warning }}
                           </v-list-item-title>
                         </v-list-item>
@@ -423,8 +544,13 @@
 
                     <!-- 数据预览 -->
                     <div v-if="validationResult.data?.length > 0">
-                      <h4 class="mb-2">数据预览（前5行）：</h4>
-                      <v-table density="compact" class="border rounded">
+                      <h4 class="mb-2">
+                        数据预览（前5行）：
+                      </h4>
+                      <v-table
+                        density="compact"
+                        class="border rounded"
+                      >
                         <thead>
                           <tr>
                             <th>行号</th>
@@ -436,7 +562,10 @@
                           </tr>
                         </thead>
                         <tbody>
-                          <tr v-for="row in validationResult.data.slice(0, 5)" :key="row.row_number">
+                          <tr
+                            v-for="row in validationResult.data.slice(0, 5)"
+                            :key="row.row_number"
+                          >
                             <td>{{ row.row_number }}</td>
                             <td>{{ row.product_code || '-' }}</td>
                             <td>{{ row.product_name || '-' }}</td>
@@ -454,9 +583,18 @@
               <!-- 步骤3: 导入结果 -->
               <v-stepper-window-item :value="3">
                 <div class="pa-4">
-                  <div v-if="isImporting" class="text-center py-8">
-                    <v-progress-circular indeterminate color="primary" size="64" />
-                    <p class="mt-4">正在导入数据...</p>
+                  <div
+                    v-if="isImporting"
+                    class="text-center py-8"
+                  >
+                    <v-progress-circular
+                      indeterminate
+                      color="primary"
+                      size="64"
+                    />
+                    <p class="mt-4">
+                      正在导入数据...
+                    </p>
                   </div>
 
                   <div v-else-if="importResult">
@@ -479,35 +617,75 @@
 
                     <!-- 详细统计 -->
                     <v-row class="mb-4">
-                      <v-col cols="6" md="3">
-                        <v-card variant="tonal" color="info">
+                      <v-col
+                        cols="6"
+                        md="3"
+                      >
+                        <v-card
+                          variant="tonal"
+                          color="info"
+                        >
                           <v-card-text class="text-center">
-                            <div class="text-h4">{{ importResult.total_rows }}</div>
-                            <div class="text-caption">总行数</div>
+                            <div class="text-h4">
+                              {{ importResult.total_rows }}
+                            </div>
+                            <div class="text-caption">
+                              总行数
+                            </div>
                           </v-card-text>
                         </v-card>
                       </v-col>
-                      <v-col cols="6" md="3">
-                        <v-card variant="tonal" color="success">
+                      <v-col
+                        cols="6"
+                        md="3"
+                      >
+                        <v-card
+                          variant="tonal"
+                          color="success"
+                        >
                           <v-card-text class="text-center">
-                            <div class="text-h4">{{ importResult.imported_rows }}</div>
-                            <div class="text-caption">新增</div>
+                            <div class="text-h4">
+                              {{ importResult.imported_rows }}
+                            </div>
+                            <div class="text-caption">
+                              新增
+                            </div>
                           </v-card-text>
                         </v-card>
                       </v-col>
-                      <v-col cols="6" md="3">
-                        <v-card variant="tonal" color="primary">
+                      <v-col
+                        cols="6"
+                        md="3"
+                      >
+                        <v-card
+                          variant="tonal"
+                          color="primary"
+                        >
                           <v-card-text class="text-center">
-                            <div class="text-h4">{{ importResult.updated_rows }}</div>
-                            <div class="text-caption">更新</div>
+                            <div class="text-h4">
+                              {{ importResult.updated_rows }}
+                            </div>
+                            <div class="text-caption">
+                              更新
+                            </div>
                           </v-card-text>
                         </v-card>
                       </v-col>
-                      <v-col cols="6" md="3">
-                        <v-card variant="tonal" color="warning">
+                      <v-col
+                        cols="6"
+                        md="3"
+                      >
+                        <v-card
+                          variant="tonal"
+                          color="warning"
+                        >
                           <v-card-text class="text-center">
-                            <div class="text-h4">{{ importResult.skipped_rows }}</div>
-                            <div class="text-caption">跳过</div>
+                            <div class="text-h4">
+                              {{ importResult.skipped_rows }}
+                            </div>
+                            <div class="text-caption">
+                              跳过
+                            </div>
                           </v-card-text>
                         </v-card>
                       </v-col>
@@ -515,17 +693,28 @@
 
                     <!-- 错误详情 -->
                     <div v-if="importResult.errors?.length > 0">
-                      <v-alert type="error" variant="tonal" class="mb-2">
+                      <v-alert
+                        type="error"
+                        variant="tonal"
+                        class="mb-2"
+                      >
                         <strong>导入错误详情：</strong>
                       </v-alert>
-                      <v-list density="compact" class="bg-error-lighten-5 rounded">
+                      <v-list
+                        density="compact"
+                        class="bg-error-lighten-5 rounded"
+                      >
                         <v-list-item
                           v-for="(error, index) in importResult.errors"
                           :key="index"
                           class="text-error"
                         >
                           <v-list-item-title>
-                            <v-icon icon="mdi-alert-circle" size="small" class="mr-2" />
+                            <v-icon
+                              icon="mdi-alert-circle"
+                              size="small"
+                              class="mr-2"
+                            />
                             {{ error }}
                           </v-list-item-title>
                         </v-list-item>
@@ -551,9 +740,9 @@
             </v-btn>
             <v-btn
               color="primary"
-              @click="validateFile"
               :disabled="!hasValidFile || !importDate"
               :loading="isValidating"
+              @click="validateFile"
             >
               下一步
             </v-btn>
@@ -569,9 +758,9 @@
             </v-btn>
             <v-btn
               color="primary"
-              @click="importData"
               :disabled="!validationResult?.is_valid"
               :loading="isImporting"
+              @click="importData"
             >
               开始导入
             </v-btn>

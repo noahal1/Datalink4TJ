@@ -9,7 +9,7 @@
     <v-card>
       <v-card-title class="text-h5">
         <span>{{ role.name }} - 权限管理</span>
-        <v-spacer></v-spacer>
+        <v-spacer />
         <v-text-field
           v-model="search"
           append-icon="mdi-magnify"
@@ -19,20 +19,33 @@
           density="compact"
           class="ml-2"
           style="max-width: 200px;"
-        ></v-text-field>
+        />
       </v-card-title>
       
-      <v-divider></v-divider>
+      <v-divider />
       
       <v-card-text style="height: 500px;">
-        <div v-if="loading" class="d-flex justify-center align-center" style="height: 100%;">
-          <v-progress-circular indeterminate color="primary"></v-progress-circular>
+        <div
+          v-if="loading"
+          class="d-flex justify-center align-center"
+          style="height: 100%;"
+        >
+          <v-progress-circular
+            indeterminate
+            color="primary"
+          />
         </div>
         <v-container v-else>
           <v-row>
             <!-- 已分配权限 -->
-            <v-col cols="12" md="6">
-              <v-card variant="outlined" class="pa-2">
+            <v-col
+              cols="12"
+              md="6"
+            >
+              <v-card
+                variant="outlined"
+                class="pa-2"
+              >
                 <v-card-title class="text-subtitle-1">
                   已分配权限 ({{ selectedPermissions.length }})
                 </v-card-title>
@@ -42,15 +55,18 @@
                       v-for="permission in selectedPermissions"
                       :key="permission.id"
                       closable
-                      @click:close="removePermission(permission)"
                       color="info"
                       text-color="white"
                       class="ma-1"
+                      @click:close="removePermission(permission)"
                     >
                       {{ getPermissionLabel(permission) }}
                     </v-chip>
                   </v-chip-group>
-                  <div v-if="selectedPermissions.length === 0" class="text-center text-grey pa-4">
+                  <div
+                    v-if="selectedPermissions.length === 0"
+                    class="text-center text-grey pa-4"
+                  >
                     暂无已分配的权限
                   </div>
                 </v-card-text>
@@ -58,11 +74,17 @@
             </v-col>
             
             <!-- 可用权限 -->
-            <v-col cols="12" md="6">
-              <v-card variant="outlined" class="pa-2">
+            <v-col
+              cols="12"
+              md="6"
+            >
+              <v-card
+                variant="outlined"
+                class="pa-2"
+              >
                 <v-card-title class="text-subtitle-1">
                   可用权限
-                  <v-spacer></v-spacer>
+                  <v-spacer />
                   <v-select
                     v-model="filterPrefix"
                     :items="prefixOptions"
@@ -71,10 +93,13 @@
                     hide-details
                     class="ml-2"
                     style="max-width: 150px;"
-                  ></v-select>
+                  />
                 </v-card-title>
                 <v-card-text class="permissions-list">
-                  <v-list density="compact" lines="two">
+                  <v-list
+                    density="compact"
+                    lines="two"
+                  >
                     <v-list-item
                       v-for="permission in filteredAvailablePermissions"
                       :key="permission.id"
@@ -82,17 +107,19 @@
                       :subtitle="getPermissionDescription(permission)"
                       @click="addPermission(permission)"
                     >
-                      <template v-slot:prepend>
+                      <template #prepend>
                         <v-icon :color="getPermissionColor(permission)">
                           mdi-shield
                         </v-icon>
                       </template>
-                      <template v-slot:append>
-                        <v-icon color="primary">mdi-plus</v-icon>
+                      <template #append>
+                        <v-icon color="primary">
+                          mdi-plus
+                        </v-icon>
                       </template>
                     </v-list-item>
                     <v-list-item v-if="filteredAvailablePermissions.length === 0">
-                      <template v-slot:default>
+                      <template #default>
                         <div class="text-center text-grey pa-4">
                           没有更多可用权限
                         </div>
@@ -106,24 +133,24 @@
         </v-container>
       </v-card-text>
       
-      <v-divider></v-divider>
+      <v-divider />
       
       <v-card-actions>
         <small class="text-grey">已选择 {{ selectedPermissions.length }} 个权限</small>
-        <v-spacer></v-spacer>
+        <v-spacer />
         <v-btn
           color="grey-darken-1"
           variant="text"
-          @click="closeDialog"
           :disabled="savingPermissions"
+          @click="closeDialog"
         >
           取消
         </v-btn>
         <v-btn
           color="primary"
-          @click="saveRolePermissions"
           :loading="savingPermissions"
           :disabled="savingPermissions"
+          @click="saveRolePermissions"
         >
           保存
         </v-btn>

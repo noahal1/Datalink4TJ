@@ -7,9 +7,15 @@
     <!-- 顶部控制栏 -->
     <v-row class="mb-4 align-center">
       <!-- 左侧：月份和年份选择器 -->
-      <v-col cols="12" md="6">
+      <v-col
+        cols="12"
+        md="6"
+      >
         <v-row>
-          <v-col cols="6" md="4">
+          <v-col
+            cols="6"
+            md="4"
+          >
             <v-select
               v-model="selectedMonth"
               :items="monthOptions"
@@ -17,9 +23,12 @@
               variant="outlined"
               density="compact"
               @update:model-value="loadData"
-            ></v-select>
+            />
           </v-col>
-          <v-col cols="6" md="4">
+          <v-col
+            cols="6"
+            md="4"
+          >
             <v-select
               v-model="selectedYear"
               :items="yearOptions"
@@ -27,13 +36,17 @@
               variant="outlined"
               density="compact"
               @update:model-value="loadData"
-            ></v-select>
+            />
           </v-col>
         </v-row>
       </v-col>
 
       <!-- 右侧：操作按钮 -->
-      <v-col cols="12" md="6" class="text-right">
+      <v-col
+        cols="12"
+        md="6"
+        class="text-right"
+      >
         <v-btn
           color="primary"
           variant="outlined"
@@ -57,19 +70,39 @@
     </v-row>
 
     <!-- 数据变更提醒 -->
-    <v-alert
-      v-if="showChangeAlert"
-      type="warning"
-      variant="tonal"
-      closable
-      class="mb-4"
-      @click:close="showChangeAlert = false"
+    <v-snackbar
+      v-model="showChangeAlert"
+      :timeout="3000"
+      color="warning"
+      location="bottom"
+      multi-line
+      class="change-alert"
     >
-      <template v-slot:title>
-        数据已修改
+      <v-icon
+        start
+        class="mr-2"
+      >
+        mdi-alert
+      </v-icon>
+      数据已修改，请记得保存
+      <template #actions>
+        <v-btn
+          color="white"
+          variant="text"
+          :loading="submitting"
+          @click="saveData"
+        >
+          保存
+        </v-btn>
+        <v-btn
+          color="white"
+          variant="text"
+          @click="showChangeAlert = false"
+        >
+          关闭
+        </v-btn>
       </template>
-      您有未保存的数据修改，请及时保存以免丢失。
-    </v-alert>
+    </v-snackbar>
 
     <!-- KPI 数据表格 -->
     <unified-data-table
@@ -81,14 +114,14 @@
       hide-default-footer
     >
       <!-- KPI描述列 -->
-      <template v-slot:item.description="{ item }">
+      <template #item.description="{ item }">
         <div class="font-weight-medium">
           {{ item.description }}
         </div>
       </template>
 
       <!-- 区域列 -->
-      <template v-slot:item.area="{ item }">
+      <template #item.area="{ item }">
         <v-chip
           :color="getAreaColor(item.area)"
           size="small"
@@ -99,7 +132,7 @@
       </template>
 
       <!-- 实际值输入 -->
-      <template v-slot:item.actual_value="{ item }">
+      <template #item.actual_value="{ item }">
         <v-text-field
           v-model.number="item.actual_value"
           type="number"
@@ -110,11 +143,11 @@
           hide-details
           class="text-field-small"
           @input="handleInput"
-        ></v-text-field>
+        />
       </template>
 
       <!-- 目标值显示 -->
-      <template v-slot:item.target_value="{ item }">
+      <template #item.target_value="{ item }">
         <div class="text-center">
           <v-chip
             :color="item.target_value > 0 ? 'primary' : 'grey'"
@@ -127,7 +160,7 @@
       </template>
 
       <!-- YTD值输入 -->
-      <template v-slot:item.ytd_value="{ item }">
+      <template #item.ytd_value="{ item }">
         <v-text-field
           v-model.number="item.ytd_value"
           type="number"
@@ -138,11 +171,11 @@
           hide-details
           class="text-field-small"
           @input="handleInput"
-        ></v-text-field>
+        />
       </template>
 
       <!-- 达成状态 -->
-      <template v-slot:item.status="{ item }">
+      <template #item.status="{ item }">
         <v-chip
           :color="getStatusColor(item)"
           size="small"
@@ -153,8 +186,11 @@
       </template>
 
       <!-- 原因分析与行动计划 -->
-      <template v-slot:item.remark="{ item }">
-        <div v-if="shouldShowRemark(item)" class="d-flex align-center">
+      <template #item.remark="{ item }">
+        <div
+          v-if="shouldShowRemark(item)"
+          class="d-flex align-center"
+        >
           <v-btn
             size="small"
             variant="outlined"
@@ -172,15 +208,24 @@
             mdi-check-circle
           </v-icon>
         </div>
-        <span v-else class="text-grey">-</span>
+        <span
+          v-else
+          class="text-grey"
+        >-</span>
       </template>
     </unified-data-table>
 
     <!-- 目标值管理对话框 -->
-    <v-dialog v-model="targetDialog" max-width="1200px" persistent>
+    <v-dialog
+      v-model="targetDialog"
+      max-width="1200px"
+      persistent
+    >
       <v-card>
         <v-card-title class="d-flex align-center">
-          <v-icon class="mr-2">mdi-target</v-icon>
+          <v-icon class="mr-2">
+            mdi-target
+          </v-icon>
           {{ selectedYear }}年 维修KPI 目标值设置
         </v-card-title>
         
@@ -193,7 +238,7 @@
             :items-per-page="50"
           >
             <!-- 区域列 -->
-            <template v-slot:item.area="{ item }">
+            <template #item.area="{ item }">
               <v-chip
                 :color="getAreaColor(item.area)"
                 size="small"
@@ -204,7 +249,7 @@
             </template>
 
             <!-- 目标值输入 -->
-            <template v-slot:item.target_value="{ item }">
+            <template #item.target_value="{ item }">
               <v-text-field
                 v-model.number="item.target_value"
                 type="number"
@@ -214,13 +259,13 @@
                 density="compact"
                 hide-details
                 class="text-field-small"
-              ></v-text-field>
+              />
             </template>
           </unified-data-table>
         </v-card-text>
 
         <v-card-actions>
-          <v-spacer></v-spacer>
+          <v-spacer />
           <v-btn
             variant="text"
             @click="targetDialog = false"
@@ -464,7 +509,6 @@ const saveData = async () => {
 
     Message.success('数据保存成功')
     isDataChanged.value = false
-    showChangeAlert.value = false
 
     // 更新原始数据
     originalKpiData.value = JSON.parse(JSON.stringify(kpiData.value))
@@ -582,11 +626,227 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 页面布局样式 */
+.sticky-header-container {
+  position: sticky;
+  top: 64px; /* 考虑导航栏高度 */
+  z-index: 1000;
+  background: rgba(248, 250, 252, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 16px;
+}
+
+.controls-bar {
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 16px 16px 0 0;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.scrollable-table-container {
+  background: white;
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-top: none;
+}
+
+/* 表格样式 */
+.frozen-header-table {
+  background: transparent;
+}
+
+.frozen-header-table :deep(.v-data-table__wrapper) {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  border-radius: 0 0 16px 16px;
+}
+
+.frozen-header-table :deep(thead tr th) {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 16px 12px;
+  position: sticky;
+  top: 0;
+  z-index: 999;
+}
+
+/* 控制组件美化 */
+.control-select :deep(.v-field) {
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.control-select :deep(.v-field:hover) {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* 操作按钮美化 */
+.action-btn {
+  transition: all 0.3s ease;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 表格容器美化 */
+.table-container {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  margin-bottom: 24px;
+}
+
+/* 表格样式优化 */
+.maintenance-kpi-table {
+  background: transparent;
+}
+
+.maintenance-kpi-table :deep(.v-data-table__wrapper) {
+  border-radius: 16px;
+}
+
+.maintenance-kpi-table :deep(thead tr th) {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 16px 12px;
+}
+
+.maintenance-kpi-table :deep(tbody tr) {
+  transition: all 0.2s ease;
+}
+
+.maintenance-kpi-table :deep(tbody tr:hover) {
+  background: rgba(59, 130, 246, 0.04);
+}
+
+.maintenance-kpi-table :deep(tbody tr td) {
+  padding: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* 文本字段美化 */
 .text-field-small {
   max-width: 120px;
 }
 
+.text-field-small :deep(.v-field) {
+  border-radius: 8px;
+  background: rgba(59, 130, 246, 0.02);
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  transition: all 0.3s ease;
+}
+
+.text-field-small :deep(.v-field:hover) {
+  border-color: rgba(59, 130, 246, 0.3);
+  background: rgba(59, 130, 246, 0.05);
+  transform: scale(1.02);
+}
+
+.text-field-small :deep(.v-field--focused) {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 字体样式 */
 .font-weight-medium {
   font-weight: 500;
+}
+
+/* 芯片美化 */
+:deep(.v-chip) {
+  font-weight: 500;
+  letter-spacing: 0.025em;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+}
+
+:deep(.v-chip:hover) {
+  transform: scale(1.05);
+}
+
+/* 对话框美化 */
+:deep(.v-dialog .v-card) {
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+:deep(.v-dialog .v-card-title) {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #e2e8f0;
+  padding: 20px 24px;
+  font-weight: 600;
+}
+
+/* 响应式优化 */
+@media (max-width: 1264px) {
+  .sticky-header-container {
+    top: 56px;
+  }
+}
+
+@media (max-width: 960px) {
+  .controls-bar {
+    padding: 16px;
+  }
+
+  .scrollable-table-container {
+    border-radius: 0 0 12px 12px;
+  }
+
+  .frozen-header-table :deep(.v-data-table__wrapper) {
+    max-height: calc(100vh - 240px);
+  }
+
+  .frozen-header-table :deep(thead tr th) {
+    padding: 12px 8px;
+    font-size: 0.875rem;
+  }
+
+  .maintenance-kpi-table :deep(tbody tr td) {
+    padding: 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  .controls-bar {
+    padding: 12px;
+  }
+
+  .frozen-header-table :deep(.v-data-table__wrapper) {
+    max-height: calc(100vh - 220px);
+  }
+
+  .text-field-small {
+    max-width: 100px;
+  }
+}
+
+/* 加载动画美化 */
+:deep(.v-progress-circular) {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* Snackbar美化 */
+:deep(.v-snackbar) {
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
 }
 </style>
