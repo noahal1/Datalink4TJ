@@ -18,6 +18,13 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   
   return {
+    // 全局定义
+    define: {
+      __VUE_OPTIONS_API__: true,
+      __VUE_PROD_DEVTOOLS__: false,
+      __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false,
+      global: 'globalThis',
+    },
     plugins: [
       // Vue Router
       VueRouter({
@@ -278,6 +285,8 @@ export default defineConfig(({ mode }) => {
         'vue-router',
         'pinia',
         'vuetify',
+        'vuetify/components',
+        'vuetify/directives',
         'echarts/core',
         'echarts/charts',
         'echarts/renderers',
@@ -300,7 +309,11 @@ export default defineConfig(({ mode }) => {
       esbuildOptions: {
         target: 'es2015',
         // 优化大型库的构建
-        plugins: []
+        plugins: [],
+        // 修复循环引用问题
+        define: {
+          global: 'globalThis',
+        }
       }
     },
     
