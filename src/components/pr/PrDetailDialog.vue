@@ -6,15 +6,24 @@
   >
     <v-card v-if="pr">
       <v-card-title class="d-flex justify-space-between align-center">
-        <div>
-          <span>PR详情</span>
+        <div class="d-flex align-center">
+          <span class="text-h6">请购单详情</span>
           <v-chip
             :color="getStatusColor(pr.status)"
             size="small"
             variant="flat"
-            class="ml-2"
+            class="ml-3"
+            :prepend-icon="getStatusIcon(pr.status)"
           >
             {{ pr.status?.name }}
+          </v-chip>
+          <v-chip
+            color="info"
+            size="small"
+            variant="outlined"
+            class="ml-2"
+          >
+            {{ pr.pr_number }}
           </v-chip>
         </div>
         <v-btn
@@ -26,364 +35,302 @@
 
       <v-divider />
 
-      <v-card-text class="pa-6">
-        <v-row>
-          <!-- 基本信息 -->
-          <v-col cols="12">
-            <h4 class="text-subtitle-1 mb-3">
-              基本信息
-            </h4>
-          </v-col>
+      <v-card-text class="pa-0">
+        <!-- 基本信息卡片 -->
+        <v-card
+          flat
+          class="ma-4 mb-2"
+          border
+        >
+          <v-card-title class="d-flex align-center pa-4 bg-grey-lighten-5">
+            <v-icon class="mr-2" color="primary">mdi-information</v-icon>
+            <span class="text-subtitle-1 font-weight-medium">基本信息</span>
+          </v-card-title>
+          <v-card-text class="pa-4">
+            <v-row dense>
+              <v-col cols="12" md="6">
+                <div class="info-item">
+                  <div class="info-label">
+                    <v-icon size="small" class="mr-1">mdi-identifier</v-icon>
+                    请购单号
+                  </div>
+                  <div class="info-value">{{ pr.pr_number }}</div>
+                </div>
+              </v-col>
+              <v-col cols="12" md="6">
+                <div class="info-item">
+                  <div class="info-label">
+                    <v-icon size="small" class="mr-1">mdi-account</v-icon>
+                    申请人
+                  </div>
+                  <div class="info-value">{{ pr.requester?.name || '-' }}</div>
+                </div>
+              </v-col>
+              <v-col cols="12" md="6">
+                <div class="info-item">
+                  <div class="info-label">
+                    <v-icon size="small" class="mr-1">mdi-calendar</v-icon>
+                    申请日期
+                  </div>
+                  <div class="info-value">{{ formatDate(pr.requested_date) }}</div>
+                </div>
+              </v-col>
+              <v-col cols="12" md="6">
+                <div class="info-item">
+                  <div class="info-label">
+                    <v-icon size="small" class="mr-1">mdi-calendar-clock</v-icon>
+                    需求日期
+                  </div>
+                  <div class="info-value">{{ formatDate(pr.required_date) || '-' }}</div>
+                </div>
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </v-card>
 
-          <v-col
-            cols="12"
-            md="6"
-          >
-            <v-text-field
-              :model-value="pr.pr_number"
-              label="PR编号"
-              readonly
-              variant="outlined"
+
+        <!-- 物料信息卡片 -->
+        <v-card
+          flat
+          class="ma-4 mb-2"
+          border
+        >
+          <v-card-title class="d-flex align-center pa-4 bg-blue-grey-lighten-5">
+            <v-icon class="mr-2" color="blue-grey">mdi-package-variant</v-icon>
+            <span class="text-subtitle-1 font-weight-medium">物料信息</span>
+          </v-card-title>
+          <v-card-text class="pa-4">
+            <v-row dense>
+              <v-col cols="12">
+                <div class="info-item-large">
+                  <div class="info-label">
+                    <v-icon size="small" class="mr-1">mdi-tag</v-icon>
+                    物料名称
+                  </div>
+                  <div class="info-value-large">{{ pr.material_name || '-' }}</div>
+                </div>
+              </v-col>
+              <v-col cols="12" md="6">
+                <div class="info-item">
+                  <div class="info-label">
+                    <v-icon size="small" class="mr-1">mdi-barcode</v-icon>
+                    物料编码
+                  </div>
+                  <div class="info-value">{{ pr.material_code || '-' }}</div>
+                </div>
+              </v-col>
+              <v-col cols="12" md="6">
+                <div class="info-item">
+                  <div class="info-label">
+                    <v-icon size="small" class="mr-1">mdi-counter</v-icon>
+                    数量
+                  </div>
+                  <div class="info-value">{{ pr.quantity || 0 }}</div>
+                </div>
+              </v-col>
+              <v-col cols="12" md="6">
+                <div class="info-item">
+                  <div class="info-label">
+                    <v-icon size="small" class="mr-1">mdi-star</v-icon>
+                    品牌
+                  </div>
+                  <div class="info-value">{{ pr.brand || '-' }}</div>
+                </div>
+              </v-col>
+              <v-col cols="12" md="6">
+                <div class="info-item">
+                  <div class="info-label">
+                    <v-icon size="small" class="mr-1">mdi-ruler</v-icon>
+                    规格
+                  </div>
+                  <div class="info-value">{{ pr.specification || '-' }}</div>
+                </div>
+              </v-col>
+              <v-col v-if="pr.description" cols="12">
+                <div class="info-item">
+                  <div class="info-label">
+                    <v-icon size="small" class="mr-1">mdi-text</v-icon>
+                    详细描述
+                  </div>
+                  <div class="info-value">{{ pr.description }}</div>
+                </div>
+              </v-col>
+              <v-col v-if="pr.remarks" cols="12">
+                <div class="info-item">
+                  <div class="info-label">
+                    <v-icon size="small" class="mr-1">mdi-note-text</v-icon>
+                    备注
+                  </div>
+                  <div class="info-value">{{ pr.remarks }}</div>
+                </div>
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </v-card>
+
+        <!-- 时间信息卡片 -->
+        <v-card
+          flat
+          class="ma-4 mb-2"
+          border
+        >
+          <v-card-title class="d-flex align-center pa-4 bg-green-lighten-5">
+            <v-icon class="mr-2" color="green">mdi-clock-outline</v-icon>
+            <span class="text-subtitle-1 font-weight-medium">时间信息</span>
+          </v-card-title>
+          <v-card-text class="pa-4">
+            <v-row dense>
+              <v-col cols="12" md="6">
+                <div class="info-item">
+                  <div class="info-label">
+                    <v-icon size="small" class="mr-1">mdi-calendar-plus</v-icon>
+                    申请时间
+                  </div>
+                  <div class="info-value">{{ formatDateTime(pr.requested_date) }}</div>
+                </div>
+              </v-col>
+              <v-col cols="12" md="6">
+                <div class="info-item">
+                  <div class="info-label">
+                    <v-icon size="small" class="mr-1">mdi-calendar-clock</v-icon>
+                    需求时间
+                  </div>
+                  <div class="info-value">{{ formatDate(pr.required_date) || '-' }}</div>
+                </div>
+              </v-col>
+              <v-col v-if="pr.approved_date" cols="12" md="6">
+                <div class="info-item">
+                  <div class="info-label">
+                    <v-icon size="small" class="mr-1" color="success">mdi-check-circle</v-icon>
+                    批准时间
+                  </div>
+                  <div class="info-value text-success">{{ formatDateTime(pr.approved_date) }}</div>
+                </div>
+              </v-col>
+              <v-col v-if="pr.delivery_date" cols="12" md="6">
+                <div class="info-item">
+                  <div class="info-label">
+                    <v-icon size="small" class="mr-1" color="orange">mdi-truck-delivery</v-icon>
+                    到货时间
+                  </div>
+                  <div class="info-value text-orange">{{ formatDateTime(pr.delivery_date) }}</div>
+                </div>
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </v-card>
+
+        <!-- 进度时间轴卡片 -->
+        <v-card
+          flat
+          class="ma-4 mb-2"
+          border
+        >
+          <v-card-title class="d-flex align-center pa-4 bg-purple-lighten-5">
+            <v-icon class="mr-2" color="purple">mdi-timeline</v-icon>
+            <span class="text-subtitle-1 font-weight-medium">进度时间轴</span>
+          </v-card-title>
+          <v-card-text class="pa-4">
+            <v-timeline
               density="compact"
-            />
-          </v-col>
-
-          <v-col
-            cols="12"
-            md="6"
-          >
-            <v-text-field
-              :model-value="pr.title"
-              label="PR标题"
-              readonly
-              variant="outlined"
-              density="compact"
-            />
-          </v-col>
-
-          <v-col
-            cols="12"
-            md="6"
-          >
-            <v-text-field
-              :model-value="pr.pr_type?.name"
-              label="PR类型"
-              readonly
-              variant="outlined"
-              density="compact"
-            />
-          </v-col>
-
-          <v-col
-            cols="12"
-            md="6"
-          >
-            <v-text-field
-              :model-value="pr.priority?.name"
-              label="优先级"
-              readonly
-              variant="outlined"
-              density="compact"
-            />
-          </v-col>
-
-          <v-col
-            cols="12"
-            md="6"
-          >
-            <v-text-field
-              :model-value="pr.requester?.name"
-              label="申请人"
-              readonly
-              variant="outlined"
-              density="compact"
-            />
-          </v-col>
-
-          <v-col
-            cols="12"
-            md="6"
-          >
-            <v-text-field
-              :model-value="formatDate(pr.requested_date)"
-              label="申请日期"
-              readonly
-              variant="outlined"
-              density="compact"
-            />
-          </v-col>
-
-          <v-col
-            cols="12"
-            md="6"
-          >
-            <v-text-field
-              :model-value="formatDate(pr.required_date)"
-              label="需求日期"
-              readonly
-              variant="outlined"
-              density="compact"
-            />
-          </v-col>
-
-          <v-col
-            cols="12"
-            md="6"
-          >
-            <v-text-field
-              :model-value="formatCurrency(pr.estimated_cost)"
-              label="预估成本"
-              readonly
-              variant="outlined"
-              density="compact"
-            />
-          </v-col>
-
-          <v-col
-            cols="12"
-            md="6"
-          >
-            <v-text-field
-              :model-value="pr.supplier || '-'"
-              label="供应商"
-              readonly
-              variant="outlined"
-              density="compact"
-            />
-          </v-col>
-
-          <v-col
-            v-if="pr.description"
-            cols="12"
-          >
-            <v-textarea
-              :model-value="pr.description"
-              label="详细描述"
-              readonly
-              variant="outlined"
-              density="compact"
-              rows="3"
-            />
-          </v-col>
-
-          <!-- 审批信息 -->
-          <v-col
-            v-if="pr.approver || pr.approved_date"
-            cols="12"
-          >
-            <h4 class="text-subtitle-1 mb-3">
-              审批信息
-            </h4>
-          </v-col>
-
-          <v-col
-            v-if="pr.approver"
-            cols="12"
-            md="6"
-          >
-            <v-text-field
-              :model-value="pr.approver?.name"
-              label="审批人"
-              readonly
-              variant="outlined"
-              density="compact"
-            />
-          </v-col>
-
-          <v-col
-            v-if="pr.approved_date"
-            cols="12"
-            md="6"
-          >
-            <v-text-field
-              :model-value="formatDate(pr.approved_date)"
-              label="审批日期"
-              readonly
-              variant="outlined"
-              density="compact"
-            />
-          </v-col>
-
-          <v-col
-            v-if="pr.approval_comments"
-            cols="12"
-          >
-            <v-textarea
-              :model-value="pr.approval_comments"
-              label="审批意见"
-              readonly
-              variant="outlined"
-              density="compact"
-              rows="2"
-            />
-          </v-col>
-
-          <!-- 采购信息 -->
-          <v-col
-            v-if="pr.purchaser || pr.po_number || pr.ordered_date"
-            cols="12"
-          >
-            <h4 class="text-subtitle-1 mb-3">
-              采购信息
-            </h4>
-          </v-col>
-
-          <v-col
-            v-if="pr.purchaser"
-            cols="12"
-            md="6"
-          >
-            <v-text-field
-              :model-value="pr.purchaser?.name"
-              label="采购员"
-              readonly
-              variant="outlined"
-              density="compact"
-            />
-          </v-col>
-
-          <v-col
-            v-if="pr.po_number"
-            cols="12"
-            md="6"
-          >
-            <v-text-field
-              :model-value="pr.po_number"
-              label="采购订单号"
-              readonly
-              variant="outlined"
-              density="compact"
-            />
-          </v-col>
-
-          <v-col
-            v-if="pr.ordered_date"
-            cols="12"
-            md="6"
-          >
-            <v-text-field
-              :model-value="formatDate(pr.ordered_date)"
-              label="下单日期"
-              readonly
-              variant="outlined"
-              density="compact"
-            />
-          </v-col>
-
-          <v-col
-            v-if="pr.expected_delivery_date"
-            cols="12"
-            md="6"
-          >
-            <v-text-field
-              :model-value="formatDate(pr.expected_delivery_date)"
-              label="预计到货日期"
-              readonly
-              variant="outlined"
-              density="compact"
-            />
-          </v-col>
-
-          <v-col
-            v-if="pr.actual_delivery_date"
-            cols="12"
-            md="6"
-          >
-            <v-text-field
-              :model-value="formatDate(pr.actual_delivery_date)"
-              label="实际到货日期"
-              readonly
-              variant="outlined"
-              density="compact"
-            />
-          </v-col>
-
-          <v-col
-            v-if="pr.actual_cost"
-            cols="12"
-            md="6"
-          >
-            <v-text-field
-              :model-value="formatCurrency(pr.actual_cost)"
-              label="实际成本"
-              readonly
-              variant="outlined"
-              density="compact"
-            />
-          </v-col>
-
-          <!-- PR明细 -->
-          <v-col cols="12">
-            <h4 class="text-subtitle-1 mb-3">
-              PR明细
-            </h4>
-          </v-col>
-
-          <v-col
-            v-if="pr.items && pr.items.length > 0"
-            cols="12"
-          >
-            <v-card variant="outlined">
-              <v-card-text class="pa-0">
-                <v-table density="compact">
-                  <thead>
-                    <tr>
-                      <th>物品名称</th>
-                      <th>物品编码</th>
-                      <th>规格</th>
-                      <th>数量</th>
-                      <th>单位</th>
-                      <th>单价</th>
-                      <th>总价</th>
-                      <th>备注</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr
-                      v-for="item in pr.items"
-                      :key="item.id"
-                    >
-                      <td>{{ item.item_name }}</td>
-                      <td>{{ item.item_code || '-' }}</td>
-                      <td>{{ item.specification || '-' }}</td>
-                      <td>{{ item.quantity }}</td>
-                      <td>{{ item.unit || '-' }}</td>
-                      <td>{{ formatPrice(item.unit_price) }}</td>
-                      <td>{{ formatPrice(item.total_price) }}</td>
-                      <td>{{ item.remarks || '-' }}</td>
-                    </tr>
-                  </tbody>
-                </v-table>
-              </v-card-text>
-            </v-card>
-          </v-col>
-
-          <v-col
-            v-else
-            cols="12"
-          >
-            <v-alert
-              type="info"
-              variant="outlined"
-              text="暂无明细项目"
-            />
-          </v-col>
-
-          <!-- 状态更改 -->
-          <v-col
-            v-if="canChangeStatus"
-            cols="12"
-          >
-            <v-divider class="my-4" />
-            <h4 class="text-subtitle-1 mb-3">
-              状态更改
-            </h4>
-            
-            <v-row>
-              <v-col
-                cols="12"
-                md="6"
+              side="end"
+              align="start"
+            >
+              <!-- 申请时间 -->
+              <v-timeline-item
+                dot-color="primary"
+                size="small"
+                icon="mdi-file-document-plus"
               >
+                <template #opposite>
+                  <span class="text-caption text-medium-emphasis">
+                    {{ formatDateTime(pr.requested_date) }}
+                  </span>
+                </template>
+                <div>
+                  <div class="text-subtitle-2">申请提交</div>
+                  <div class="text-caption text-medium-emphasis">
+                    由 {{ pr.requester?.name }} 提交申请
+                  </div>
+                </div>
+              </v-timeline-item>
+
+              <!-- 批准时间 -->
+              <v-timeline-item
+                v-if="pr.approved_date"
+                dot-color="success"
+                size="small"
+                icon="mdi-check-circle"
+              >
+                <template #opposite>
+                  <span class="text-caption text-medium-emphasis">
+                    {{ formatDateTime(pr.approved_date) }}
+                  </span>
+                </template>
+                <div>
+                  <div class="text-subtitle-2">申请批准</div>
+                  <div class="text-caption text-medium-emphasis">
+                    申请已通过审批
+                  </div>
+                </div>
+              </v-timeline-item>
+
+              <!-- 到货时间 -->
+              <v-timeline-item
+                v-if="pr.delivery_date"
+                dot-color="orange"
+                size="small"
+                icon="mdi-truck-delivery"
+              >
+                <template #opposite>
+                  <span class="text-caption text-medium-emphasis">
+                    {{ formatDateTime(pr.delivery_date) }}
+                  </span>
+                </template>
+                <div>
+                  <div class="text-subtitle-2">物品到货</div>
+                  <div class="text-caption text-medium-emphasis">
+                    物品已送达指定地点
+                  </div>
+                </div>
+              </v-timeline-item>
+
+              <!-- 当前状态 -->
+              <v-timeline-item
+                :dot-color="getStatusColor(pr.status)"
+                size="small"
+                :icon="getStatusIcon(pr.status)"
+              >
+                <template #opposite>
+                  <span class="text-caption text-medium-emphasis">
+                    {{ formatDateTime(pr.updated_at) }}
+                  </span>
+                </template>
+                <div>
+                  <div class="text-subtitle-2">当前状态</div>
+                  <div class="text-caption text-medium-emphasis">
+                    {{ pr.status?.name }}
+                  </div>
+                </div>
+              </v-timeline-item>
+            </v-timeline>
+          </v-card-text>
+        </v-card>
+
+        <!-- 状态更改卡片 -->
+        <v-card
+          v-if="canChangeStatus"
+          flat
+          class="ma-4 mb-2"
+          border
+        >
+          <v-card-title class="d-flex align-center pa-4 bg-orange-lighten-5">
+            <v-icon class="mr-2" color="orange">mdi-swap-horizontal</v-icon>
+            <span class="text-subtitle-1 font-weight-medium">状态更改</span>
+          </v-card-title>
+          <v-card-text class="pa-4">
+            <v-row dense>
+              <v-col cols="12" md="6">
                 <v-select
                   v-model="newStatusId"
                   :items="statusOptions"
@@ -392,7 +339,21 @@
                   label="新状态"
                   variant="outlined"
                   density="compact"
-                />
+                  prepend-inner-icon="mdi-flag"
+                >
+                  <template #item="{ props, item }">
+                    <v-list-item
+                      v-bind="props"
+                      :prepend-icon="getStatusIcon(item.raw)"
+                    >
+                      <template #prepend>
+                        <v-icon :color="getStatusColor(item.raw)">
+                          {{ getStatusIcon(item.raw) }}
+                        </v-icon>
+                      </template>
+                    </v-list-item>
+                  </template>
+                </v-select>
               </v-col>
               <v-col cols="12">
                 <v-textarea
@@ -401,21 +362,23 @@
                   rows="2"
                   variant="outlined"
                   density="compact"
+                  prepend-inner-icon="mdi-comment-text"
                 />
               </v-col>
-              <v-col cols="12">
+              <v-col cols="12" class="d-flex justify-end">
                 <v-btn
                   color="primary"
                   :disabled="!newStatusId || newStatusId === pr.status_id"
                   :loading="changingStatus"
+                  prepend-icon="mdi-check"
                   @click="changeStatus"
                 >
                   更改状态
                 </v-btn>
               </v-col>
             </v-row>
-          </v-col>
-        </v-row>
+          </v-card-text>
+        </v-card>
       </v-card-text>
 
       <v-divider />
@@ -485,6 +448,44 @@ const getStatusColor = (status) => {
   return status.color
 }
 
+const getStatusIcon = (status) => {
+  if (!status) return 'mdi-help-circle'
+  const statusName = status.name?.toLowerCase()
+  switch (statusName) {
+    case '待提交':
+      return 'mdi-file-document-outline'
+    case '待审批':
+    case '审批中':
+      return 'mdi-clock-outline'
+    case '已批准':
+    case '已审批':
+      return 'mdi-check-circle'
+    case '已下单':
+    case '采购中':
+      return 'mdi-cart'
+    case '已到货':
+      return 'mdi-truck-delivery'
+    case '已完成':
+      return 'mdi-check-all'
+    case '已拒绝':
+    case '已取消':
+      return 'mdi-close-circle'
+    default:
+      return 'mdi-help-circle'
+  }
+}
+
+const formatDateTime = (dateString) => {
+  if (!dateString) return '-'
+  return new Date(dateString).toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
 const changeStatus = async () => {
   if (!newStatusId.value) return
   
@@ -512,8 +513,79 @@ const close = () => {
 </script>
 
 <style scoped>
-.v-table th {
+/* 信息项样式 */
+.info-item {
+  margin-bottom: 16px;
+}
+
+.info-item-large {
+  margin-bottom: 20px;
+}
+
+.info-label {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
   font-weight: 600;
-  background-color: rgb(var(--v-theme-surface-variant));
+  color: #424242;
+  margin-bottom: 4px;
+}
+
+.info-label .v-icon {
+  color: #616161 !important;
+}
+
+.info-value {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #212121;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.info-value-large {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: rgb(var(--v-theme-primary));
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+/* 卡片标题样式 */
+.v-card-title {
+  border-radius: 8px 8px 0 0;
+}
+
+/* 时间轴样式优化 */
+.v-timeline {
+  padding-left: 0;
+}
+
+.v-timeline-item {
+  margin-bottom: 8px;
+}
+
+/* 状态选择器样式 */
+.v-select .v-field__prepend-inner {
+  padding-top: 8px;
+}
+
+/* 按钮样式 */
+.v-btn {
+  border-radius: 8px;
+  text-transform: none;
+  font-weight: 500;
+}
+
+/* 卡片边框样式 */
+.v-card[border] {
+  border: 1px solid rgba(var(--v-border-color), 0.12);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* 悬停效果 */
+.v-card[border]:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
 }
 </style>

@@ -27,6 +27,7 @@ export const componentMap = {
   'Gmo': () => import('../pages/Gmo.vue'),
   'Maintenance': () => import('../pages/Maintenance.vue'),
   'MaintenanceMetrics': () => import('../pages/MaintenanceMetrics.vue'),
+  'MaterialManagement': () => import('../pages/MaterialManagement.vue'),
   'PrManagement': () => import('../pages/PrManagement.vue'),
   'DowntimeRecords': () => import('../pages/DowntimeRecords.vue'),
   'Events': () => import('../pages/Events.vue'),

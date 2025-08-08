@@ -42,6 +42,7 @@ declare module 'vue-router/auto-routes' {
     '/Maintenance': RouteRecordInfo<'/Maintenance', '/Maintenance', Record<never, never>, Record<never, never>>,
     '/MaintenanceKpi': RouteRecordInfo<'/MaintenanceKpi', '/MaintenanceKpi', Record<never, never>, Record<never, never>>,
     '/MaintenanceMetrics': RouteRecordInfo<'/MaintenanceMetrics', '/MaintenanceMetrics', Record<never, never>, Record<never, never>>,
+    '/MaterialManagement': RouteRecordInfo<'/MaterialManagement', '/MaterialManagement', Record<never, never>, Record<never, never>>,
     '/Pcl': RouteRecordInfo<'/Pcl', '/Pcl', Record<never, never>, Record<never, never>>,
     '/PermissionManagement': RouteRecordInfo<'/PermissionManagement', '/PermissionManagement', Record<never, never>, Record<never, never>>,
     '/PrManagement': RouteRecordInfo<'/PrManagement', '/PrManagement', Record<never, never>, Record<never, never>>,

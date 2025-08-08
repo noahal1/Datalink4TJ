@@ -24,6 +24,7 @@ const LogisticsKpi = () => import('../pages/LogisticsKpi.vue')
 const DohDaily = () => import('../pages/DohDaily.vue')
 const DohMasterData = () => import('../pages/DohMasterData.vue')
 const AdminUser = () => import('../pages/admin/Users.vue')
+const MaterialManagement = () => import('../pages/MaterialManagement.vue')
 
 
 export const moduleRoutes = [
@@ -179,6 +180,14 @@ export const moduleRoutes = [
     meta: { 
       title: '维修',
       permission_code: 'access_maintenance', 
+      requiresAuth: true
+    } 
+  },
+  { 
+    path: '/materialmanagement', 
+    component: MaterialManagement,
+    meta: { 
+      title: '备件维护',
       requiresAuth: true
     } 
   },

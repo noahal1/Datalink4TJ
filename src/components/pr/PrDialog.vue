@@ -6,7 +6,7 @@
   >
     <v-card>
       <v-card-title class="d-flex justify-space-between align-center">
-        <span>{{ isNew ? '新建PR' : '编辑PR' }}</span>
+        <span>{{ isNew ? '新建请购单' : '编辑请购单' }}</span>
         <v-btn
           icon="mdi-close"
           variant="text"
@@ -29,17 +29,9 @@
               </h4>
             </v-col>
 
-            <v-col cols="12">
-              <v-text-field
-                v-model="localPr.title"
-                label="PR标题"
-                :rules="[rules.required]"
-                variant="outlined"
-                density="compact"
-              />
-            </v-col>
 
-            <v-col
+            <!-- PR类型字段已删除，不再需要 -->
+            <!-- <v-col
               cols="12"
               md="6"
             >
@@ -48,28 +40,13 @@
                 :items="typeOptions"
                 item-title="name"
                 item-value="id"
-                label="PR类型"
+                label="请购类型"
                 :rules="[rules.required]"
                 variant="outlined"
                 density="compact"
               />
-            </v-col>
+            </v-col> -->
 
-            <v-col
-              cols="12"
-              md="6"
-            >
-              <v-select
-                v-model="localPr.priority_id"
-                :items="priorityOptions"
-                item-title="name"
-                item-value="id"
-                label="优先级"
-                :rules="[rules.required]"
-                variant="outlined"
-                density="compact"
-              />
-            </v-col>
 
             <v-col
               cols="12"
@@ -89,158 +66,133 @@
               md="6"
             >
               <v-text-field
-                v-model.number="localPr.estimated_cost"
-                label="预估成本"
-                type="number"
-                min="0"
-                step="0.01"
-                prefix="¥"
+                v-model="localPr.approved_date"
+                label="批准时间"
+                type="datetime-local"
+                variant="outlined"
+                density="compact"
+                readonly
+                hint="状态变更为已批准时自动记录"
+                persistent-hint
+              />
+            </v-col>
+
+            <v-col
+              cols="12"
+              md="6"
+            >
+              <v-text-field
+                v-model="localPr.delivery_date"
+                label="到货时间"
+                type="datetime-local"
+                variant="outlined"
+                density="compact"
+                hint="状态变更为已到货时自动记录，也可手动修改"
+                persistent-hint
+              />
+            </v-col>
+
+            <!-- 物品信息 -->
+            <v-col cols="12">
+              <h4 class="text-subtitle-1 mb-3">
+                物品信息
+              </h4>
+            </v-col>
+
+            <v-col
+              cols="12"
+              md="6"
+            >
+              <v-text-field
+                v-model="localPr.material_name"
+                label="物品名称"
+                :rules="[rules.required]"
                 variant="outlined"
                 density="compact"
               />
             </v-col>
 
-            <v-col cols="12">
+            <v-col
+              cols="12"
+              md="6"
+            >
               <v-text-field
-                v-model="localPr.supplier"
-                label="供应商"
+                v-model="localPr.brand"
+                label="品牌"
                 variant="outlined"
                 density="compact"
+              />
+            </v-col>
+
+            <!-- 单位字段已删除 -->
+            <!-- <v-col
+              cols="12"
+              md="6"
+            >
+              <v-text-field
+                v-model="localPr.unit"
+                label="单位"
+                placeholder="如：台、个、套、米等"
+                variant="outlined"
+                density="compact"
+              />
+            </v-col> -->
+
+            <v-col
+              cols="12"
+              md="6"
+            >
+              <v-text-field
+                v-model="localPr.material_code"
+                label="物料编码"
+                placeholder="请手动输入物料编码"
+                variant="outlined"
+                density="compact"
+                clearable
               />
             </v-col>
 
             <v-col cols="12">
               <v-textarea
-                v-model="localPr.description"
-                label="详细描述"
-                rows="3"
+                v-model="localPr.specification"
+                label="规格说明"
+                rows="2"
                 variant="outlined"
                 density="compact"
               />
             </v-col>
 
-            <!-- PR明细 -->
-            <v-col cols="12">
-              <div class="d-flex justify-space-between align-center mb-3">
-                <h4 class="text-subtitle-1">
-                  PR明细
-                </h4>
-                <v-btn
-                  color="primary"
-                  variant="outlined"
-                  size="small"
-                  prepend-icon="mdi-plus"
-                  @click="addItem"
-                >
-                  添加明细
-                </v-btn>
-              </div>
-            </v-col>
-
             <v-col
-              v-if="localPr.items && localPr.items.length > 0"
               cols="12"
+              md="6"
             >
-              <v-card variant="outlined">
-                <v-card-text class="pa-0">
-                  <v-table density="compact">
-                    <thead>
-                      <tr>
-                        <th>物品名称</th>
-                        <th>规格</th>
-                        <th>数量</th>
-                        <th>单位</th>
-                        <th>单价</th>
-                        <th>总价</th>
-                        <th width="80">
-                          操作
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr
-                        v-for="(item, index) in localPr.items"
-                        :key="index"
-                      >
-                        <td>
-                          <v-text-field
-                            v-model="item.item_name"
-                            density="compact"
-                            variant="plain"
-                            hide-details
-                            :rules="[rules.required]"
-                          />
-                        </td>
-                        <td>
-                          <v-text-field
-                            v-model="item.specification"
-                            density="compact"
-                            variant="plain"
-                            hide-details
-                          />
-                        </td>
-                        <td>
-                          <v-text-field
-                            v-model.number="item.quantity"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            density="compact"
-                            variant="plain"
-                            hide-details
-                            :rules="[rules.required, rules.positive]"
-                            @input="calculateTotal(item)"
-                          />
-                        </td>
-                        <td>
-                          <v-text-field
-                            v-model="item.unit"
-                            density="compact"
-                            variant="plain"
-                            hide-details
-                          />
-                        </td>
-                        <td>
-                          <v-text-field
-                            v-model.number="item.unit_price"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            density="compact"
-                            variant="plain"
-                            hide-details
-                            @input="calculateTotal(item)"
-                          />
-                        </td>
-                        <td>
-                          <span class="text-body-2">
-                            {{ formatPrice(item.total_price) }}
-                          </span>
-                        </td>
-                        <td>
-                          <v-btn
-                            icon="mdi-delete"
-                            size="small"
-                            variant="text"
-                            color="error"
-                            @click="removeItem(index)"
-                          />
-                        </td>
-                      </tr>
-                    </tbody>
-                  </v-table>
-                </v-card-text>
-              </v-card>
-            </v-col>
-
-            <v-col
-              v-else
-              cols="12"
-            >
-              <v-alert
-                type="info"
+              <v-text-field
+                v-model.number="localPr.quantity"
+                label="数量"
+                type="number"
+                min="0"
+                step="0.01"
+                :rules="[rules.required, rules.positive]"
                 variant="outlined"
-                text="暂无明细项目，请点击【添加明细】按钮添加。"
+                density="compact"
+              />
+            </v-col>
+
+            <!-- 备注信息 -->
+            <v-col cols="12">
+              <h4 class="text-subtitle-1 mb-3">
+                备注信息
+              </h4>
+            </v-col>
+
+            <v-col cols="12">
+              <v-textarea
+                v-model="localPr.remarks"
+                label="备注"
+                rows="2"
+                variant="outlined"
+                density="compact"
+                placeholder="可填写特殊要求、紧急程度等说明"
               />
             </v-col>
           </v-row>
@@ -269,6 +221,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+// import api from '../../utils/api'  // 暂时注释，改为手动填写模式
 
 // Props
 const props = defineProps({
@@ -277,8 +230,7 @@ const props = defineProps({
   isNew: Boolean,
   loading: Boolean,
   statusOptions: Array,
-  typeOptions: Array,
-  priorityOptions: Array
+  // typeOptions: Array  // 已删除
 })
 
 // Emits
@@ -289,6 +241,10 @@ const form = ref(null)
 const formRef = ref(null)
 const valid = ref(false)
 const localPr = ref({})
+// 移除物料自动匹配相关的响应式数据
+// const materialOptions = ref([])
+// const loadingMaterials = ref(false)
+// const useCustomMaterial = ref(false)
 
 // 计算属性
 const dialog = computed({
@@ -302,60 +258,62 @@ const rules = {
   positive: value => value > 0 || '数值必须大于0'
 }
 
-// 方法
-const addItem = () => {
-  if (!localPr.value.items) {
-    localPr.value.items = []
-  }
+// 移除物料自动匹配相关的方法
+// const searchMaterials = async (search) => {
+//   if (!search || search.length < 2) {
+//     materialOptions.value = []
+//     return
+//   }
   
-  localPr.value.items.push({
-    item_name: '',
-    item_code: '',
-    specification: '',
-    unit: '',
-    quantity: 1,
-    unit_price: null,
-    total_price: null,
-    remarks: ''
-  })
-}
+//   try {
+//     loadingMaterials.value = true
+//     const response = await api.get('/materials/', {
+//       params: { search, limit: 20, is_active: true }
+//     })
+    
+//     // 格式化选项
+//     materialOptions.value = response.data.items.map(material => ({
+//       title: `${material.material_code} - ${material.material_name}`,
+//       value: material.material_code,
+//       material_name: material.material_name,
+//       material_code: material.material_code,
+//       specification: material.specification,
+//       brand: material.brand,
+//       unit: material.unit
+//     }))
+//   } catch (error) {
+//     console.error('搜索物料失败:', error)
+//     materialOptions.value = []
+//   } finally {
+//     loadingMaterials.value = false
+//   }
+// }
 
-const removeItem = (index) => {
-  localPr.value.items.splice(index, 1)
-}
+// const onMaterialSelect = (materialCode) => {
+//   if (!materialCode) {
+//     useCustomMaterial.value = false
+//     return
+//   }
+  
+//   // 检查是否为自定义输入（不在选项列表中）
+//   const selectedMaterial = materialOptions.value.find(m => m.material_code === materialCode)
+//   if (selectedMaterial) {
+//     // 从数据库选择的物料
+//     useCustomMaterial.value = false
+//     localPr.value.material_name = selectedMaterial.material_name
+//     localPr.value.specification = selectedMaterial.specification
+//     localPr.value.brand = selectedMaterial.brand
+//   } else {
+//     // 自定义物料编码
+//     useCustomMaterial.value = true
+//     // 保留当前填写的信息，不自动清空
+//   }
+// }
 
-const calculateTotal = (item) => {
-  if (item.quantity && item.unit_price) {
-    item.total_price = item.quantity * item.unit_price
-  } else {
-    item.total_price = null
-  }
-}
-
-const formatPrice = (price) => {
-  if (!price) return '-'
-  return '¥' + price.toFixed(2)
-}
 
 const save = async () => {
   const { valid: isValid } = await formRef.value.validate()
   if (!isValid) return
-
-  // 确保至少有一个明细项目
-  if (!localPr.value.items || localPr.value.items.length === 0) {
-    alert('请至少添加一个明细项目')
-    return
-  }
-
-  // 验证明细项目
-  const hasInvalidItem = localPr.value.items.some(item => 
-    !item.item_name || !item.quantity || item.quantity <= 0
-  )
-  
-  if (hasInvalidItem) {
-    alert('请完善明细项目信息')
-    return
-  }
 
   emit('save', localPr.value)
 }
@@ -367,10 +325,7 @@ const close = () => {
 // 监听props变化
 watch(() => props.pr, (newPr) => {
   if (newPr) {
-    localPr.value = {
-      ...newPr,
-      items: newPr.items ? [...newPr.items] : []
-    }
+    localPr.value = { ...newPr }
   }
 }, { immediate: true, deep: true })
 

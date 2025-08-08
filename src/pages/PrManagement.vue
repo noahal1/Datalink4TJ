@@ -52,30 +52,15 @@
             md="3"
           >
             <v-select
-              v-model="filters.pr_type_id"
-              :items="typeOptions"
+              v-model="filters.requester_id"
+              :items="requesterOptions"
               item-title="name"
               item-value="id"
-              label="类型筛选"
+              label="申请人筛选"
               clearable
               variant="outlined"
               density="compact"
-              @update:model-value="loadPrList"
-            />
-          </v-col>
-          <v-col
-            cols="12"
-            md="3"
-          >
-            <v-select
-              v-model="filters.priority_id"
-              :items="priorityOptions"
-              item-title="name"
-              item-value="id"
-              label="优先级筛选"
-              clearable
-              variant="outlined"
-              density="compact"
+              prepend-inner-icon="mdi-account"
               @update:model-value="loadPrList"
             />
           </v-col>
@@ -86,7 +71,7 @@
             <v-text-field
               v-model="filters.search"
               label="搜索"
-              placeholder="PR编号、标题或描述"
+              placeholder="请购单号、物品名称或编码"
               prepend-inner-icon="mdi-magnify"
               variant="outlined"
               density="compact"
@@ -148,35 +133,52 @@
 
           <!-- 状态 -->
           <template #item.status="{ item }">
-            <v-chip
-              :color="getStatusColor(item.status)"
-              size="small"
-              variant="flat"
-            >
-              {{ item.status?.name }}
-            </v-chip>
+            <v-menu offset-y>
+              <template #activator="{ props }">
+                <v-chip
+                  v-bind="props"
+                  :color="getStatusColor(item.status)"
+                  size="small"
+                  variant="flat"
+                  class="cursor-pointer"
+                  :prepend-icon="getStatusIcon(item.status)"
+                >
+                  {{ item.status?.name }}
+                  <v-icon size="small" class="ml-1">mdi-chevron-down</v-icon>
+                </v-chip>
+              </template>
+              <v-list density="compact">
+                <v-list-item
+                  v-for="status in statusOptions"
+                  :key="status.id"
+                  :disabled="status.id === item.status_id"
+                  @click="changeStatus(item, status)"
+                >
+                  <template #prepend>
+                    <v-icon :color="getStatusColor(status)" size="small">
+                      {{ getStatusIcon(status) }}
+                    </v-icon>
+                  </template>
+                  <v-list-item-title>{{ status.name }}</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
           </template>
-
-          <!-- 类型 -->
-          <template #item.pr_type="{ item }">
-            <v-chip
-              color="info"
-              variant="outlined"
-              size="small"
-            >
-              {{ item.pr_type?.name }}
-            </v-chip>
+          <!-- 物品名称 -->
+          <template #item.item_name="{ item }">
+            <span class="font-weight-medium">{{ item.item_name }}</span>
           </template>
-
-          <!-- 优先级 -->
-          <template #item.priority="{ item }">
-            <v-chip
-              :color="getPriorityColor(item.priority)"
-              size="small"
-              variant="flat"
-            >
-              {{ item.priority?.name }}
-            </v-chip>
+          <!-- 型号 -->
+          <template #item.specification="{ item }">
+            <span class="font-weight-medium">{{ item.specification }}</span>
+          </template>
+          <!-- 品牌 -->
+          <template #item.brand="{ item }">
+            <span class="font-weight-medium">{{ item.brand }}</span>
+          </template>
+          <!-- 数量 -->
+          <template #item.quantity="{ item }">
+            <span>{{ item.quantity }} {{ item.unit || '' }}</span>
           </template>
 
           <!-- 申请人 -->
@@ -189,43 +191,57 @@
             {{ formatDate(item.requested_date) }}
           </template>
 
-          <!-- 预估成本 -->
-          <template #item.estimated_cost="{ item }">
-            <span v-if="item.estimated_cost">
-              ¥{{ item.estimated_cost.toLocaleString() }}
-            </span>
-            <span
-              v-else
-              class="text-medium-emphasis"
-            >-</span>
-          </template>
-
           <!-- 操作 -->
           <template #item.actions="{ item }">
-            <v-btn
-              icon="mdi-eye"
-              size="small"
-              variant="text"
-              title="查看详情"
-              @click="viewPrDetail(item)"
-            />
-            <v-btn
-              v-if="canEdit(item)"
-              icon="mdi-pencil"
-              size="small"
-              variant="text"
-              title="编辑"
-              @click="editPr(item)"
-            />
-            <v-btn
-              v-if="canDelete(item)"
-              icon="mdi-delete"
-              size="small"
-              variant="text"
-              color="error"
-              title="删除"
-              @click="deletePr(item)"
-            />
+            <v-btn-group variant="text" density="compact">
+              <v-btn
+                icon="mdi-eye"
+                size="small"
+                color="info"
+                title="查看详情"
+                @click="viewPrDetail(item)"
+              />
+              <v-btn
+                v-if="canEdit(item)"
+                icon="mdi-pencil"
+                size="small"
+                color="primary"
+                title="编辑"
+                @click="editPr(item)"
+              />
+              <v-btn
+                v-if="canQuickApprove(item)"
+                icon="mdi-check-circle"
+                size="small"
+                color="success"
+                title="快速批准"
+                @click="quickApprove(item)"
+              />
+              <v-btn
+                v-if="canMarkPurchased(item)"
+                icon="mdi-cart"
+                size="small"
+                color="purple"
+                title="标记已采购"
+                @click="markPurchased(item)"
+              />
+              <v-btn
+                v-if="canMarkDelivered(item)"
+                icon="mdi-truck-delivery"
+                size="small"
+                color="orange"
+                title="标记已到货"
+                @click="markDelivered(item)"
+              />
+              <v-btn
+                v-if="canDelete(item)"
+                icon="mdi-delete"
+                size="small"
+                color="error"
+                title="删除"
+                @click="deletePr(item)"
+              />
+            </v-btn-group>
           </template>
         </v-data-table-server>
       </v-card-text>
@@ -238,8 +254,6 @@
       :is-new="editedIndex === -1"
       :loading="savingPr"
       :status-options="statusOptions"
-      :type-options="typeOptions"
-      :priority-options="priorityOptions"
       @save="savePr"
       @close="closePrDialog"
     />
@@ -261,7 +275,7 @@
       <v-card>
         <v-card-title>确认删除</v-card-title>
         <v-card-text>
-          确定要删除PR "{{ deletingPr?.title }}" 吗？此操作不可撤销。
+          确定要删除PR "{{ deletingPr?.material_name }}" 吗？此操作不可撤销。
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -301,8 +315,7 @@ const deleteDialog = ref(false)
 // 列表数据
 const prList = ref([])
 const statusOptions = ref([])
-const typeOptions = ref([])
-const priorityOptions = ref([])
+const requesterOptions = ref([])
 
 // 编辑相关
 const editedIndex = ref(-1)
@@ -313,8 +326,8 @@ const deletingPr = ref(null)
 // 筛选和分页
 const filters = reactive({
   status_id: null,
-  pr_type_id: null,
-  priority_id: null,
+  requester_id: null,
+  // pr_type_id: null,  // 已删除
   search: ''
 })
 
@@ -329,14 +342,13 @@ const userStore = useUserStore()
 
 // 表格列定义
 const headers = [
-  { title: 'PR编号', key: 'pr_number', sortable: false },
-  { title: '标题', key: 'title', sortable: false },
-  { title: '状态', key: 'status', sortable: false },
-  { title: '类型', key: 'pr_type', sortable: false },
-  { title: '优先级', key: 'priority', sortable: false },
+  { title: '物品名称', key: 'item_name', sortable: false },
+  { title: '型号', key: 'specification', sortable: false },
+  { title: '品牌', key: 'brand', sortable: false},
+  { title: '数量', key: 'quantity', sortable: false },
   { title: '申请人', key: 'requester', sortable: false },
   { title: '申请日期', key: 'requested_date', sortable: false },
-  { title: '预估成本', key: 'estimated_cost', sortable: false },
+  { title: '状态', key: 'status', sortable: false },
   { title: '操作', key: 'actions', sortable: false, width: 120 }
 ]
 
@@ -347,7 +359,7 @@ const canEdit = computed(() => (item) => {
 
 const canDelete = computed(() => (item) => {
   const canEditItem = item.requester?.id === userStore.userId || userStore.isSuperAdmin
-  const isDeletableStatus = ['草稿', '待提交'].includes(item.status?.name)
+  const isDeletableStatus = ['待提交'].includes(item.status?.name)
   return canEditItem && isDeletableStatus
 })
 
@@ -357,14 +369,17 @@ const loadBasicData = async () => {
     // 加载状态选项
     const statusResponse = await api.get('/pr/status')
     statusOptions.value = statusResponse.data
+    console.log('状态选项加载成功:', statusOptions.value)
 
-    // 加载类型选项
-    const typeResponse = await api.get('/pr/types')
-    typeOptions.value = typeResponse.data
+    // 加载申请人选项
+    const requesterResponse = await api.get('/pr/requesters')
+    requesterOptions.value = requesterResponse.data
+    console.log('申请人选项加载成功:', requesterOptions.value)
 
-    // 加载优先级选项
-    const priorityResponse = await api.get('/pr/priorities')
-    priorityOptions.value = priorityResponse.data
+    // 加载类型选项 - 已删除
+    // const typeResponse = await api.get('/pr/types')
+    // typeOptions.value = typeResponse.data
+
   } catch (error) {
     console.error('加载基础数据失败:', error)
     Message.error('加载基础数据失败')
@@ -414,28 +429,66 @@ const formatDate = (dateString) => {
 
 // 获取状态颜色
 const getStatusColor = (status) => {
-  if (!status?.color) return 'grey'
-  return status.color
+  if (!status) return 'grey'
+
+  // 如果有颜色值，直接使用（支持十六进制颜色和 Vuetify 颜色名）
+  if (status.color) {
+    // 如果是十六进制颜色，转换为 Vuetify 颜色名
+    if (status.color.startsWith('#')) {
+      const colorMap = {
+        '#9E9E9E': 'grey',
+        '#FF9800': 'orange',
+        '#2196F3': 'blue',
+        '#4CAF50': 'green',
+        '#9C27B0': 'purple',
+        '#00BCD4': 'cyan',
+        '#8BC34A': 'light-green',
+        '#F44336': 'red',
+        '#E91E63': 'pink'
+      }
+      return colorMap[status.color] || 'grey'
+    }
+    return status.color
+  }
+
+  // 如果没有颜色，根据状态名称提供默认颜色
+  const statusName = status.name?.toLowerCase()
+  switch (statusName) {
+    case '待提交':
+      return 'orange'
+    case '审批中':
+      return 'blue'
+    case '已批准':
+      return 'green'
+    case '采购中':
+      return 'purple'
+    case '已到货':
+      return 'cyan'
+    case '已取消':
+      return 'red'
+    case '已拒绝':
+      return 'pink'
+    default:
+      return 'grey'
+  }
 }
 
-// 获取优先级颜色
-const getPriorityColor = (priority) => {
-  if (!priority?.color) return 'grey'
-  return priority.color
-}
 
 // PR操作方法
 const openPrDialog = () => {
   editedIndex.value = -1
   editedPr.value = {
-    title: '',
+    material_name: '',
     description: '',
-    pr_type_id: null,
-    priority_id: null,
+    priority_id: 1,
     required_date: null,
     estimated_cost: null,
     supplier: '',
-    items: []
+    material_code: '',
+    specification: '',
+    quantity: 1,
+    brand: '',
+    remarks: ''
   }
   prDialog.value = true
 }
@@ -456,13 +509,30 @@ const savePr = async (prData) => {
   try {
     savingPr.value = true
     
+    // 清理数据，确保正确的JSON格式
+    const cleanData = {
+      material_name: prData.material_name || '',
+      description: prData.description || null,
+      required_date: prData.required_date || null,
+      approved_date: prData.approved_date || null,
+      delivery_date: prData.delivery_date || null,
+      material_code: prData.material_code || null,
+      specification: prData.specification || null,
+      quantity: parseFloat(prData.quantity) || 0,
+      brand: prData.brand || null,
+      remarks: prData.remarks || null
+    }
+    
+    // 调试：打印发送的数据
+    console.log('发送的PR数据:', JSON.stringify(cleanData, null, 2))
+    
     if (editedIndex.value === -1) {
       // 创建新PR
-      await api.post('/pr/', prData)
+      await api.post('/pr/', cleanData)
       Message.success('PR创建成功')
     } else {
       // 更新PR
-      await api.put(`/pr/${editedPr.value.id}`, prData)
+      await api.put(`/pr/${editedPr.value.id}`, cleanData)
       Message.success('PR更新成功')
     }
     
@@ -525,11 +595,87 @@ const confirmDelete = async () => {
   }
 }
 
+// 状态相关辅助函数
+const getStatusIcon = (status) => {
+  if (!status) return 'mdi-help-circle'
+  const statusName = status.name?.toLowerCase()
+  switch (statusName) {
+    case '待提交':
+      return 'mdi-file-document-outline'
+    case '待审批':
+    case '审批中':
+      return 'mdi-clock-outline'
+    case '已批准':
+    case '已审批':
+      return 'mdi-check-circle'
+    case '已下单':
+    case '采购中':
+      return 'mdi-cart'
+    case '已到货':
+      return 'mdi-truck-delivery'
+    case '已拒绝':
+    case '已取消':
+      return 'mdi-close-circle'
+    default:
+      return 'mdi-help-circle'
+  }
+}
+
+// 快速操作权限检查
+const canQuickApprove = (item) => {
+  return item.status?.name === '待审批' || item.status?.name === '审批中'
+}
+
+const canMarkPurchased = (item) => {
+  return item.status?.name === '已批准' || item.status?.name === '已审批'
+}
+
+const canMarkDelivered = (item) => {
+  return item.status?.name === '已下单' || item.status?.name === '采购中'
+}
+
+// 快速状态变更操作
+const changeStatus = async (item, newStatus) => {
+  try {
+    console.log('正在更新状态:', { itemId: item.id, newStatusId: newStatus.id, newStatusName: newStatus.name })
+    await api.put(`/pr/${item.id}/status`, { status_id: newStatus.id })
+    Message.success(`状态已更新为：${newStatus.name}`)
+    loadPrList()
+  } catch (error) {
+    console.error('状态更新失败:', error)
+    Message.error('状态更新失败: ' + (error.response?.data?.detail || error.message))
+  }
+}
+
+const quickApprove = async (item) => {
+  const approvedStatus = statusOptions.value.find(s => s.name === '已批准' || s.name === '已审批')
+  if (approvedStatus) {
+    await changeStatus(item, approvedStatus)
+  }
+}
+
+const markPurchased = async (item) => {
+  const purchasedStatus = statusOptions.value.find(s => s.name === '采购中' || s.name === '已下单')
+  if (purchasedStatus) {
+    await changeStatus(item, purchasedStatus)
+  }
+}
+
+const markDelivered = async (item) => {
+  const deliveredStatus = statusOptions.value.find(s => s.name === '已到货')
+  if (deliveredStatus) {
+    await changeStatus(item, deliveredStatus)
+  }
+}
+
+// 搜索防抖
+let searchTimeout = null
+
 // 监听搜索输入
 watch(() => filters.search, () => {
   // 延迟搜索
-  clearTimeout(window.searchTimeout)
-  window.searchTimeout = setTimeout(() => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
     pagination.page = 1
     loadPrList()
   }, 500)
@@ -563,6 +709,32 @@ onMounted(() => {
 /* 统一按钮样式 */
 .v-btn {
   border-radius: 8px !important;
+}
+
+/* 状态芯片悬停效果 */
+.v-chip.cursor-pointer {
+  transition: all 0.2s ease;
+}
+
+.v-chip.cursor-pointer:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* 操作按钮组样式 */
+.v-btn-group .v-btn {
+  margin: 0 1px;
+}
+
+.v-btn-group .v-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 状态菜单样式 */
+.v-menu > .v-overlay__content > .v-list {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 /* 统一芯片样式 */

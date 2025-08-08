@@ -22,6 +22,8 @@ declare module 'vue' {
     LineComparisonChart: typeof import('./components/maintenance/charts/LineComparisonChart.vue')['default']
     LoadingOverlay: typeof import('./components/LoadingOverlay.vue')['default']
     MaintenanceCalendar: typeof import('./components/maintenance/MaintenanceCalendar.vue')['default']
+    MaterialDetailDialog: typeof import('./components/materials/MaterialDetailDialog.vue')['default']
+    MaterialDialog: typeof import('./components/materials/MaterialDialog.vue')['default']
     MetricsDialog: typeof import('./components/maintenance/MetricsDialog.vue')['default']
     MetricsList: typeof import('./components/maintenance/MetricsList.vue')['default']
     MTTRMTBFChart: typeof import('./components/maintenance/charts/MTTRMTBFChart.vue')['default']
