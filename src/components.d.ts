@@ -32,7 +32,6 @@ declare module 'vue' {
     PageHeader: typeof import('./components/PageHeader.vue')['default']
     PermissionCodesManager: typeof import('./components/permissions/PermissionCodesManager.vue')['default']
     PermissionControl: typeof import('./components/PermissionControl.vue')['default']
-    PermissionDebug: typeof import('./components/PermissionDebug.vue')['default']
     PermissionDialog: typeof import('./components/permissions/PermissionDialog.vue')['default']
     PermissionList: typeof import('./components/permissions/PermissionList.vue')['default']
     PrDetailDialog: typeof import('./components/pr/PrDetailDialog.vue')['default']

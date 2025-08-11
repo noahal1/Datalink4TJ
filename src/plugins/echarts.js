@@ -5,7 +5,8 @@ import {
   GridComponent,
   TooltipComponent,
   TitleComponent,
-  LegendComponent
+  LegendComponent,
+  RadarComponent
 } from "echarts/components"
 
 // 配置ECharts
@@ -18,6 +19,7 @@ export function setupECharts() {
     GridComponent,
     TooltipComponent,
     TitleComponent,
-    LegendComponent
+    LegendComponent,
+    RadarComponent
   ])
 }
