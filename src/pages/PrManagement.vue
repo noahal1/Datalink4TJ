@@ -6,7 +6,6 @@
   >
     <template #header-actions>
       <v-btn
-        v-permission="'MAINT:WRITE'"
         color="primary"
         prepend-icon="mdi-plus"
         @click="openPrDialog"
@@ -214,7 +213,7 @@
                 icon="mdi-check-circle"
                 size="small"
                 color="success"
-                title="快速批准"
+                title="标记已批准"
                 @click="quickApprove(item)"
               />
               <v-btn
@@ -297,7 +296,6 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
-import { useUserStore } from '../stores/user.js'
 import Message from '../utils/notification'
 import api from '../utils/api'
 import PrDialog from '../components/pr/PrDialog.vue'
@@ -308,6 +306,7 @@ import UnifiedPageTemplate from '../components/UnifiedPageTemplate.vue'
 const loading = ref(false)
 const savingPr = ref(false)
 const deleting = ref(false)
+
 const prDialog = ref(false)
 const detailDialog = ref(false)
 const deleteDialog = ref(false)
@@ -337,8 +336,7 @@ const pagination = reactive({
   total: 0
 })
 
-// 用户store
-const userStore = useUserStore()
+
 
 // 表格列定义
 const headers = [
@@ -353,14 +351,15 @@ const headers = [
 ]
 
 // 计算属性
-const canEdit = computed(() => (item) => {
-  return item.requester?.id === userStore.userId || userStore.isSuperAdmin
+const canEdit = computed(() => () => {
+  // 编辑权限：所有用户在所有状态下都可以编辑
+  return true
 })
 
 const canDelete = computed(() => (item) => {
-  const canEditItem = item.requester?.id === userStore.userId || userStore.isSuperAdmin
+  // 只有在"待提交"状态下才能删除
   const isDeletableStatus = ['待提交'].includes(item.status?.name)
-  return canEditItem && isDeletableStatus
+  return isDeletableStatus
 })
 
 // 方法
@@ -464,10 +463,8 @@ const getStatusColor = (status) => {
       return 'purple'
     case '已到货':
       return 'cyan'
-    case '已取消':
-      return 'red'
     case '已拒绝':
-      return 'pink'
+      return 'red'
     default:
       return 'grey'
   }
@@ -614,14 +611,12 @@ const getStatusIcon = (status) => {
     case '已到货':
       return 'mdi-truck-delivery'
     case '已拒绝':
-    case '已取消':
       return 'mdi-close-circle'
     default:
       return 'mdi-help-circle'
   }
 }
 
-// 快速操作权限检查
 const canQuickApprove = (item) => {
   return item.status?.name === '待审批' || item.status?.name === '审批中'
 }

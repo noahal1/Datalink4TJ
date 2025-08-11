@@ -25,7 +25,7 @@
     <v-divider v-if="title || $slots.title" />
     
     <!-- 表格内容 -->
-    <v-card-text :class="contentClass">
+    <v-card-text :class="computedContentClass">
       <slot name="pre-table" />
       
       <v-data-table
@@ -113,7 +113,7 @@ const props = defineProps({
   },
   headers: {
     type: Array,
-    required: true
+    default: () => []
   },
   items: {
     type: Array,
@@ -158,6 +158,10 @@ const props = defineProps({
   tableClass: {
     type: String,
     default: ''
+  },
+  contentClass: {
+    type: String,
+    default: ''
   }
 });
 
@@ -169,8 +173,9 @@ watch(() => props.items, (newItems) => {
 }, { immediate: true });
 
 // 计算内容区的样式类
-const contentClass = computed(() => {
-  return props.noPadding ? 'pa-0' : '';
+const computedContentClass = computed(() => {
+  const userClass = (/** @type {any} */ (props)).contentClass || '';
+  return [props.noPadding ? 'pa-0' : '', userClass].filter(Boolean).join(' ');
 });
 
 // 确保headers和items是数组的计算属性

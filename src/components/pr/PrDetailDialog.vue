@@ -36,59 +36,6 @@
       <v-divider />
 
       <v-card-text class="pa-0">
-        <!-- 基本信息卡片 -->
-        <v-card
-          flat
-          class="ma-4 mb-2"
-          border
-        >
-          <v-card-title class="d-flex align-center pa-4 bg-grey-lighten-5">
-            <v-icon class="mr-2" color="primary">mdi-information</v-icon>
-            <span class="text-subtitle-1 font-weight-medium">基本信息</span>
-          </v-card-title>
-          <v-card-text class="pa-4">
-            <v-row dense>
-              <v-col cols="12" md="6">
-                <div class="info-item">
-                  <div class="info-label">
-                    <v-icon size="small" class="mr-1">mdi-identifier</v-icon>
-                    请购单号
-                  </div>
-                  <div class="info-value">{{ pr.pr_number }}</div>
-                </div>
-              </v-col>
-              <v-col cols="12" md="6">
-                <div class="info-item">
-                  <div class="info-label">
-                    <v-icon size="small" class="mr-1">mdi-account</v-icon>
-                    申请人
-                  </div>
-                  <div class="info-value">{{ pr.requester?.name || '-' }}</div>
-                </div>
-              </v-col>
-              <v-col cols="12" md="6">
-                <div class="info-item">
-                  <div class="info-label">
-                    <v-icon size="small" class="mr-1">mdi-calendar</v-icon>
-                    申请日期
-                  </div>
-                  <div class="info-value">{{ formatDate(pr.requested_date) }}</div>
-                </div>
-              </v-col>
-              <v-col cols="12" md="6">
-                <div class="info-item">
-                  <div class="info-label">
-                    <v-icon size="small" class="mr-1">mdi-calendar-clock</v-icon>
-                    需求日期
-                  </div>
-                  <div class="info-value">{{ formatDate(pr.required_date) || '-' }}</div>
-                </div>
-              </v-col>
-            </v-row>
-          </v-card-text>
-        </v-card>
-
-
         <!-- 物料信息卡片 -->
         <v-card
           flat
@@ -395,7 +342,6 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useUserStore } from '../../stores/user.js'
 
 // Props
 const props = defineProps({
@@ -412,8 +358,7 @@ const newStatusId = ref(null)
 const statusComments = ref('')
 const changingStatus = ref(false)
 
-// 用户store
-const userStore = useUserStore()
+
 
 // 计算属性
 const dialog = computed({
@@ -422,9 +367,8 @@ const dialog = computed({
 })
 
 const canChangeStatus = computed(() => {
-  // 只有管理员或相关人员可以更改状态
-  return userStore.isSuperAdmin || 
-         (props.pr && props.pr.requester?.id === userStore.userId)
+  // 所有用户都可以更改状态
+  return true
 })
 
 // 方法
@@ -468,7 +412,6 @@ const getStatusIcon = (status) => {
     case '已完成':
       return 'mdi-check-all'
     case '已拒绝':
-    case '已取消':
       return 'mdi-close-circle'
     default:
       return 'mdi-help-circle'
@@ -575,12 +518,6 @@ const close = () => {
   border-radius: 8px;
   text-transform: none;
   font-weight: 500;
-}
-
-/* 卡片边框样式 */
-.v-card[border] {
-  border: 1px solid rgba(var(--v-border-color), 0.12);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 /* 悬停效果 */

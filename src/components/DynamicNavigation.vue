@@ -584,11 +584,17 @@ watch(() => route.path, (newPath, oldPath) => {
   const registeredRoutes = router.getRoutes()
   const routeExists = registeredRoutes.some(r => r.path === newPath)
 
-  if (!routeExists && newPath !== '/' && !newPath.startsWith('/login')) {
+  console.log(`DynamicNavigation: 检查路由 ${newPath}:`, routeExists ? '✅ 存在' : '❌ 不存在')
+  console.log(`DynamicNavigation: 当前注册路由数量: ${registeredRoutes.length}`)
+
+  if (!routeExists && newPath !== '/' && !newPath.startsWith('/login') && !newPath.startsWith('/dashboard')) {
     console.warn('DynamicNavigation: 路由不存在，尝试重新加载路由表', newPath)
-    setTimeout(() => {
-      forceReloadRoutes()
-    }, 100)
+
+    // 打印调试信息
+    console.log('DynamicNavigation: 当前所有路由路径:', registeredRoutes.map(r => r.path))
+
+    // 立即尝试重新加载，不延迟
+    forceReloadRoutes()
   }
 }, { immediate: true })
 
@@ -599,39 +605,33 @@ watch(() => searchQuery.value, () => {
 })
 
 // 监听用户登录状态变化
-watch(() => userStore.isLogin, (newLoginState) => {
-  console.log('DynamicNavigation: 用户登录状态变化', newLoginState, '用户:', userStore.user);
-  if (newLoginState) {
-    // 用户登录后，重新加载路由
+watch(() => userStore.isLogin, (newLoginState, oldLoginState) => {
+  console.log('DynamicNavigation: 用户登录状态变化', { old: oldLoginState, new: newLoginState }, '用户:', userStore.user);
+  if (newLoginState && !oldLoginState) {
+    // 用户刚刚登录，重新加载路由
+    console.log('DynamicNavigation: 用户刚刚登录，重新加载路由')
     loadRoutes()
-  } else {
+  } else if (!newLoginState) {
     // 用户登出后，清空路由
+    console.log('DynamicNavigation: 用户登出，清空路由')
     navRoutes.value = []
   }
 }, { immediate: true })
 
-// 监听权限变化
-watch(() => permissionStore.roles.length, (newLength) => {
-  if (userStore.isLogin && newLength > 0) {
-    // 权限初始化后，重新加载路由
-    loadRoutes()
-  }
-})
-
 // 监听权限初始化状态
-watch(() => permissionStore.isInitialized, (isInitialized) => {
-  if (userStore.isLogin && isInitialized) {
-    // 权限初始化完成后，重新加载路由
-    console.log('DynamicNavigation: 权限初始化完成，重新加载路由')
+watch(() => permissionStore.isInitialized, (isInitialized, wasInitialized) => {
+  if (userStore.isLogin && isInitialized && !wasInitialized) {
+    // 权限刚刚初始化完成，重新加载路由
+    console.log('DynamicNavigation: 权限刚刚初始化完成，重新加载路由')
     loadRoutes()
   }
 })
 
 // 监听可访问路由列表变化
-watch(() => permissionStore.accessibleRoutesList.length, (newLength) => {
-  if (userStore.isLogin && newLength > 0) {
+watch(() => permissionStore.accessibleRoutesList.length, (newLength, oldLength) => {
+  if (userStore.isLogin && newLength > 0 && newLength !== oldLength) {
     // 可访问路由列表更新后，重新加载路由
-    console.log('DynamicNavigation: 可访问路由列表更新，重新加载路由')
+    console.log('DynamicNavigation: 可访问路由列表更新，重新加载路由', { old: oldLength, new: newLength })
     loadRoutes()
   }
 })
@@ -677,30 +677,27 @@ const logRouteClick = (route) => {
 
   // 如果路由不存在，尝试重新加载路由表
   if (!matchedRoute) {
-    console.log('路由不存在，尝试重新加载路由表...')
+    console.log('路由不存在，尝试重新加载路由表...', route.path)
 
-    // 先尝试动态加载路由
-    import('../services').then(async ({ routeService }) => {
-      try {
-        await routeService.getNavigationTree()
-        console.log('动态路由重新加载完成')
+    // 使用强制重新加载路由的方法
+    forceReloadRoutes().then(() => {
+      // 重新检查路由是否存在
+      const updatedRoutes = router.getRoutes()
+      const newMatchedRoute = updatedRoutes.find(r => r.path === route.path)
 
-        // 重新检查路由是否存在
-        const updatedRoutes = router.getRoutes()
-        const newMatchedRoute = updatedRoutes.find(r => r.path === route.path)
-
-        if (newMatchedRoute) {
-          console.log('路由现在可用，导航到:', route.path)
-          router.push(route.path)
-        } else {
-          console.warn('路由仍然不可用:', route.path)
-          // 可以显示错误提示或导航到默认页面
-        }
-      } catch (err) {
-        console.error('重新加载动态路由失败:', err)
+      if (newMatchedRoute) {
+        console.log('路由现在可用，导航到:', route.path)
+        // 使用 replace 而不是 push 避免历史记录重复
+        router.replace(route.path)
+      } else {
+        console.warn('路由仍然不可用:', route.path)
+        // 导航到仪表板作为备用方案
+        router.replace('/dashboard')
       }
     }).catch(err => {
-      console.error('导入路由服务失败:', err)
+      console.error('重新加载动态路由失败:', err)
+      // 如果重新加载失败，导航到仪表板
+      router.replace('/dashboard')
     })
   }
 }
@@ -710,33 +707,44 @@ const forceReloadRoutes = async () => {
   try {
     loading.value = true
     console.log('强制重新加载路由表...')
-    
+
     // 清除路由缓存
     sessionStorage.removeItem('accessibleRoutes')
-    
+    localStorage.removeItem('accessibleRoutes')
+
     // 重新初始化权限存储
-    await permissionStore.initPermissions()
-    
+    await permissionStore.refreshPermissions()
+
     // 重新加载导航菜单
     await loadRoutes()
-    
+
     // 手动触发动态路由注册
     try {
-      // 动态导入路由模块中的addDynamicRoutes函数
-      const { addDynamicRoutes } = await import('../router')
-      
+      // 动态导入路由模块中的addDynamicRoutes函数和状态重置函数
+      const { addDynamicRoutes, resetDynamicRoutesState } = await import('../router')
+
+      // 重置动态路由加载状态，强制重新加载
+      resetDynamicRoutesState()
+
       // 调用函数添加动态路由
       console.log('调用addDynamicRoutes添加动态路由...')
       const routes = await addDynamicRoutes()
       console.log(`成功添加 ${routes.length} 个动态路由`)
-      
-      // 强制刷新当前页面以应用新路由
-      setTimeout(() => {
-        const currentPath = router.currentRoute.value.path
-        console.log(`当前路径: ${currentPath}, 尝试重新导航...`)
+
+      // 验证目标路由是否现在可用
+      const currentPath = router.currentRoute.value.path
+      const targetRoute = router.resolve(currentPath)
+
+      if (targetRoute.matched.length > 0) {
+        console.log(`路由 ${currentPath} 现在可用，重新导航`)
+        // 使用 replace 而不是 push 避免历史记录重复
         router.replace(currentPath)
-      }, 100)
-      
+      } else {
+        console.warn(`路由 ${currentPath} 仍然不可用`)
+        // 如果当前路由仍然不可用，导航到仪表板
+        router.replace('/dashboard')
+      }
+
       console.log('路由表已刷新')
     } catch (error) {
       console.error('刷新路由表失败:', error)

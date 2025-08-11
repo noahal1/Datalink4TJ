@@ -54,7 +54,6 @@ export const DEFAULT_ROUTE_CONFIG = {
     requiresAuth: true,
     hideInMenu: false,
     permission: null,
-    permissionCode: null,
     public: false,
     isParentMenu: false
   },

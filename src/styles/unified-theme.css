@@ -77,7 +77,7 @@
   --info: #3b82f6;
   --info-light: #60a5fa;
   --info-dark: #2563eb;
-  
+
   /* 中性色 - 现代灰色系 */
   --grey-50: #f8fafc;
   --grey-100: #f1f5f9;
@@ -175,7 +175,7 @@
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
-  
+
   /* z-index层级 */
   --z-index-dropdown: 1000;
   --z-index-sticky: 1020;
@@ -194,6 +194,12 @@
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+
+/* 全局缩放：将根字体设为13px，约等于80%-82%的整体缩放 */
+html {
+  font-size: 13px;
 }
 
 body {
@@ -601,12 +607,12 @@ body::before {
   .unified-container {
     padding: var(--spacing-md);
   }
-  
+
   .unified-card-title,
   .unified-card-content {
     padding: var(--spacing-md);
   }
-  
+
   .unified-page-title {
     font-size: var(--font-size-xl);
   }
@@ -616,13 +622,13 @@ body::before {
   .unified-container {
     padding: var(--spacing-sm);
   }
-  
+
   .unified-stats-value {
     font-size: var(--font-size-xl);
   }
-  
+
   .unified-table th,
   .unified-table td {
     padding: var(--spacing-sm);
   }
-} 
+}

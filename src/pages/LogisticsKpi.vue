@@ -4,9 +4,10 @@
     icon="mdi-truck"
     color="info"
   >
-    <!-- 顶部控制栏 -->
-    <div class="controls-bar mb-6">
-      <v-row class="align-center">
+    <!-- 固定区域：控制栏 + 表格头部 -->
+    <div class="sticky-header-container">
+      <div class="controls-bar">
+        <v-row class="align-center">
         <!-- 左侧：月份和年份选择器 -->
         <v-col
           cols="12"
@@ -81,7 +82,8 @@
             保存数据
           </v-btn>
         </v-col>
-      </v-row>
+        </v-row>
+      </div>
     </div>
 
     <!-- 加载指示器 -->
@@ -90,17 +92,19 @@
       message="加载数据中..."
     />
 
-    <!-- KPI数据表格 -->
-    <div class="table-container">
+    <!-- 可滚动的数据表格容器 -->
+    <div class="scrollable-table-container">
       <unified-data-table
         :headers="headers"
         :items="kpiData"
         :loading="loading"
         density="comfortable"
-        class="logistics-kpi-table logistics-data-table"
+        class="logistics-kpi-table logistics-data-table frozen-header-table"
         hide-default-footer=""
         :items-per-page="-1"
         hover
+        :fixed-header="true"
+        :height="'calc(100vh - 280px)'"
       >
         <template #item.description="{ item }">
           <div class="font-weight-medium">
@@ -387,7 +391,7 @@ const originalKpiData = ref([])
 const initializeKpiData = () => {
   const data = []
   let id = 1
-  
+
   kpiDescriptions.forEach(description => {
     areas.forEach(area => {
       data.push({
@@ -403,7 +407,7 @@ const initializeKpiData = () => {
       })
     })
   })
-  
+
   return data
 }
 
@@ -420,10 +424,10 @@ const getAreaColor = (area) => {
 // 获取目标值颜色
 const getTargetColor = (actual, target, description) => {
   if (!target || target === 0) return 'grey'
-  
+
   // Premium Freight、DTime due to Logistics、DOH 是大于目标值时显示警告
   const higherIsBetter = ['Premium Freight', 'DTime due to Logistics', 'DOH']
-  
+
   if (higherIsBetter.includes(description)) {
     return actual > target ? 'error' : 'success'
   } else {
@@ -435,10 +439,10 @@ const getTargetColor = (actual, target, description) => {
 // 判断是否应该显示备注按钮
 const shouldShowRemark = (item) => {
   if (!item.target_value || item.target_value === 0) return false
-  
+
   // Premium Freight、DTime due to Logistics、DOH 是大于目标值时需要备注
   const higherIsBetter = ['Premium Freight', 'DTime due to Logistics', 'DOH']
-  
+
   if (higherIsBetter.includes(item.description)) {
     return item.actual_value > item.target_value
   } else {
@@ -481,11 +485,11 @@ const handleInput = () => {
 // 加载数据
 const loadData = async () => {
   loading.value = true
-  
+
   try {
     // 初始化数据
     kpiData.value = initializeKpiData()
-    
+
     // 获取KPI数据
     const response = await get('/logistics/kpi/', {
       params: {
@@ -606,7 +610,7 @@ const openTargetDialog = async () => {
 // 保存目标值
 const saveTargets = async () => {
   savingTargets.value = true
-  
+
   try {
     const updateData = {
       year: selectedYear.value,
@@ -619,10 +623,10 @@ const saveTargets = async () => {
     }
 
     await put('/logistics/kpi/targets/', updateData)
-    
+
     Message.success('目标值保存成功')
     targetDialog.value = false
-    
+
     // 重新加载数据以更新目标值显示
     await loadData()
   } catch (error) {
@@ -700,6 +704,71 @@ watch([selectedMonth, selectedYear], () => {
 .v-chip {
   font-weight: 500;
 }
+
+/* 固定头部容器 - 类似冻结窗格 */
+.sticky-header-container {
+  position: sticky;
+  top: 64px; /* 导航栏高度 */
+  z-index: 1000;
+  background: white;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sticky-header-container .controls-bar {
+  margin-bottom: 0 !important;
+  border-radius: 16px 16px 0 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+/* 可滚动表格容器 + 冻结表头 */
+.scrollable-table-container {
+  background: white;
+  border-radius: 0 0 16px 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+}
+
+.frozen-header-table {
+  background: transparent;
+}
+
+.frozen-header-table :deep(.v-data-table__wrapper) {
+  max-height: calc(100vh - 280px);
+  overflow-y: auto;
+}
+
+.frozen-header-table :deep(thead) {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+}
+
+.frozen-header-table :deep(thead tr th) {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 16px 12px;
+}
+
+/* 响应式优化 */
+@media (max-width: 1264px) {
+  .sticky-header-container { top: 56px; }
+}
+@media (max-width: 960px) {
+  .controls-bar { padding: 16px; }
+  .scrollable-table-container { border-radius: 0 0 12px 12px; }
+  .frozen-header-table :deep(.v-data-table__wrapper) { max-height: calc(100vh - 240px); }
+  .frozen-header-table :deep(thead tr th) { padding: 12px 8px; font-size: 0.875rem; }
+}
+@media (max-width: 600px) {
+  .controls-bar { padding: 12px; }
+  .frozen-header-table :deep(.v-data-table__wrapper) { max-height: calc(100vh - 220px); }
+  .text-field-small { max-width: 100px; }
+}
+
 
 .font-weight-medium {
   font-weight: 500;

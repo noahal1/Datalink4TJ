@@ -122,85 +122,207 @@ export default defineConfig(({ mode }) => {
       },
     },
     
-    // 构建配置
+    // 构建配置 - 性能优化
     build: {
       // 设置文件大小警告阈值
       chunkSizeWarningLimit: 1600,
+      // 目标浏览器
+      target: ['es2020', 'chrome80', 'firefox78', 'safari14'],
       // 将大的依赖模块拆分
       rollupOptions: {
         output: {
           manualChunks: (id) => {
-            // Vue相关依赖
-            if (id.includes('node_modules/vue') || 
-                id.includes('node_modules/vue-router') || 
-                id.includes('node_modules/pinia') || 
+            // Vue核心依赖
+            if (id.includes('node_modules/vue/') && !id.includes('vue-router')) {
+              return 'vue-core';
+            }
+
+            // Vue Router
+            if (id.includes('node_modules/vue-router')) {
+              return 'vue-router';
+            }
+
+            // 状态管理
+            if (id.includes('node_modules/pinia') ||
                 id.includes('node_modules/@vueuse/core')) {
-              return 'vue-vendor';
+              return 'state-vendor';
             }
-            
-            // UI框架
+
+            // UI框架 - 分离核心和组件
             if (id.includes('node_modules/vuetify')) {
-              return 'ui-vendor';
+              if (id.includes('vuetify/lib/components')) {
+                return 'ui-components';
+              }
+              return 'ui-core';
             }
-            
-            // 图表相关
-            if (id.includes('node_modules/echarts') || 
-                id.includes('node_modules/d3')) {
-              return 'chart-vendor';
+
+            // 图表相关 - 按需分离
+            if (id.includes('node_modules/echarts')) {
+              if (id.includes('echarts/lib/chart')) {
+                return 'chart-components';
+              }
+              return 'chart-core';
             }
-            
+
+            if (id.includes('node_modules/d3')) {
+              return 'chart-d3';
+            }
+
             // 日期处理
-            if (id.includes('node_modules/date-fns') || 
-                id.includes('node_modules/v-calendar') || 
+            if (id.includes('node_modules/date-fns') ||
+                id.includes('node_modules/v-calendar') ||
                 id.includes('node_modules/@vuepic/vue-datepicker')) {
               return 'date-vendor';
             }
-            
+
+            // 工具库
+            if (id.includes('node_modules/lodash') ||
+                id.includes('node_modules/axios') ||
+                id.includes('node_modules/crypto-js')) {
+              return 'utils-vendor';
+            }
+
             // 其他node_modules依赖
             if (id.includes('node_modules')) {
               return 'vendors';
             }
-            
-            return null; // 对于非node_modules的代码不进行分块处理
+
+            return null;
           },
-          entryFileNames: 'assets/[name].[hash].js',
-          chunkFileNames: 'assets/[name].[hash].js',
-          assetFileNames: 'assets/[name].[hash].[ext]'
+          // 优化文件命名
+          entryFileNames: (chunkInfo) => {
+            return `assets/entry-[name].[hash].js`;
+          },
+          chunkFileNames: (chunkInfo) => {
+            return `assets/chunk-[name].[hash].js`;
+          },
+          assetFileNames: (assetInfo) => {
+            const info = assetInfo.name.split('.');
+            const ext = info[info.length - 1];
+            if (/\.(css)$/.test(assetInfo.name)) {
+              return `assets/css/[name].[hash].${ext}`;
+            }
+            if (/\.(png|jpe?g|gif|svg|webp|ico)$/.test(assetInfo.name)) {
+              return `assets/images/[name].[hash].${ext}`;
+            }
+            if (/\.(woff2?|eot|ttf|otf)$/.test(assetInfo.name)) {
+              return `assets/fonts/[name].[hash].${ext}`;
+            }
+            return `assets/[name].[hash].${ext}`;
+          }
         },
+        // 外部依赖优化
+        external: (id) => {
+          // 在生产环境中，可以考虑将某些大型库设为外部依赖
+          return false;
+        }
       },
-      // 开启source map
+      // 开启source map（仅开发环境）
       sourcemap: mode === 'development',
-      // 最小化混淆
+      // 最小化混淆 - 增强配置
       minify: 'terser',
       terserOptions: {
         compress: {
           drop_console: mode === 'production',
           drop_debugger: true,
-          pure_funcs: mode === 'production' ? ['console.log', 'console.info'] : [],
+          pure_funcs: mode === 'production' ? ['console.log', 'console.info', 'console.debug'] : [],
+          // 移除未使用的代码
+          dead_code: true,
+          // 优化条件表达式
+          conditionals: true,
+          // 优化比较操作
+          comparisons: true,
+          // 优化求值
+          evaluate: true,
+          // 优化布尔值
+          booleans: true,
+          // 优化循环
+          loops: true,
+          // 移除未使用的函数参数
+          unused: true,
+          // 内联函数
+          inline: 2,
+        },
+        mangle: {
+          // 保留类名
+          keep_classnames: false,
+          // 保留函数名
+          keep_fnames: false,
+        },
+        format: {
+          // 移除注释
+          comments: false,
         },
       },
-      // 生产环境禁用CSS源映射
+      // CSS代码分离和压缩
       cssCodeSplit: true,
       cssMinify: mode === 'production',
+      // 报告压缩详情
+      reportCompressedSize: mode === 'production',
+      // 写入文件系统缓存
+      write: true,
+      // 清空输出目录
+      emptyOutDir: true,
     },
     
-    // 性能优化
+    // 性能优化 - 依赖预构建
     optimizeDeps: {
       include: [
         'vue',
         'vue-router',
         'pinia',
+        'pinia-plugin-persistedstate',
         'vuetify',
-        'echarts',
-        '@vueuse/core'
+        'vuetify/components',
+        'vuetify/directives',
+        'echarts/core',
+        'echarts/charts/BarChart',
+        'echarts/charts/LineChart',
+        'echarts/charts/PieChart',
+        'echarts/components/GridComponent',
+        'echarts/components/TooltipComponent',
+        'echarts/components/LegendComponent',
+        'echarts/renderers/CanvasRenderer',
+        '@vueuse/core',
+        '@vueuse/shared',
+        'axios',
+        'date-fns',
+        'lodash-es',
+        'crypto-js'
       ],
-      exclude: ['@vueuse/motion'],
+      exclude: [
+        '@vueuse/motion',
+        'vue-demi'
+      ],
+      // 强制预构建
+      force: false,
+      // 预构建缓存目录
+      cacheDir: 'node_modules/.vite',
     },
-    
-    // 预构建缓存控制
-    cacheControl: {
-      hash: true,
-      maxAge: 31536000, // 1年
+
+    // 实验性功能
+    experimental: {
+      // 启用构建优化
+      renderBuiltUrl: (filename, { hostType }) => {
+        if (hostType === 'js') {
+          return { js: `/${filename}` }
+        } else {
+          return { css: `/${filename}` }
+        }
+      }
+    },
+
+    // 预览配置
+    preview: {
+      port: 4173,
+      host: '0.0.0.0',
+      strictPort: true,
+      headers: {
+        'Cache-Control': 'public, max-age=31536000',
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'X-XSS-Protection': '1; mode=block'
+      }
     },
   }
 })

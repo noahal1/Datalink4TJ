@@ -59,6 +59,13 @@ export const usePermissionStore = defineStore('permission', {
         return true
       }
 
+      // 基础路由允许所有已登录用户访问
+      const basicRoutes = ['/dashboard', '/profile', '/settings']
+      if (basicRoutes.includes(routePath) && userStore.isLogin) {
+        debug(`基础路由允许访问: ${routePath}`)
+        return true
+      }
+
       // 如果权限还在加载中，暂时拒绝访问（避免首次登录时显示未授权路由）
       if (state.loading || !state.permissionsLoaded) {
         debug(`权限加载中，暂时拒绝访问路由: ${routePath}`)
@@ -190,33 +197,12 @@ export const usePermissionStore = defineStore('permission', {
   }
 })
 
-// 权限检查工具函数
+// 简化的权限检查工具函数
 export const checkPermission = (permissionCode) => {
-  const permissionStore = usePermissionStore()
   const userStore = useUserStore()
-  
-  // 超级管理员拥有所有权限
-  if (userStore.roles.includes('超级管理员') || userStore.roles.includes('管理员')) {
-    return true
-  }
-  
-  // 基于角色的简单权限检查
-  const rolePermissions = {
-    '普通用户': ['dashboard_view'],
-    '质量部门负责人': ['dashboard_view', 'quality_view', 'quality_manage'],
-    '质量班组负责人': ['dashboard_view', 'quality_view', 'quality_manage'],
-    '维修班组负责人': ['dashboard_view', 'maintenance_view', 'maintenance_manage'],
-    '安全负责人': ['dashboard_view', 'safety_view', 'safety_manage']
-  }
-  
-  for (const role of userStore.roles) {
-    const permissions = rolePermissions[role] || []
-    if (permissions.includes(permissionCode)) {
-      return true
-    }
-  }
-  
-  return false
+
+  // 只要用户已登录就有权限（简化权限系统）
+  return userStore.isLogin
 }
 
 // 路由权限检查工具函数

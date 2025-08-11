@@ -15,9 +15,8 @@ export const baseRoutes = [
   {
     path: '/dashboard',
     component: Dashboard,
-    meta: { 
+    meta: {
       title: '首页',
-      permission_code: '*', 
       requiresAuth: true
     }
   },
@@ -34,7 +33,6 @@ export const baseRoutes = [
     component: Profile,
     meta: {
       title: '个人资料',
-      permission_code: '*',
       requiresAuth: true
     }
   },
@@ -43,7 +41,6 @@ export const baseRoutes = [
     component: Settings,
     meta: {
       title: '系统设置',
-      permission_code: '*',
       requiresAuth: true
     }
   },

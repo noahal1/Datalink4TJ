@@ -25,6 +25,18 @@ const router = createRouter({
 let dynamicRoutesLoaded = false
 let dynamicRoutesLoading = false
 
+// 导出状态变量以便外部访问和重置
+export const getDynamicRoutesState = () => ({
+  loaded: dynamicRoutesLoaded,
+  loading: dynamicRoutesLoading
+})
+
+export const resetDynamicRoutesState = () => {
+  dynamicRoutesLoaded = false
+  dynamicRoutesLoading = false
+  console.log('🔄 动态路由状态已重置')
+}
+
 export async function addDynamicRoutes() {
   if (dynamicRoutesLoaded || dynamicRoutesLoading) {
     console.log('🔄 动态路由已加载或正在加载中，跳过重复加载')
@@ -82,14 +94,47 @@ router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
   const permissionStore = usePermissionStore()
 
+  // 首先检查是否需要加载动态路由
+  if (!dynamicRoutesLoaded && !dynamicRoutesLoading) {
+    console.log('检测到未加载动态路由，开始加载...')
+    try {
+      await addDynamicRoutes()
+      console.log('动态路由加载完成，重新解析目标路由')
+
+      // 重新解析目标路由
+      const targetRoute = router.resolve(to.path)
+      if (targetRoute.matched.length > 0) {
+        console.log(`动态路由加载后找到目标路由: ${to.path}`)
+        // 重新导航到目标路由，这次应该能找到匹配的路由
+        next(to.path)
+        return
+      }
+    } catch (error) {
+      console.error('路由守卫中加载动态路由失败:', error)
+    }
+  }
+
+  // 检查路由是否存在
+  if (to.matched.length === 0) {
+    console.warn(`路由不存在: ${to.path}`)
+    if (to.path === '/') {
+      next('/dashboard')
+      return
+    }
+    next('/dashboard')
+    return
+  }
+
+  // 检查是否为公共页面
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   if (to.matched.some(record => record.meta.public)) {
     console.log('访问公共页面')
     next()
     return
   }
-  
+
   try {
+    // 用户认证检查
     if (!userStore.isAuthenticated) {
       console.log('用户未登录，初始化用户状态')
       const isInitialized = await userStore.initialize()
@@ -101,12 +146,14 @@ router.beforeEach(async (to, from, next) => {
       }
     }
 
+    // 权限初始化检查
     if (userStore.isAuthenticated && !permissionStore.isInitialized) {
       console.log('权限未初始化，开始加载权限')
       await permissionStore.initPermissions()
       console.log('权限加载完成')
     }
 
+    // 等待权限加载完成
     if (userStore.isAuthenticated && permissionStore.loading) {
       console.log('权限正在加载中，等待完成...')
       let attempts = 0
@@ -117,6 +164,7 @@ router.beforeEach(async (to, from, next) => {
       console.log('权限加载等待完成')
     }
 
+    // 权限检查
     if (requiresAuth && to.path !== '/dashboard') {
       const hasAccess = permissionStore.canAccessRoute(to.path)
       if (!hasAccess && !permissionStore.isSuperUser) {
@@ -128,50 +176,19 @@ router.beforeEach(async (to, from, next) => {
     }
 
     next()
-    
+
   } catch (error) {
     console.error('路由导航守卫错误:', error)
     next({ path: '/login' })
   }
 })
+
 router.afterEach((to) => {
   if (to.meta.title) {
     document.title = `${to.meta.title} - Datalink4TJ`
   } else {
     document.title = 'Datalink4TJ'
   }
-})
-
-router.beforeEach(async (to, from, next) => {
-  console.log(`路由导航: ${from.path} -> ${to.path}`)
-
-  if (!dynamicRoutesLoaded && !dynamicRoutesLoading) {
-    console.log('检测到未加载动态路由，开始加载...')
-    try {
-      await addDynamicRoutes()
-
-      const targetRoute = router.resolve(to.path)
-      if (targetRoute.matched.length > 0) {
-        console.log(`动态路由加载后找到目标路由: ${to.path}`)
-        next(to.path)
-        return
-      }
-    } catch (error) {
-      console.error('路由守卫中加载动态路由失败:', error)
-    }
-  }
-
-  if (to.matched.length === 0) {
-    console.warn(`路由不存在: ${to.path}`)
-    if (to.path === '/') {
-      next('/dashboard')
-      return
-    }
-    next('/dashboard')
-    return
-  }
-
-  next()
 })
 
 // 路由错误处理

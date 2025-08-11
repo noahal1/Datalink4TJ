@@ -6,7 +6,6 @@
   >
     <template #header-actions>
       <v-btn
-        v-permission="'MAINT:READ'"
         color="info"
         variant="outlined"
         prepend-icon="mdi-file-document-multiple"
@@ -25,7 +24,6 @@
         查看维修指标
       </v-btn>
       <v-btn
-        v-permission="'MAINT:WRITE'"
         color="primary"
         prepend-icon="mdi-plus"
         @click="openTaskDialog"

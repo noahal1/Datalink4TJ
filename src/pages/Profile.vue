@@ -457,10 +457,6 @@ const logout = () => {
 </script>
 
 <style scoped>
-.profile-info-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
 
 .profile-info-card .v-card-text {
   background: rgba(255, 255, 255, 0.95);

@@ -28,58 +28,52 @@ const MaterialManagement = () => import('../pages/MaterialManagement.vue')
 
 
 export const moduleRoutes = [
-  { 
-    path: '/quality', 
+  {
+    path: '/quality',
     component: Quality,
-    alias: '/Quality', 
-    meta: { 
+    alias: '/Quality',
+    meta: {
       title: '质量',
-      permission_code: 'view_quality',
-      requiresAuth: true
-    } 
-  },
-  { 
-    path: '/ehs', 
-    component: EHS,
-    meta: { 
-      title: 'EHS',
-      permission_code: 'view_ehs', 
-      requiresAuth: true
-    } 
-  },
-  { 
-    path: '/assy', 
-    component: Assy,
-    meta: { 
-      title: '生产',
-      permission_code: 'access_assy',
       requiresAuth: true
     }
   },
-  { 
-    path: '/pcl', 
-    component: Pcl,
-    meta: { 
-      title: '物流',
-      permission_code: 'access_pcl',
+  {
+    path: '/ehs',
+    component: EHS,
+    meta: {
+      title: 'EHS',
       requiresAuth: true
-    } 
+    }
   },
-  { 
-    path: '/gmo', 
-    component: Gmo,
-    meta: { 
-      title: 'GMO',
-      permission_code: 'access_gmo', 
+  {
+    path: '/assy',
+    component: Assy,
+    meta: {
+      title: '生产',
       requiresAuth: true
-    } 
+    }
+  },
+  {
+    path: '/pcl',
+    component: Pcl,
+    meta: {
+      title: '物流',
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/gmo',
+    component: Gmo,
+    meta: {
+      title: 'GMO',
+      requiresAuth: true
+    }
   },
   {
     path: '/quality-kpi',
     component: QualityKpi,
     meta: {
       title: '质量KPI',
-      permission_code: 'view_quality_kpi',
       requiresAuth: true
     }
   },

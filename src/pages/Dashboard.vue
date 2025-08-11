@@ -329,7 +329,8 @@ onMounted(async () => {
             v-for="card in statsCards"
             :key="card.title"
             cols="12"
-            sm="4"
+            sm="6"
+            md="4"
             lg="3"
           >
             <unified-stats-card
@@ -353,6 +354,7 @@ onMounted(async () => {
               title="数据趋势"
               hide-default-footer
               icon="mdi-chart-line"
+              no-padding
             >
               <template #actions>
                 <v-btn-toggle 
@@ -416,7 +418,7 @@ onMounted(async () => {
               </template>
               
               <loading-overlay :loading="isLoadingQualityData" />
-              <div class="quality-overview-wrapper">
+              
                 <v-row class="quality-stats-row g-1">
                   <v-col
                     cols="12"
@@ -471,7 +473,6 @@ onMounted(async () => {
                     />
                   </v-col>
                 </v-row>
-              </div>
             </unified-data-table>
           </v-col>
         </v-row>
@@ -561,7 +562,7 @@ onMounted(async () => {
 }
 
 .chart {
-  height: 400px;
+  height: clamp(260px, 42vh, 460px);
   width: 100%;
   border-radius: 16px;
   overflow: hidden;
@@ -1038,7 +1039,7 @@ onMounted(async () => {
   }
 
   .chart {
-    height: 320px;
+    height: clamp(240px, 36vh, 380px);
     border-radius: 16px;
   }
 
@@ -1090,7 +1091,7 @@ onMounted(async () => {
   }
 
   .chart {
-    height: 280px;
+    height: clamp(220px, 32vh, 320px);
     border-radius: 12px;
   }
 
@@ -1129,7 +1130,7 @@ onMounted(async () => {
 
 @media (max-width: 480px) {
   .chart {
-    height: 240px;
+    height: clamp(200px, 28vh, 280px);
     border-radius: 8px;
   }
 

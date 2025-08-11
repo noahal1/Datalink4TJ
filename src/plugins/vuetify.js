@@ -43,6 +43,11 @@ const vuetify = createVuetify({
       mdi,
     },
   },
+  defaults: {
+    global: {
+      density: 'compact'
+    }
+  },
   components:{
     VCalendar,
   }
