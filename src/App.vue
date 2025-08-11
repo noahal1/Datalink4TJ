@@ -94,11 +94,11 @@ const windowWidth = ref(window.innerWidth)
 // 响应式侧边栏宽度
 const drawerWidth = computed(() => {
   if (windowWidth.value < 600) {
-    return Math.min(280, windowWidth.value * 0.85) // 小屏幕使用85%宽度，最大280px
+    return Math.min(200, windowWidth.value * 0.8) // 小屏幕使用80%宽度，最大260px
   } else if (windowWidth.value < 960) {
-    return 240 // 中等屏幕使用240px
+    return 180 
   } else {
-    return 260 // 大屏幕使用260px
+    return 200
   }
 })
 
@@ -228,14 +228,14 @@ const handleResize = () => {
 /* 响应式优化 */
 @media (max-width: 600px) {
   .navigation-drawer {
-    width: 85vw !important;
-    max-width: 280px !important;
+    width: 80vw !important;
+    max-width: 260px !important;
   }
 }
 
 @media (max-width: 960px) {
   .navigation-drawer {
-    width: 240px !important;
+    width: 220px !important;
   }
 }
 

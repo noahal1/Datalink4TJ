@@ -93,7 +93,7 @@
                 <v-col cols="12">
                   <v-textarea
                     v-model="localPr.description"
-                    label="申请说明"
+                    label="申请说明(可选)"
                     rows="3"
                     variant="outlined"
                     density="comfortable"
@@ -192,7 +192,7 @@
               </div>
 
               <!-- 信息预览卡片 -->
-              <v-card variant="outlined" class="mb-4">
+              <v-card class="mb-4">
                 <v-card-title class="text-subtitle-1 bg-grey-lighten-4">
                   <v-icon icon="mdi-eye" class="mr-2" />
                   申请信息预览
@@ -236,10 +236,8 @@
                 v-model="localPr.remarks"
                 label="备注信息"
                 rows="3"
-                variant="outlined"
                 density="comfortable"
                 prepend-inner-icon="mdi-note-text"
-                placeholder="可填写特殊要求、紧急程度等说明..."
                 counter="500"
                 :rules="[rules.maxLength(500)]"
               />
@@ -300,7 +298,7 @@
               <v-col cols="12">
                 <v-textarea
                   v-model="localPr.description"
-                  label="申请说明"
+                  label="申请说明(可选)"
                   rows="2"
                   variant="outlined"
                   density="comfortable"
