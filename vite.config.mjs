@@ -21,7 +21,6 @@ export default defineConfig(({ mode }) => {
     plugins: [
       // Vue Router
       VueRouter({
-        // 路由规则
         routesFolder: 'src/pages',
         extensions: ['.vue'],
         dts: './src/typed-router.d.ts',
@@ -132,23 +131,16 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks: (id) => {
-            // Vue核心依赖
-            if (id.includes('node_modules/vue/') && !id.includes('vue-router')) {
+            // Vue生态系统 - 保持在一起避免循环依赖
+            if (id.includes('node_modules/vue') ||
+                id.includes('node_modules/vue-router') ||
+                id.includes('node_modules/pinia') ||
+                id.includes('node_modules/pinia-plugin-persistedstate') ||
+                id.includes('node_modules/@vueuse/core')) {
               return 'vue-core';
             }
 
-            // Vue Router
-            if (id.includes('node_modules/vue-router')) {
-              return 'vue-router';
-            }
-
-            // 状态管理
-            if (id.includes('node_modules/pinia') ||
-                id.includes('node_modules/@vueuse/core')) {
-              return 'state-vendor';
-            }
-
-            // UI框架 - 分离核心和组件
+            // UI框架 - 统一打包避免依赖问题
             if (id.includes('node_modules/vuetify')) {
               if (id.includes('vuetify/lib/components')) {
                 return 'ui-components';
@@ -156,16 +148,11 @@ export default defineConfig(({ mode }) => {
               return 'ui-core';
             }
 
-            // 图表相关 - 按需分离
-            if (id.includes('node_modules/echarts')) {
-              if (id.includes('echarts/lib/chart')) {
-                return 'chart-components';
-              }
+            // 图表相关 - 统一打包避免初始化问题
+            if (id.includes('node_modules/echarts') ||
+                id.includes('node_modules/vue-echarts') ||
+                id.includes('node_modules/zrender')) {
               return 'chart-core';
-            }
-
-            if (id.includes('node_modules/d3')) {
-              return 'chart-d3';
             }
 
             // 日期处理
@@ -275,16 +262,27 @@ export default defineConfig(({ mode }) => {
         'vuetify',
         'vuetify/components',
         'vuetify/directives',
+        'echarts',
         'echarts/core',
+        'echarts/charts',
         'echarts/charts/BarChart',
         'echarts/charts/LineChart',
         'echarts/charts/PieChart',
         'echarts/charts/RadarChart',
+        'echarts/charts/ScatterChart',
+        'echarts/components',
         'echarts/components/GridComponent',
         'echarts/components/TooltipComponent',
         'echarts/components/LegendComponent',
         'echarts/components/RadarComponent',
+        'echarts/components/MarkPointComponent',
+        'echarts/components/MarkLineComponent',
+        'echarts/components/DataZoomComponent',
+        'echarts/components/BrushComponent',
+        'echarts/components/ToolboxComponent',
+        'echarts/renderers',
         'echarts/renderers/CanvasRenderer',
+        'vue-echarts',
         '@vueuse/core',
         '@vueuse/shared',
         'axios',
