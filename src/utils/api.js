@@ -361,7 +361,7 @@ export function get(endpoint, options = {}) {
  * @param {object} data - 请求体数据
  * @returns {Promise} - 请求Promise
  */
-export function post(endpoint, data = {}) {
+export function post(endpoint, data = {}, config = {}) {
   // 自动处理响应式对象，避免循环引用
   const processedData = prepareApiData(data)
 
@@ -372,7 +372,21 @@ export function post(endpoint, data = {}) {
     console.log('处理后数据:', processedData)
   }
 
-  return api.post(endpoint, processedData)
+  // 如果是FormData，需要特殊处理headers
+  if (processedData instanceof FormData) {
+    // 删除Content-Type，让浏览器自动设置（包括boundary）
+    const formDataConfig = {
+      ...config,
+      headers: {
+        ...config.headers
+      }
+    }
+    // 删除Content-Type，让浏览器自动设置
+    delete formDataConfig.headers['Content-Type']
+    return api.post(endpoint, processedData, formDataConfig)
+  }
+
+  return api.post(endpoint, processedData, config)
 }
 
 /**

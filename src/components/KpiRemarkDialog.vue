@@ -89,16 +89,48 @@
         />
 
         <!-- 行动计划 -->
-        <v-textarea
-          v-model="localData.action_plan"
-          label="行动计划"
-          placeholder="请制定具体的改进行动计划..."
-          variant="outlined"
-          rows="4"
-          counter="500"
-          maxlength="500"
-          prepend-inner-icon="mdi-clipboard-list"
-        />
+        <div class="mb-4">
+          <div class="d-flex align-center mb-3">
+            <v-icon class="mr-2" color="primary">mdi-clipboard-list</v-icon>
+            <span class="text-h6">行动计划</span>
+          </div>
+
+          <!-- 行动计划内容 -->
+          <v-textarea
+            v-model="localData.action_plan_content"
+            label="行动计划内容"
+            placeholder="请制定具体的改进行动计划..."
+            variant="outlined"
+            rows="4"
+            counter="500"
+            maxlength="500"
+            class="mb-3"
+          />
+
+          <!-- 日期字段 -->
+          <v-row>
+            <v-col cols="6">
+              <v-text-field
+                v-model="localData.expected_close_date"
+                label="预计关闭日期"
+                type="date"
+                variant="outlined"
+                density="compact"
+                hide-details
+              />
+            </v-col>
+            <v-col cols="6">
+              <v-text-field
+                v-model="localData.actual_close_date"
+                label="实际关闭日期"
+                type="date"
+                variant="outlined"
+                density="compact"
+                hide-details
+              />
+            </v-col>
+          </v-row>
+        </div>
       </v-card-text>
 
       <v-divider />
@@ -114,7 +146,6 @@
         <v-btn
           color="primary"
           variant="flat"
-          :disabled="!isValid"
           @click="save"
         >
           保存
@@ -154,7 +185,9 @@ const dialog = computed({
 
 const localData = ref({
   root_cause_analysis: '',
-  action_plan: ''
+  action_plan_content: '',
+  expected_close_date: '',
+  actual_close_date: ''
 })
 
 // 监听item变化，初始化本地数据
@@ -162,14 +195,16 @@ watch(() => props.item, (newItem) => {
   if (newItem) {
     localData.value = {
       root_cause_analysis: newItem.root_cause_analysis || '',
-      action_plan: newItem.action_plan || ''
+      action_plan_content: newItem.action_plan_content || '',
+      expected_close_date: newItem.expected_close_date || '',
+      actual_close_date: newItem.actual_close_date || ''
     }
   }
 }, { immediate: true })
 
-// 计算属性
+// 计算属性 - 允许空白内容保存
 const isValid = computed(() => {
-  return localData.value.root_cause_analysis?.trim() || localData.value.action_plan?.trim()
+  return true // 始终允许保存，即使内容为空
 })
 
 // 格式化数值显示
@@ -211,7 +246,10 @@ const getDifferenceText = () => {
 // 方法
 const save = () => {
   emit('save', {
-    ...localData.value,
+    root_cause_analysis: localData.value.root_cause_analysis,
+    action_plan_content: localData.value.action_plan_content,
+    expected_close_date: localData.value.expected_close_date,
+    actual_close_date: localData.value.actual_close_date,
     item: props.item
   })
   dialog.value = false
@@ -222,7 +260,9 @@ const cancel = () => {
   if (props.item) {
     localData.value = {
       root_cause_analysis: props.item.root_cause_analysis || '',
-      action_plan: props.item.action_plan || ''
+      action_plan_content: props.item.action_plan_content || '',
+      expected_close_date: props.item.expected_close_date || '',
+      actual_close_date: props.item.actual_close_date || ''
     }
   }
   dialog.value = false

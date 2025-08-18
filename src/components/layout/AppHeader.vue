@@ -223,11 +223,19 @@ onMounted(() => {
   // 从本地存储加载主题设置
   try {
     const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
+    if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
       theme.global.name.value = savedTheme;
+    } else if (savedTheme === 'auto') {
+      // 跟随系统主题
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      theme.global.name.value = prefersDark ? 'dark' : 'light';
+    } else {
+      // 默认使用浅色主题
+      theme.global.name.value = 'light';
     }
   } catch (e) {
     console.error('无法加载主题设置', e);
+    theme.global.name.value = 'light';
   }
 });
 </script>
@@ -245,6 +253,18 @@ onMounted(() => {
     0 2px 16px rgba(0, 0, 0, 0.04),
     0 1px 8px rgba(59, 130, 246, 0.05) !important;
   position: relative;
+}
+
+/* 深色主题下的头部样式 */
+.v-theme--dark .app-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: linear-gradient(135deg,
+    rgba(30, 30, 30, 0.98) 0%,
+    rgba(18, 18, 18, 0.95) 100%
+  ) !important;
+  box-shadow:
+    0 2px 16px rgba(0, 0, 0, 0.3),
+    0 1px 8px rgba(255, 255, 255, 0.05) !important;
 }
 
 .app-header::after {
@@ -398,6 +418,36 @@ onMounted(() => {
     rgba(255, 138, 128, 0.06) 100%
   ) !important;
   transform: translateX(4px);
+}
+
+/* 深色主题样式 */
+.v-theme--dark .user-menu-card {
+  background: linear-gradient(135deg,
+    rgba(44, 44, 44, 0.98) 0%,
+    rgba(30, 30, 30, 0.95) 100%
+  ) !important;
+}
+
+.v-theme--dark .user-menu-header {
+  background: linear-gradient(135deg,
+    rgba(33, 150, 243, 0.12) 0%,
+    rgba(144, 202, 249, 0.08) 100%
+  ) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+.v-theme--dark .user-menu-content {
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    0 4px 16px rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+.v-theme--dark :deep(.v-list-item:hover) {
+  background: linear-gradient(135deg,
+    rgba(33, 150, 243, 0.12) 0%,
+    rgba(144, 202, 249, 0.08) 100%
+  ) !important;
 }
 
 /* 响应式设计 */

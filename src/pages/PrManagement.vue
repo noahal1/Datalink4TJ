@@ -301,8 +301,10 @@ import api from '../utils/api'
 import PrDialog from '../components/pr/PrDialog.vue'
 import PrDetailDialog from '../components/pr/PrDetailDialog.vue'
 import UnifiedPageTemplate from '../components/UnifiedPageTemplate.vue'
+import { useUserStore } from '../stores/user'
 
 // 响应式数据
+const userStore = useUserStore()
 const loading = ref(false)
 const savingPr = ref(false)
 const deleting = ref(false)
@@ -344,8 +346,9 @@ const headers = [
   { title: '型号', key: 'specification', sortable: false },
   { title: '品牌', key: 'brand', sortable: false},
   { title: '数量', key: 'quantity', sortable: false },
+  { title: '物料编码', key: 'material_code', sortable: false},
   { title: '申请人', key: 'requester', sortable: false },
-  { title: '申请日期', key: 'requested_date', sortable: false },
+  { title: '申请日期', key: 'requested_date', sortable: true },
   { title: '状态', key: 'status', sortable: false },
   { title: '操作', key: 'actions', sortable: false, width: 120 }
 ]
@@ -359,7 +362,21 @@ const canEdit = computed(() => () => {
 const canDelete = computed(() => (item) => {
   // 只有在"待提交"状态下才能删除
   const isDeletableStatus = ['待提交'].includes(item.status?.name)
-  return isDeletableStatus
+  // 只能删除自己的PR (考虑数据类型转换)
+  const isOwnPr = String(item.requester_id) === String(userStore.userId)
+
+  // 调试信息
+  console.log('删除权限检查:', {
+    prId: item.id,
+    statusName: item.status?.name,
+    isDeletableStatus,
+    requester_id: item.requester_id,
+    current_user_id: userStore.userId,
+    isOwnPr,
+    canDelete: isDeletableStatus && isOwnPr
+  })
+
+  return isDeletableStatus && isOwnPr
 })
 
 // 方法
@@ -390,7 +407,7 @@ const loadPrList = async () => {
     loading.value = true
     const params = {
       page: pagination.page,
-      page_size: pagination.page_size,
+      page_size: Math.max(1, pagination.page_size), // 确保page_size至少为1
       ...filters
     }
 
@@ -416,7 +433,8 @@ const loadPrList = async () => {
 
 const handleTableUpdate = (options) => {
   pagination.page = options.page
-  pagination.page_size = options.itemsPerPage
+  // 处理itemsPerPage为-1的情况（显示所有项）
+  pagination.page_size = options.itemsPerPage === -1 ? 1000 : options.itemsPerPage
   loadPrList()
 }
 
@@ -505,7 +523,16 @@ const closePrDialog = () => {
 const savePr = async (prData) => {
   try {
     savingPr.value = true
-    
+
+    // 检查是否是Excel导入的情况
+    if (prData && prData.isExcelImport) {
+      console.log('Excel导入成功，刷新列表')
+      // 只刷新列表，不创建新的PR
+      await loadPrList()
+      closePrDialog()
+      return
+    }
+
     // 清理数据，确保正确的JSON格式
     const cleanData = {
       material_name: prData.material_name || '',
@@ -519,14 +546,14 @@ const savePr = async (prData) => {
       brand: prData.brand || null,
       remarks: prData.remarks || null
     }
-    
+
     // 调试：打印发送的数据
     console.log('发送的PR数据:', JSON.stringify(cleanData, null, 2))
     
     if (editedIndex.value === -1) {
       // 创建新PR
-      await api.post('/pr/', cleanData)
-      Message.success('PR创建成功')
+      const response = await api.post('/pr/', cleanData)
+      Message.success(`PR创建成功！编号：${response.data.pr_number || ''}`)
     } else {
       // 更新PR
       await api.put(`/pr/${editedPr.value.id}`, cleanData)
@@ -572,6 +599,24 @@ const handleStatusChange = async (statusData) => {
 }
 
 const deletePr = (item) => {
+  // 检查删除权限
+  if (!canDelete.value(item)) {
+    let message = '无法删除此PR：'
+    const reasons = []
+
+    if (!['待提交'].includes(item.status?.name)) {
+      reasons.push('只能删除待提交状态的PR')
+    }
+
+    if (item.requester_id !== userStore.userId) {
+      reasons.push('只能删除自己创建的PR')
+    }
+
+    message += reasons.join('，')
+    Message.warning(message)
+    return
+  }
+
   deletingPr.value = item
   deleteDialog.value = true
 }

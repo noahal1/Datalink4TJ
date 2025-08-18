@@ -283,6 +283,7 @@ import Message from '@/utils/notification'
 import UnifiedPageTemplate from '@/components/UnifiedPageTemplate.vue'
 import UnifiedDataTable from '@/components/UnifiedDataTable.vue'
 import KpiRemarkDialog from '@/components/KpiRemarkDialog.vue'
+import { hasRemarkContent } from '@/utils/kpiUtils'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 
 // 获取上一个月的月份和年份
@@ -389,7 +390,9 @@ const initializeKpiData = () => {
         target_value: 0,
         ytd_value: 0,
         remark: null,
-        action_plan: null,
+        action_plan_content: null,
+        expected_close_date: null,
+        actual_close_date: null,
         root_cause_analysis: null
       })
     })
@@ -468,7 +471,9 @@ const loadData = async () => {
           existingItem.target_value = item.target_value || 0
           existingItem.ytd_value = item.ytd_value || 0
           existingItem.remark = item.remark || null
-          existingItem.action_plan = item.action_plan || null
+          existingItem.action_plan_content = item.action_plan_content || null
+          existingItem.expected_close_date = item.expected_close_date || null
+          existingItem.actual_close_date = item.actual_close_date || null
           existingItem.root_cause_analysis = item.root_cause_analysis || null
         }
       })
@@ -521,7 +526,9 @@ const saveData = async () => {
         actual_value: item.actual_value,
         ytd_value: item.ytd_value,
         remark: item.remark,
-        action_plan: item.action_plan,
+        action_plan_content: item.action_plan_content,
+        expected_close_date: item.expected_close_date,
+        actual_close_date: item.actual_close_date,
         root_cause_analysis: item.root_cause_analysis
       }))
     }
@@ -653,15 +660,14 @@ const getRemarkButtonText = (item) => {
   return '填写分析'
 }
 
-const hasRemarkContent = (item) => {
-  return (item.root_cause_analysis && item.root_cause_analysis.trim()) ||
-         (item.action_plan && item.action_plan.trim())
-}
+// hasRemarkContent 函数现在从工具模块导入
 
 const saveRemarkData = (data) => {
   if (selectedItem.value) {
     selectedItem.value.root_cause_analysis = data.root_cause_analysis
-    selectedItem.value.action_plan = data.action_plan
+    selectedItem.value.action_plan_content = data.action_plan_content
+    selectedItem.value.expected_close_date = data.expected_close_date
+    selectedItem.value.actual_close_date = data.actual_close_date
     handleInput()
   }
 }

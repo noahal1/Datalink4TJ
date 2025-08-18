@@ -817,6 +817,20 @@ const forceReloadRoutes = async () => {
   backdrop-filter: blur(10px);
 }
 
+/* 深色主题样式 */
+:deep(.v-theme--dark) .nav-bottom-actions {
+  background-color: rgba(44, 44, 44, 0.8) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+:deep(.v-theme--dark) .nav-search {
+  background-color: rgba(30, 30, 30, 0.9) !important;
+}
+
+:deep(.v-theme--dark) .nav-group-title {
+  color: rgba(33, 150, 243, 0.9) !important;
+}
+
 .search-field {
   border-radius: 8px;
 }

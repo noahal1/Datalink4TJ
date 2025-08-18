@@ -10,6 +10,8 @@ import 'remixicon/fonts/remixicon.css'
 import '@/styles/transitions.css'
 import '@/styles/theme.css'
 import '@/styles/unified-theme.css'
+import '@/styles/enhanced-components.css'
+import '@/styles/dark-theme.css'
 
 // 工具模块
 import errorHandler from '@/utils/errorHandler'

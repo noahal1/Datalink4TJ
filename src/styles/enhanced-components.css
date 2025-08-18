@@ -8,6 +8,8 @@
   letter-spacing: 0.025em !important;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   border-radius: 8px !important;
+  min-height: 42px !important; /* 增加按钮最小高度 */
+  padding: 0 20px !important; /* 增加水平内边距 */
 }
 
 .v-btn:hover {
@@ -21,6 +23,169 @@
 
 .v-btn--variant-outlined {
   border-width: 1.5px !important;
+}
+
+/* 不同尺寸按钮的高度调整 */
+.v-btn--size-x-small {
+  min-height: 32px !important;
+  padding: 0 12px !important;
+  font-size: 0.75rem !important;
+}
+
+.v-btn--size-small {
+  min-height: 36px !important;
+  padding: 0 16px !important;
+  font-size: 0.875rem !important;
+}
+
+.v-btn--size-default {
+  min-height: 42px !important;
+  padding: 0 20px !important;
+  font-size: 0.875rem !important;
+}
+
+.v-btn--size-large {
+  min-height: 48px !important;
+  padding: 0 24px !important;
+  font-size: 1rem !important;
+}
+
+.v-btn--size-x-large {
+  min-height: 54px !important;
+  padding: 0 28px !important;
+  font-size: 1.125rem !important;
+}
+
+/* 图标按钮的尺寸调整 */
+.v-btn--icon {
+  width: 42px !important;
+  height: 42px !important;
+}
+
+.v-btn--icon.v-btn--size-x-small {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+.v-btn--icon.v-btn--size-small {
+  width: 36px !important;
+  height: 36px !important;
+}
+
+.v-btn--icon.v-btn--size-large {
+  width: 48px !important;
+  height: 48px !important;
+}
+
+.v-btn--icon.v-btn--size-x-large {
+  width: 54px !important;
+  height: 54px !important;
+}
+
+/* 表格中的按钮样式调整 */
+.v-data-table .v-btn {
+  min-height: 36px !important;
+  padding: 0 16px !important;
+}
+
+.v-data-table .v-btn--icon {
+  width: 36px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+}
+
+/* 对话框中的按钮样式 */
+.v-dialog .v-card-actions .v-btn {
+  min-height: 40px !important;
+  padding: 0 24px !important;
+  font-size: 0.875rem !important;
+}
+
+/* 工具栏和应用栏中的按钮 */
+.v-toolbar .v-btn,
+.v-app-bar .v-btn {
+  min-height: 40px !important;
+}
+
+.v-toolbar .v-btn--icon,
+.v-app-bar .v-btn--icon {
+  width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+}
+
+/* 浮动操作按钮 */
+.v-fab {
+  width: 56px !important;
+  height: 56px !important;
+  min-height: 56px !important;
+}
+
+.v-fab--size-small {
+  width: 48px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+}
+
+.v-fab--size-large {
+  width: 64px !important;
+  height: 64px !important;
+  min-height: 64px !important;
+}
+
+/* 深色主题优化 */
+.v-theme--dark {
+  /* 卡片和表面 */
+  .v-card {
+    background-color: rgb(var(--v-theme-surface)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  }
+
+  /* 数据表格 */
+  .v-data-table {
+    background-color: rgb(var(--v-theme-surface)) !important;
+  }
+
+  .v-data-table .v-data-table__tr:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  /* 输入框 */
+  .v-field {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  }
+
+  .v-field:hover {
+    border-color: rgba(255, 255, 255, 0.24) !important;
+  }
+
+  .v-field--focused {
+    border-color: rgb(var(--v-theme-primary)) !important;
+  }
+
+  /* 菜单和对话框 */
+  .v-menu .v-list {
+    background-color: rgb(var(--v-theme-surface-bright)) !important;
+  }
+
+  .v-dialog .v-card {
+    background-color: rgb(var(--v-theme-surface-bright)) !important;
+  }
+
+  /* 分割线 */
+  .v-divider {
+    border-color: rgba(255, 255, 255, 0.12) !important;
+  }
+
+  /* 文本颜色 */
+  .text-grey {
+    color: rgba(255, 255, 255, 0.6) !important;
+  }
+
+  .text-grey-lighten-1 {
+    color: rgba(255, 255, 255, 0.7) !important;
+  }
 }
 
 /* 按钮组美化 */

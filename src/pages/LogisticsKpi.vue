@@ -308,6 +308,7 @@ import Message from '@/utils/notification'
 import UnifiedPageTemplate from '@/components/UnifiedPageTemplate.vue'
 import UnifiedDataTable from '@/components/UnifiedDataTable.vue'
 import KpiRemarkDialog from '@/components/KpiRemarkDialog.vue'
+import { hasRemarkContent } from '@/utils/kpiUtils'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 
 // 获取上一个月的月份和年份
@@ -402,7 +403,9 @@ const initializeKpiData = () => {
         target_value: 0,
         ytd_value: 0,
         remark: null,
-        action_plan: null,
+        action_plan_content: null,
+        expected_close_date: null,
+        actual_close_date: null,
         root_cause_analysis: null
       })
     })
@@ -456,10 +459,7 @@ const getRemarkButtonText = (item) => {
   return hasRemarkContent(item) ? '查看/编辑' : '添加备注'
 }
 
-// 检查是否有备注内容
-const hasRemarkContent = (item) => {
-  return !!(item.action_plan || item.root_cause_analysis)
-}
+// hasRemarkContent 函数现在从工具模块导入
 
 // 打开备注对话框
 const openRemarkDialog = (item) => {
@@ -470,7 +470,9 @@ const openRemarkDialog = (item) => {
 // 保存备注
 const saveRemark = (remarkData) => {
   if (selectedItem.value) {
-    selectedItem.value.action_plan = remarkData.action_plan
+    selectedItem.value.action_plan_content = remarkData.action_plan_content
+    selectedItem.value.expected_close_date = remarkData.expected_close_date
+    selectedItem.value.actual_close_date = remarkData.actual_close_date
     selectedItem.value.root_cause_analysis = remarkData.root_cause_analysis
     handleInput()
   }
@@ -510,7 +512,9 @@ const loadData = async () => {
           existingItem.target_value = item.target_value || 0
           existingItem.ytd_value = item.ytd_value || 0
           existingItem.remark = item.remark || null
-          existingItem.action_plan = item.action_plan || null
+          existingItem.action_plan_content = item.action_plan_content || null
+          existingItem.expected_close_date = item.expected_close_date || null
+          existingItem.actual_close_date = item.actual_close_date || null
           existingItem.root_cause_analysis = item.root_cause_analysis || null
         }
       })
@@ -546,7 +550,9 @@ const saveData = async () => {
         actual_value: item.actual_value || 0,
         ytd_value: item.ytd_value || 0,
         remark: item.remark,
-        action_plan: item.action_plan,
+        action_plan_content: item.action_plan_content,
+        expected_close_date: item.expected_close_date,
+        actual_close_date: item.actual_close_date,
         root_cause_analysis: item.root_cause_analysis
       }))
     }

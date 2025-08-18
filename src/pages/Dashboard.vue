@@ -588,6 +588,26 @@ onMounted(async () => {
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
+/* 深色主题下的图表样式 */
+:deep(.v-theme--dark) .chart {
+  background: linear-gradient(135deg,
+    rgba(44, 44, 44, 0.95) 0%,
+    rgba(30, 30, 30, 0.9) 100%
+  ) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    0 4px 16px rgba(33, 150, 243, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+:deep(.v-theme--dark) .chart:hover {
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.8),
+    0 8px 24px rgba(33, 150, 243, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+}
+
 .h-100 {
   height: 100%;
 }
@@ -635,6 +655,15 @@ onMounted(async () => {
   border: 1px solid rgba(255, 255, 255, 0.3);
   position: relative;
   overflow: hidden;
+}
+
+/* 深色主题下的列表项 */
+:deep(.v-theme--dark .v-list-item) {
+  background: linear-gradient(135deg,
+    rgba(44, 44, 44, 0.8) 0%,
+    rgba(30, 30, 30, 0.7) 100%
+  ) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
 
 :deep(.v-list-item)::before {

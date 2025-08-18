@@ -1,0 +1,309 @@
+/* 深色主题专用样式 */
+
+/* 全局深色主题变量 */
+.v-theme--dark {
+  /* 自定义CSS变量 */
+  --dark-surface-1: #1e1e1e;
+  --dark-surface-2: #2c2c2c;
+  --dark-surface-3: #3c3c3c;
+  --dark-border: rgba(255, 255, 255, 0.12);
+  --dark-border-hover: rgba(255, 255, 255, 0.24);
+  --dark-text-primary: rgba(255, 255, 255, 0.87);
+  --dark-text-secondary: rgba(255, 255, 255, 0.6);
+  --dark-text-disabled: rgba(255, 255, 255, 0.38);
+}
+
+/* 基础组件深色主题 */
+.v-theme--dark {
+  /* 卡片组件 */
+  .v-card {
+    background-color: var(--dark-surface-1) !important;
+    border: 1px solid var(--dark-border) !important;
+    color: var(--dark-text-primary) !important;
+  }
+  
+  .v-card--variant-elevated {
+    box-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.3),
+      0 8px 16px rgba(0, 0, 0, 0.15) !important;
+  }
+  
+  /* 数据表格 */
+  .v-data-table {
+    background-color: var(--dark-surface-1) !important;
+    color: var(--dark-text-primary) !important;
+  }
+  
+  .v-data-table .v-data-table__tr {
+    border-bottom: 1px solid var(--dark-border) !important;
+  }
+  
+  .v-data-table .v-data-table__tr:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+  }
+  
+  .v-data-table .v-data-table__th {
+    background-color: var(--dark-surface-2) !important;
+    color: var(--dark-text-primary) !important;
+    border-bottom: 1px solid var(--dark-border) !important;
+  }
+  
+  /* 输入框和表单 */
+  .v-field {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid var(--dark-border) !important;
+    color: var(--dark-text-primary) !important;
+  }
+  
+  .v-field:hover {
+    border-color: var(--dark-border-hover) !important;
+  }
+  
+  .v-field--focused {
+    border-color: rgb(var(--v-theme-primary)) !important;
+    box-shadow: 0 0 0 2px rgba(var(--v-theme-primary), 0.2) !important;
+  }
+  
+  .v-field__input {
+    color: var(--dark-text-primary) !important;
+  }
+  
+  .v-field__input::placeholder {
+    color: var(--dark-text-secondary) !important;
+  }
+  
+  /* 选择框 */
+  .v-select .v-field {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+  }
+  
+  /* 文本区域 */
+  .v-textarea .v-field {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+  }
+  
+  /* 按钮深色主题优化 */
+  .v-btn--variant-elevated {
+    box-shadow: 
+      0 2px 4px rgba(0, 0, 0, 0.3),
+      0 4px 8px rgba(0, 0, 0, 0.15) !important;
+  }
+  
+  .v-btn--variant-outlined {
+    border-color: var(--dark-border) !important;
+    color: var(--dark-text-primary) !important;
+  }
+  
+  .v-btn--variant-outlined:hover {
+    border-color: var(--dark-border-hover) !important;
+    background-color: rgba(255, 255, 255, 0.08) !important;
+  }
+  
+  .v-btn--variant-text {
+    color: var(--dark-text-primary) !important;
+  }
+  
+  .v-btn--variant-text:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+  }
+  
+  /* 菜单和下拉框 */
+  .v-menu .v-list {
+    background-color: var(--dark-surface-2) !important;
+    border: 1px solid var(--dark-border) !important;
+  }
+  
+  .v-list-item {
+    color: var(--dark-text-primary) !important;
+  }
+  
+  .v-list-item:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+  }
+  
+  .v-list-item--active {
+    background-color: rgba(var(--v-theme-primary), 0.2) !important;
+    color: rgb(var(--v-theme-primary)) !important;
+  }
+  
+  /* 对话框 */
+  .v-dialog .v-card {
+    background-color: var(--dark-surface-2) !important;
+    border: 1px solid var(--dark-border) !important;
+  }
+  
+  .v-dialog .v-card-title {
+    color: var(--dark-text-primary) !important;
+  }
+  
+  .v-dialog .v-card-text {
+    color: var(--dark-text-primary) !important;
+  }
+  
+  /* 分割线 */
+  .v-divider {
+    border-color: var(--dark-border) !important;
+  }
+  
+  /* 工具提示 */
+  .v-tooltip .v-overlay__content {
+    background-color: var(--dark-surface-3) !important;
+    color: var(--dark-text-primary) !important;
+    border: 1px solid var(--dark-border) !important;
+  }
+  
+  /* 标签页 */
+  .v-tabs {
+    background-color: var(--dark-surface-1) !important;
+  }
+  
+  .v-tab {
+    color: var(--dark-text-secondary) !important;
+  }
+  
+  .v-tab--selected {
+    color: rgb(var(--v-theme-primary)) !important;
+  }
+  
+  /* 进度条 */
+  .v-progress-linear {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+  }
+  
+  /* 芯片 */
+  .v-chip {
+    background-color: var(--dark-surface-2) !important;
+    color: var(--dark-text-primary) !important;
+    border: 1px solid var(--dark-border) !important;
+  }
+  
+  /* 警告框 */
+  .v-alert {
+    border: 1px solid var(--dark-border) !important;
+  }
+  
+  .v-alert--variant-tonal {
+    background-color: rgba(var(--v-theme-surface), 0.8) !important;
+  }
+  
+  /* 导航抽屉 */
+  .v-navigation-drawer {
+    background-color: var(--dark-surface-1) !important;
+    border-right: 1px solid var(--dark-border) !important;
+  }
+
+  /* 导航抽屉内的列表项 */
+  .v-navigation-drawer .v-list-item {
+    color: var(--dark-text-primary) !important;
+    border-radius: 8px !important;
+    margin: 4px 8px !important;
+  }
+
+  .v-navigation-drawer .v-list-item:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .v-navigation-drawer .v-list-item--active {
+    background-color: rgba(var(--v-theme-primary), 0.2) !important;
+    color: rgb(var(--v-theme-primary)) !important;
+  }
+
+  /* 导航抽屉内的分组标题 */
+  .v-navigation-drawer .v-list-subheader {
+    color: var(--dark-text-secondary) !important;
+  }
+
+  /* 搜索框深色主题 */
+  .v-navigation-drawer .v-field--variant-outlined {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+  }
+
+  .v-navigation-drawer .v-field--variant-outlined .v-field__outline {
+    color: var(--dark-border) !important;
+  }
+
+  .v-navigation-drawer .v-field--variant-outlined:hover .v-field__outline {
+    color: var(--dark-border-hover) !important;
+  }
+
+  /* 底部操作区域 */
+  .v-navigation-drawer .nav-bottom-actions {
+    background-color: var(--dark-surface-2) !important;
+    border-top: 1px solid var(--dark-border) !important;
+  }
+  
+  /* 应用栏 */
+  .v-app-bar {
+    background-color: var(--dark-surface-1) !important;
+    border-bottom: 1px solid var(--dark-border) !important;
+  }
+  
+  /* 页脚 */
+  .v-footer {
+    background-color: var(--dark-surface-1) !important;
+    border-top: 1px solid var(--dark-border) !important;
+  }
+  
+  /* 文本颜色类 */
+  .text-grey {
+    color: var(--dark-text-secondary) !important;
+  }
+  
+  .text-grey-lighten-1 {
+    color: rgba(255, 255, 255, 0.7) !important;
+  }
+  
+  .text-grey-darken-1 {
+    color: rgba(255, 255, 255, 0.5) !important;
+  }
+  
+  /* 背景颜色类 */
+  .bg-grey-lighten-5 {
+    background-color: var(--dark-surface-1) !important;
+  }
+  
+  .bg-grey-lighten-4 {
+    background-color: var(--dark-surface-2) !important;
+  }
+  
+  /* 滚动条样式 */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: var(--dark-surface-1);
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+  }
+}
+
+/* 深色主题下的动画和过渡效果 */
+.v-theme--dark * {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease !important;
+}
+
+/* 深色主题下的阴影优化 */
+.v-theme--dark .elevation-1 {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+.v-theme--dark .elevation-2 {
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4) !important;
+}
+
+.v-theme--dark .elevation-3 {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5) !important;
+}
+
+.v-theme--dark .elevation-4 {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6) !important;
+}

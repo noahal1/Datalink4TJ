@@ -63,10 +63,12 @@ import { useUserStore } from './stores/user.js'
 import { computed, ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { getCurrentInstance } from 'vue'
+import { useTheme } from 'vuetify'
 import GlobalNotification from './components/GlobalNotification.vue'
 import GlobalSnackbar from './components/GlobalSnackbar.vue'
 import DynamicNavigation from './components/DynamicNavigation.vue'
 import AppHeader from './components/layout/AppHeader.vue'
+import { initializeTheme, watchThemeChanges } from '@/utils/themeUtils'
 
 const app = getCurrentInstance()?.appContext.app
 const userStore = useUserStore()
@@ -80,6 +82,7 @@ const user = computed({
 const userDepartment = computed(() => userStore.department)
 const router = useRouter()
 const route = useRoute()
+const theme = useTheme()
 
 // 活动标签和抽屉状态
 const activeTab = ref(null)
@@ -165,6 +168,10 @@ const forceRefresh = () => {
 onMounted(async () => {
   try {
     isLoading.value = true
+
+    // 初始化主题
+    initializeTheme(theme)
+    watchThemeChanges(theme)
     
     console.log('挂载时的用户状态:', {
       user: userStore.user,
@@ -223,6 +230,17 @@ const handleResize = () => {
   box-shadow:
     4px 0 24px rgba(0, 0, 0, 0.08),
     2px 0 12px rgba(59, 130, 246, 0.05) !important;
+}
+
+/* 深色主题下的导航抽屉 */
+.v-theme--dark .navigation-drawer {
+  background: linear-gradient(135deg,
+    rgba(30, 30, 30, 0.98) 0%,
+    rgba(18, 18, 18, 0.95) 100%
+  ) !important;
+  box-shadow:
+    4px 0 24px rgba(0, 0, 0, 0.6),
+    2px 0 12px rgba(255, 255, 255, 0.05) !important;
 }
 
 /* 响应式优化 */

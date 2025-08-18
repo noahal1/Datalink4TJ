@@ -85,10 +85,15 @@ export function safeStringify(obj, space = 0) {
  */
 export function prepareApiData(data) {
   if (!data) return data
-  
+
+  // 如果是FormData、File、Blob等特殊对象，直接返回，不进行处理
+  if (data instanceof FormData || data instanceof File || data instanceof Blob) {
+    return data
+  }
+
   // 转换为普通对象
   const plainData = toPlainObject(data)
-  
+
   // 移除空值和undefined值（可选）
   if (typeof plainData === 'object' && !Array.isArray(plainData)) {
     const cleanData = {}
@@ -99,7 +104,7 @@ export function prepareApiData(data) {
     }
     return cleanData
   }
-  
+
   return plainData
 }
 

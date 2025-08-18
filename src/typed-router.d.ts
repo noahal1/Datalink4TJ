@@ -24,6 +24,7 @@ declare module 'vue-router/auto-routes' {
     '/admin/Users': RouteRecordInfo<'/admin/Users', '/admin/Users', Record<never, never>, Record<never, never>>,
     '/Admin': RouteRecordInfo<'/Admin', '/Admin', Record<never, never>, Record<never, never>>,
     '/Assy': RouteRecordInfo<'/Assy', '/Assy', Record<never, never>, Record<never, never>>,
+    '/ButtonTest': RouteRecordInfo<'/ButtonTest', '/ButtonTest', Record<never, never>, Record<never, never>>,
     '/ComponentTest': RouteRecordInfo<'/ComponentTest', '/ComponentTest', Record<never, never>, Record<never, never>>,
     '/Dashboard': RouteRecordInfo<'/Dashboard', '/Dashboard', Record<never, never>, Record<never, never>>,
     '/DohDaily': RouteRecordInfo<'/DohDaily', '/DohDaily', Record<never, never>, Record<never, never>>,
@@ -54,5 +55,6 @@ declare module 'vue-router/auto-routes' {
     '/RouteDebug': RouteRecordInfo<'/RouteDebug', '/RouteDebug', Record<never, never>, Record<never, never>>,
     '/RouteManagement': RouteRecordInfo<'/RouteManagement', '/RouteManagement', Record<never, never>, Record<never, never>>,
     '/Settings': RouteRecordInfo<'/Settings', '/Settings', Record<never, never>, Record<never, never>>,
+    '/TestActionPlan': RouteRecordInfo<'/TestActionPlan', '/TestActionPlan', Record<never, never>, Record<never, never>>,
   }
 }

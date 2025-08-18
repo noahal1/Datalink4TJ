@@ -392,6 +392,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useTheme } from 'vuetify'
 import UnifiedPageTemplate from '../components/UnifiedPageTemplate.vue'
 import Message from '../utils/notification'
+import { switchTheme, getCurrentThemeSetting } from '@/utils/themeUtils'
 
 // 主题
 const theme = useTheme()
@@ -473,12 +474,9 @@ const loadSettings = () => {
     if (savedSettings) {
       Object.assign(settings, JSON.parse(savedSettings))
     }
-    
+
     // 同步主题设置
-    const savedTheme = localStorage.getItem('theme')
-    if (savedTheme) {
-      settings.theme = savedTheme
-    }
+    settings.theme = getCurrentThemeSetting()
   } catch (error) {
     console.error('加载设置失败:', error)
   }
@@ -529,16 +527,14 @@ const resetSettings = () => {
 
 // 更新主题
 const updateTheme = (newTheme) => {
-  if (newTheme === 'auto') {
-    // 跟随系统主题
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    theme.global.name.value = prefersDark ? 'dark' : 'light'
+  const success = switchTheme(theme, newTheme)
+  if (success) {
+    settings.theme = newTheme
+    saveSettings()
+    Message.success(`已切换到${newTheme === 'light' ? '浅色' : newTheme === 'dark' ? '深色' : '跟随系统'}主题`)
   } else {
-    theme.global.name.value = newTheme
+    Message.error('主题切换失败')
   }
-  
-  localStorage.setItem('theme', newTheme)
-  saveSettings()
 }
 
 // 更新语言

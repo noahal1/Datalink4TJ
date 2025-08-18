@@ -4,7 +4,6 @@
     icon="mdi-chart-line"
     color="primary"
   >
-    <!-- 固定区域：控制栏 + 表格头部 -->
     <div class="sticky-header-container">
       <!-- 顶部控制栏 -->
       <div class="controls-bar">
@@ -292,13 +291,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
-import { get, post, put } from '@/utils/api'
+import { ref, onMounted, watch } from 'vue'
+import { get, put } from '@/utils/api'
 import Message from '@/utils/notification'
 import UnifiedPageTemplate from '@/components/UnifiedPageTemplate.vue'
 import UnifiedDataTable from '@/components/UnifiedDataTable.vue'
 import KpiRemarkDialog from '@/components/KpiRemarkDialog.vue'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
+import { hasRemarkContent } from '@/utils/kpiUtils'
 
 // 获取上一个月的月份和年份
 const getPreviousMonth = () => {
@@ -399,7 +399,9 @@ const initializeKpiData = () => {
         target_value: 0,
         ytd_value: 0,
         remark: null,
-        action_plan: null,
+        action_plan_content: null,
+        expected_close_date: null,
+        actual_close_date: null,
         root_cause_analysis: null
       })
     })
@@ -418,13 +420,7 @@ const getAreaColor = (area) => {
   return colors[area] || 'default'
 }
 
-const getYtdColor = (ytd, target) => {
-  if (target === 0) return 'default'
-  const rate = (ytd / target) * 100
-  if (rate >= 100) return 'success'
-  if (rate >= 80) return 'warning'
-  return 'error'
-}
+
 
 const getAchievementRate = (actual, target) => {
   if (target === 0) return 0
@@ -455,8 +451,7 @@ const shouldShowRemark = (item) => {
     return (item.actual_value || 0) < (item.target_value || 0)
   }
 
-  // 其他KPI低于目标值时显示备注
-  const isBelowTarget = (item.actual_value || 0) < (item.target_value || 0)
+  const isBelowTarget = (item.actual_value || 0) > (item.target_value || 0)
   return isBelowTarget
 }
 
@@ -494,7 +489,9 @@ const loadData = async () => {
           existingItem.target_value = item.target_value || 0
           existingItem.ytd_value = item.ytd_value || 0
           existingItem.remark = item.remark || null
-          existingItem.action_plan = item.action_plan || null
+          existingItem.action_plan_content = item.action_plan_content || null
+          existingItem.expected_close_date = item.expected_close_date || null
+          existingItem.actual_close_date = item.actual_close_date || null
           existingItem.root_cause_analysis = item.root_cause_analysis || null
         }
       })
@@ -547,12 +544,14 @@ const saveData = async () => {
         actual_value: item.actual_value,
         ytd_value: item.ytd_value,
         remark: item.remark,
-        action_plan: item.action_plan,
+        action_plan_content: item.action_plan_content,
+        expected_close_date: item.expected_close_date,
+        actual_close_date: item.actual_close_date,
         root_cause_analysis: item.root_cause_analysis
       }))
     }
     
-    const result = await put('/qa/kpi/', payload)
+    await put('/qa/kpi/', payload)
     
     Message.success('数据保存成功')
     isDataChanged.value = false
@@ -685,15 +684,14 @@ const getRemarkButtonText = (item) => {
   return '填写分析'
 }
 
-const hasRemarkContent = (item) => {
-  return (item.root_cause_analysis && item.root_cause_analysis.trim()) ||
-         (item.action_plan && item.action_plan.trim())
-}
+// hasRemarkContent 函数现在从工具模块导入
 
 const saveRemarkData = (data) => {
   if (selectedItem.value) {
     selectedItem.value.root_cause_analysis = data.root_cause_analysis
-    selectedItem.value.action_plan = data.action_plan
+    selectedItem.value.action_plan_content = data.action_plan_content
+    selectedItem.value.expected_close_date = data.expected_close_date
+    selectedItem.value.actual_close_date = data.actual_close_date
     handleInput()
   }
 }
@@ -789,7 +787,6 @@ onMounted(() => {
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
   margin-bottom: 24px;
 }
@@ -847,7 +844,6 @@ onMounted(() => {
 .text-field-small :deep(.v-field) {
   border-radius: 8px;
   background: rgba(59, 130, 246, 0.02);
-  border: 1px solid rgba(59, 130, 246, 0.1);
   transition: all 0.3s ease;
 }
 
@@ -937,12 +933,10 @@ onMounted(() => {
   }
 }
 
-/* 加载动画美化 */
+
 :deep(.v-progress-circular) {
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
-
-/* Snackbar美化 */
 :deep(.v-snackbar) {
   border-radius: 12px;
   backdrop-filter: blur(10px);
