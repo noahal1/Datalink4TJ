@@ -5,8 +5,6 @@ const Login = () => import('../pages/Login.vue')
 const Dashboard = () => import('../pages/Dashboard.vue')
 const Profile = () => import('../pages/Profile.vue')
 const Settings = () => import('../pages/Settings.vue')
-const TestActionPlan = () => import('../pages/TestActionPlan.vue')
-const ButtonTest = () => import('../pages/ButtonTest.vue')
 
 // 基础路由配置
 export const baseRoutes = [
@@ -43,22 +41,6 @@ export const baseRoutes = [
     component: Settings,
     meta: {
       title: '系统设置',
-      requiresAuth: true
-    }
-  },
-  {
-    path: '/test-action-plan',
-    component: TestActionPlan,
-    meta: {
-      title: '行动计划测试',
-      requiresAuth: true
-    }
-  },
-  {
-    path: '/button-test',
-    component: ButtonTest,
-    meta: {
-      title: '按钮测试',
       requiresAuth: true
     }
   },

@@ -55,6 +55,5 @@ declare module 'vue-router/auto-routes' {
     '/RouteDebug': RouteRecordInfo<'/RouteDebug', '/RouteDebug', Record<never, never>, Record<never, never>>,
     '/RouteManagement': RouteRecordInfo<'/RouteManagement', '/RouteManagement', Record<never, never>, Record<never, never>>,
     '/Settings': RouteRecordInfo<'/Settings', '/Settings', Record<never, never>, Record<never, never>>,
-    '/TestActionPlan': RouteRecordInfo<'/TestActionPlan', '/TestActionPlan', Record<never, never>, Record<never, never>>,
   }
 }
