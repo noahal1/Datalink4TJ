@@ -309,7 +309,159 @@
 .v-dialog .v-overlay__content {
   border-radius: 20px !important;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
-  backdrop-filter: blur(20px) !important;
+}
+
+.v-dialog .v-overlay__scrim {
+  backdrop-filter: none !important;
+}
+
+/* 确保所有对话框遮罩层都没有毛玻璃效果 */
+.v-overlay__scrim {
+  backdrop-filter: none !important;
+}
+
+/* 全局覆盖层样式 - 确保没有毛玻璃效果 */
+.v-overlay--active .v-overlay__scrim {
+  backdrop-filter: none !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* 确保 v-app 和 v-main 没有毛玻璃效果 */
+.v-application,
+.v-app,
+.v-main {
+  backdrop-filter: none !important;
+}
+
+/* 确保所有可能的容器都没有毛玻璃效果 */
+.v-application__wrap,
+.v-application--wrap {
+  backdrop-filter: none !important;
+}
+
+/* 针对 teleport 容器的样式 */
+body > div[style*="backdrop-filter"] {
+  backdrop-filter: none !important;
+}
+
+/* 移除所有元素的毛玻璃效果，除了明确指定的组件 */
+*:not(.navigation-drawer):not(.unified-card):not(.v-btn-toggle):not(.v-text-field--variant-outlined .v-field):not(.v-select .v-field):not(.v-chip--variant-tonal):not(.v-snackbar):not(.v-tooltip .v-overlay__content):not(.v-menu .v-overlay__content):not(.v-breadcrumbs):not(.v-tabs) {
+  backdrop-filter: none !important;
+}
+
+/* 强制移除所有可能影响对话框的毛玻璃效果 */
+.v-dialog .v-overlay__content > * {
+  backdrop-filter: none !important;
+}
+
+.v-dialog .v-overlay__content {
+  backdrop-filter: none !important;
+}
+
+/* 移除 body 和 html 的毛玻璃效果 */
+body, html {
+  backdrop-filter: none !important;
+}
+
+/* 移除所有可能被 teleport 使用的容器的毛玻璃效果 */
+div[style*="backdrop-filter"] {
+  backdrop-filter: none !important;
+}
+
+/* 强制移除所有 overlay 相关的毛玻璃效果 */
+[class*="overlay"],
+[class*="Overlay"],
+[id*="overlay"],
+[id*="Overlay"] {
+  backdrop-filter: none !important;
+}
+
+/* 强制移除所有 dialog 相关的毛玻璃效果 */
+[class*="dialog"],
+[class*="Dialog"],
+[id*="dialog"],
+[id*="Dialog"] {
+  backdrop-filter: none !important;
+}
+
+/* 强制移除所有 modal 相关的毛玻璃效果 */
+[class*="modal"],
+[class*="Modal"],
+[id*="modal"],
+[id*="Modal"] {
+  backdrop-filter: none !important;
+}
+
+/* 最终强制覆盖 - 移除所有元素的毛玻璃效果 */
+* {
+  backdrop-filter: none !important;
+}
+
+/* 重新启用需要的毛玻璃效果 */
+.navigation-drawer,
+.unified-card,
+.v-btn-toggle,
+.v-text-field--variant-outlined .v-field,
+.v-select .v-field,
+.v-chip--variant-tonal,
+.v-tooltip .v-overlay__content,
+.v-menu .v-overlay__content,
+.v-breadcrumbs,
+.v-tabs,
+.unified-btn,
+.unified-btn-outline {
+  backdrop-filter: blur(10px) !important;
+}
+
+/* 确保所有对话框组件都没有毛玻璃效果 */
+.v-dialog,
+.v-dialog *,
+.v-dialog .v-card,
+.v-dialog .v-card *,
+.v-dialog .v-overlay__content,
+.v-dialog .v-overlay__content *,
+.confirm-dialog,
+.confirm-dialog *,
+.alert-dialog,
+.alert-dialog * {
+  backdrop-filter: none !important;
+}
+
+/* 确保所有通知组件都没有毛玻璃效果 */
+.v-snackbar,
+.v-snackbar *,
+.global-snackbar,
+.global-snackbar * {
+  backdrop-filter: none !important;
+}
+
+/* 确保所有可能的弹窗容器都没有毛玻璃效果 */
+.v-overlay,
+.v-overlay *,
+.v-overlay__scrim,
+.v-overlay__scrim *,
+.v-overlay__content,
+.v-overlay__content * {
+  backdrop-filter: none !important;
+}
+
+/* 强制移除所有可能被动态创建的弹窗的毛玻璃效果 */
+body > div[id*="overlay"],
+body > div[id*="dialog"],
+body > div[id*="modal"],
+body > div[id*="notification"],
+body > div[id*="alert"],
+body > div[id*="confirm"] {
+  backdrop-filter: none !important;
+}
+
+body > div[id*="overlay"] *,
+body > div[id*="dialog"] *,
+body > div[id*="modal"] *,
+body > div[id*="notification"] *,
+body > div[id*="alert"] *,
+body > div[id*="confirm"] * {
+  backdrop-filter: none !important;
 }
 
 .v-dialog .v-card {
@@ -323,11 +475,11 @@
   padding: 20px 24px !important;
 }
 
-/* 警告框增强 */
+/* 警告框增强 - 移除毛玻璃效果 */
 .v-alert {
   border-radius: 12px !important;
   border: 1px solid rgba(0, 0, 0, 0.05) !important;
-  backdrop-filter: blur(10px) !important;
+  backdrop-filter: none !important;
 }
 
 /* 进度条增强 */
@@ -343,7 +495,6 @@
 /* Snackbar 增强 */
 .v-snackbar {
   border-radius: 12px !important;
-  backdrop-filter: blur(20px) !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
 }
 

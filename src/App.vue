@@ -226,7 +226,7 @@ const handleResize = () => {
     rgba(255, 255, 255, 0.98) 0%,
     rgba(248, 250, 252, 0.95) 100%
   ) !important;
-  backdrop-filter: blur(25px) !important;
+  backdrop-filter: blur(10px);
   box-shadow:
     4px 0 24px rgba(0, 0, 0, 0.08),
     2px 0 12px rgba(59, 130, 246, 0.05) !important;
