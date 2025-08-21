@@ -581,7 +581,6 @@ body > div[id*="confirm"] * {
   }
 }
 
-/* 加载动画增强 */
 @keyframes pulse-glow {
   0%, 100% {
     opacity: 1;
@@ -597,7 +596,6 @@ body > div[id*="confirm"] * {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
-/* 悬浮效果 */
 @keyframes float {
   0%, 100% {
     transform: translateY(0px);
@@ -611,7 +609,6 @@ body > div[id*="confirm"] * {
   animation: float 3s ease-in-out infinite;
 }
 
-/* 渐入动画 */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -622,12 +619,10 @@ body > div[id*="confirm"] * {
     transform: translateY(0);
   }
 }
-
 .fade-in-up {
   animation: fadeInUp 0.6s ease-out;
 }
 
-/* 缩放进入动画 */
 @keyframes scaleIn {
   from {
     opacity: 0;

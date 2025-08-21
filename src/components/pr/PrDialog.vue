@@ -7,19 +7,17 @@
   >
     <v-card class="pr-dialog-card">
       <!-- 标题栏 -->
-      <v-card-title class="d-flex justify-space-between align-center pa-4 bg-primary">
+      <v-card-title class="d-flex justify-space-between align-center pa-4" style="background-color: #1976d2 !important;">
         <div class="d-flex align-center">
           <v-icon
             :icon="isNew ? 'mdi-plus-circle' : 'mdi-pencil-circle'"
             class="mr-2"
-            color="white"
           />
-          <span class="text-h6 text-white">{{ isNew ? '新建采购申请' : '编辑采购申请' }}</span>
+          <span class="text-h6" style="font-weight: 500;">{{ isNew ? '新建采购申请' : '编辑采购申请' }}</span>
         </div>
         <v-btn
           icon="mdi-close"
           variant="text"
-          color="white"
           @click="close"
         />
       </v-card-title>
@@ -914,11 +912,19 @@ const previousStep = () => {
   }
 }
 
+let apiUtils = null
+const getApiUtils = async () => {
+  if (!apiUtils) {
+    apiUtils = await import('@/utils/api')
+  }
+  return apiUtils
+}
+
 // Excel导入相关方法
 const downloadTemplate = async () => {
   try {
     downloadingTemplate.value = true
-    const { get } = await import('@/utils/api')
+    const { get } = await getApiUtils()
 
     const response = await get('/pr/excel/template', {
       responseType: 'blob'
@@ -980,8 +986,6 @@ const handleFileChange = async () => {
     validatingFile.value = true
     console.log('Starting file validation...')
 
-    const { post } = await import('@/utils/api')
-
     const formData = new FormData()
     formData.append('file', file)
 
@@ -997,23 +1001,12 @@ const handleFileChange = async () => {
     console.log('Sending request to /pr/excel/validate...')
     console.log('Data being sent:', formData)
 
-    // 直接使用axios实例来测试
-    const { default: axios } = await import('axios')
-    const userStore = (await import('@/stores/user')).useUserStore()
+    // 使用统一的API工具
+    const { post } = await getApiUtils()
 
-    console.log('User token:', userStore.token ? 'exists' : 'missing')
-    console.log('Request config:', {
-      url: '/api/v1/pr/excel/validate',
-      baseURL: 'http://localhost:8000',
+    const response = await post('/pr/excel/validate', formData, {
       headers: {
-        'Authorization': `Bearer ${userStore.token ? userStore.token.substring(0, 10) + '...' : 'none'}`
-      }
-    })
-
-    const response = await axios.post('/api/v1/pr/excel/validate', formData, {
-      baseURL: 'http://localhost:8000',
-      headers: {
-        'Authorization': `Bearer ${userStore.token}`
+        'Content-Type': 'multipart/form-data'
       }
     })
 
@@ -1181,16 +1174,12 @@ const handleExcelImport = async () => {
       console.log(`${key}:`, value)
     }
     console.log('overwriteExisting.value:', overwriteExisting.value)
+    const { post } = await getApiUtils()
 
-    // 直接使用axios，就像验证阶段一样
-    const { default: axios } = await import('axios')
-    const userStore = (await import('@/stores/user')).useUserStore()
-
-    console.log('Sending import request with axios...')
-    const response = await axios.post('/api/v1/pr/excel/import', formData, {
-      baseURL: 'http://localhost:8000',
+    console.log('Sending import request with unified API...')
+    const response = await post('/pr/excel/import', formData, {
       headers: {
-        'Authorization': `Bearer ${userStore.token}`
+        'Content-Type': 'multipart/form-data'
       }
     })
 
@@ -1316,6 +1305,14 @@ watch(dialog, (newVal) => {
 .pr-dialog-card {
   border-radius: 12px;
   overflow: hidden;
+}
+
+.pr-dialog-card .v-card-title {
+  background-color: #1976d2 !important;
+}
+
+.pr-dialog-card .v-card-title span {
+  font-weight: 500;
 }
 
 .v-stepper {
