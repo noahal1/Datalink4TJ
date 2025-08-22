@@ -40,6 +40,8 @@
         :search="search"
         :class="tableClass"
         v-bind="$attrs"
+        @update:page="$emit('update:page', $event)"
+        @update:items-per-page="$emit('update:items-per-page', $event)"
       >
         <!-- 自定义加载器 -->
         <template #loading>

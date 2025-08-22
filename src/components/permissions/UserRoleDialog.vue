@@ -311,7 +311,6 @@ const saveUserRoles = async () => {
 
     // 调用API保存用户角色
     await api.post(`/users/${userId}/roles`, {
-      user_id: userId,
       role_ids: roleIds
     })
     

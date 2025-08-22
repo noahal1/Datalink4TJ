@@ -9,8 +9,10 @@
           :items="users"
           :loading="loading"
           :search="search"
-          :items-per-page="10"
+          :items-per-page="itemsPerPage"
           :hide-default-footer="false"
+          @update:page="onPageChange"
+          @update:items-per-page="onItemsPerPageChange"
         >
           <template #title>
             <span>用户管理</span>
@@ -402,6 +404,8 @@ const saving = ref(false);
 const resetting = ref(false);
 const search = ref('');
 const filterDrawer = ref(false);
+const itemsPerPage = ref(100); // 默认每页显示100条记录
+const currentPage = ref(1);
 
 // 过滤器
 const filters = ref({
@@ -441,12 +445,19 @@ const passwordMatch = () => {
   return resetPasswordForm.value.password === resetPasswordForm.value.confirmPassword || '两次输入的密码不一致';
 };
 
-// 获取用户列表 
+// 获取用户列表
 const fetchUsers = async () => {
   loading.value = true;
   try {
-    const response = await api.get('/users');
-    
+    // 使用 /users 端点，通过查询参数传递分页信息
+    const skip = (currentPage.value - 1) * itemsPerPage.value;
+    const response = await api.get('/users', {
+      params: {
+        skip: skip,
+        limit: itemsPerPage.value
+      }
+    });
+
     // 检查响应数据结构
     if (response && response.data && Array.isArray(response.data)) {
       users.value = response.data.map(user => ({
@@ -455,6 +466,7 @@ const fetchUsers = async () => {
       }));
       allUsers.value = [...users.value];
     } else if (response && Array.isArray(response)) {
+      // 兼容直接返回数组的情况
       users.value = response.map(user => ({
         ...user,
         roles: user.roles || []
@@ -675,6 +687,19 @@ const getRoleColor = (roleName) => {
   };
   
   return roleColors[roleName] || 'grey';
+};
+
+// 分页变化处理
+const onPageChange = (page) => {
+  currentPage.value = page;
+  fetchUsers();
+};
+
+// 每页数量变化处理
+const onItemsPerPageChange = (newItemsPerPage) => {
+  itemsPerPage.value = newItemsPerPage;
+  currentPage.value = 1; // 重置到第一页
+  fetchUsers();
 };
 
 // 初始化
