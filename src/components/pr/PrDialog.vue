@@ -22,7 +22,7 @@
         />
       </v-card-title>
 
-      <!-- 进度指示器 (仅新建模式) -->
+      <!-- 进度指示器 -->
       <v-card-subtitle v-if="isNew" class="pa-3 bg-grey-lighten-5">
         <div class="d-flex justify-center">
           <v-chip-group v-model="currentStep" mandatory>
@@ -768,6 +768,9 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import axios from 'axios'
+import api from '../../utils/api.js'
+import { useUserStore } from '../../stores/user.js'
 
 // Props
 const props = defineProps({
@@ -780,6 +783,9 @@ const props = defineProps({
 
 // Emits
 const emit = defineEmits(['update:modelValue', 'update:pr', 'save', 'close'])
+
+// 获取用户store
+const userStore = useUserStore()
 
 // 响应式数据
 const formRef = ref(null)
@@ -873,6 +879,17 @@ const canProceedToNextStep = computed(() => {
   }
 })
 
+// 获取认证头部
+const getAuthHeaders = () => {
+  const headers = {
+    'Content-Type': 'multipart/form-data'
+  }
+  if (userStore.token) {
+    headers['Authorization'] = `Bearer ${userStore.token.trim()}`
+  }
+  return headers
+}
+
 // 预览表格表头
 const previewHeaders = computed(() => [
   { title: '物品名称', key: 'material_name', sortable: false },
@@ -881,6 +898,7 @@ const previewHeaders = computed(() => [
   { title: '规格', key: 'specification', sortable: false },
   { title: '需求日期', key: 'required_date', sortable: false }
 ])
+
 
 // 验证规则
 const rules = {
@@ -912,21 +930,12 @@ const previousStep = () => {
   }
 }
 
-let apiUtils = null
-const getApiUtils = async () => {
-  if (!apiUtils) {
-    apiUtils = await import('@/utils/api')
-  }
-  return apiUtils
-}
 
 // Excel导入相关方法
 const downloadTemplate = async () => {
   try {
     downloadingTemplate.value = true
-    const { get } = await getApiUtils()
-
-    const response = await get('/pr/excel/template', {
+    const response = await api.get('/pr/excel/template', {
       responseType: 'blob'
     })
 
@@ -943,13 +952,32 @@ const downloadTemplate = async () => {
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
 
-    const { Message } = await import('@/utils/notification')
-    Message.success('模板下载成功')
+    try {
+      const { Message } = await import('@/utils/notification')
+      if (Message && Message.success) {
+        Message.success('模板下载成功')
+      } else {
+        console.log('模板下载成功')
+      }
+    } catch (notificationError) {
+      console.error('无法显示成功消息:', notificationError)
+      console.log('模板下载成功')
+    }
   } catch (error) {
     console.error('下载模板失败:', error)
-    const { Message } = await import('@/utils/notification')
-    const errorMessage = error?.response?.data?.detail || error?.message || '未知错误'
-    Message.error('下载模板失败: ' + errorMessage)
+    try {
+      const { Message } = await import('@/utils/notification')
+      const errorMessage = error?.response?.data?.detail || error?.message || '未知错误'
+      if (Message && Message.error) {
+        Message.error('下载模板失败: ' + errorMessage)
+      } else {
+        console.error('无法显示错误消息: Message.error 不可用')
+        console.error('下载模板失败:', errorMessage)
+      }
+    } catch (notificationError) {
+      console.error('无法显示错误消息:', notificationError)
+      console.error('下载模板失败:', error?.response?.data?.detail || error?.message || '未知错误')
+    }
   } finally {
     downloadingTemplate.value = false
   }
@@ -964,57 +992,32 @@ const handleFileChange = async () => {
   let file = null
   if (Array.isArray(excelFile.value)) {
     file = excelFile.value[0]
-    console.log('File from array:', file)
   } else {
     file = excelFile.value
-    console.log('File direct:', file)
   }
 
-  console.log('Final selected file:', file)
-  console.log('File instanceof File:', file instanceof File)
-  console.log('File name:', file?.name)
-  console.log('File size:', file?.size)
-  console.log('File type:', file?.type)
-
   if (!file || !(file instanceof File)) {
-    console.log('No valid file selected, clearing validation result')
     validationResult.value = null
     return
   }
 
   try {
     validatingFile.value = true
-    console.log('Starting file validation...')
-
     const formData = new FormData()
     formData.append('file', file)
-
-    console.log('FormData created:')
-    console.log('FormData instanceof FormData:', formData instanceof FormData)
     for (let [key, value] of formData.entries()) {
       console.log(`FormData entry: ${key} =`, value)
-      if (value instanceof File) {
-        console.log(`  File details: name=${value.name}, size=${value.size}, type=${value.type}`)
-      }
     }
 
-    console.log('Sending request to /pr/excel/validate...')
-    console.log('Data being sent:', formData)
-
-    // 使用统一的API工具
-    const { post } = await getApiUtils()
-
-    const response = await post('/pr/excel/validate', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+    // 额外检查文件内容
+    if (file.size === 0) {
+      console.error('文件大小为0，这可能是空文件')
+    } else if (file.size < 100) {
+      console.warn('文件非常小，可能不是有效的Excel文件')
+    }
+    const response = await axios.post('http://10.227.122.217:8000/api/v1/pr/excel/validate', formData, {
+      headers: getAuthHeaders()
     })
-
-    console.log('Full response:', response)
-    console.log('Response status:', response.status)
-    console.log('Response data:', response.data)
-    console.log('Response data type:', typeof response.data)
-    console.log('Response data keys:', response.data ? Object.keys(response.data) : 'no data')
 
     validationResult.value = response.data
 
@@ -1036,23 +1039,61 @@ const handleFileChange = async () => {
     console.error('验证文件失败:', error)
 
     let errorMessage = '未知错误'
-    if (error && error.response && error.response.data) {
-      if (Array.isArray(error.response.data.detail)) {
-        errorMessage = error.response.data.detail.map(e => e.msg || e).join(', ')
-      } else if (typeof error.response.data.detail === 'string') {
-        errorMessage = error.response.data.detail
-      } else if (error.response.data.message) {
-        errorMessage = error.response.data.message
+
+    // 安全地处理错误对象
+    try {
+      if (error && typeof error === 'object') {
+        // 检查是否是Axios错误
+        if (error.response && error.response.data) {
+          const responseData = error.response.data
+
+          // 处理422验证错误
+          if (error.response.status === 422 && responseData.detail) {
+            if (Array.isArray(responseData.detail)) {
+              errorMessage = responseData.detail.map(e => {
+                if (typeof e === 'object' && e.msg) {
+                  return e.msg
+                } else if (typeof e === 'string') {
+                  return e
+                }
+                return String(e)
+              }).join(', ')
+            } else if (typeof responseData.detail === 'string') {
+              errorMessage = responseData.detail
+            } else if (typeof responseData.detail === 'object' && responseData.detail.msg) {
+              errorMessage = responseData.detail.msg
+            }
+          }
+          // 处理其他错误
+          else if (responseData.detail) {
+            errorMessage = typeof responseData.detail === 'string' ? responseData.detail :
+                          (responseData.detail.msg || JSON.stringify(responseData.detail))
+          } else if (responseData.message) {
+            errorMessage = responseData.message
+          }
+        }
+        // 处理非HTTP错误
+        else if (error.message) {
+          errorMessage = error.message
+        }
+      } else if (typeof error === 'string') {
+        errorMessage = error
       }
-    } else if (error && error.message) {
-      errorMessage = error.message
+    } catch (parseError) {
+      console.error('解析错误信息时发生异常:', parseError)
+      errorMessage = '解析错误信息失败'
     }
 
     try {
       const { Message } = await import('@/utils/notification')
-      Message.error('验证文件失败: ' + errorMessage)
+      if (Message && Message.error) {
+        Message.error('验证文件失败: ' + errorMessage)
+      } else {
+        console.error('无法显示错误消息: Message.error 不可用')
+      }
     } catch (notificationError) {
       console.error('无法显示错误消息:', notificationError)
+      console.error('原始错误消息:', errorMessage)
     }
 
     validationResult.value = null
@@ -1174,14 +1215,9 @@ const handleExcelImport = async () => {
       console.log(`${key}:`, value)
     }
     console.log('overwriteExisting.value:', overwriteExisting.value)
-    const { post } = await getApiUtils()
 
-    console.log('Sending import request with unified API...')
-    const response = await post('/pr/excel/import', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    })
+    // 使用统一的API系统，确保正确的认证和Content-Type
+    const response = await api.post('/pr/excel/import', formData)
 
     console.log('Import response:', response.data)
     console.log('Response success:', response.data.success)
@@ -1226,16 +1262,49 @@ const handleExcelImport = async () => {
     console.error('导入数据失败:', error)
 
     let errorMessage = '未知错误'
-    if (error && error.response && error.response.data) {
-      if (Array.isArray(error.response.data.detail)) {
-        errorMessage = error.response.data.detail.map(e => e.msg || e).join(', ')
-      } else if (typeof error.response.data.detail === 'string') {
-        errorMessage = error.response.data.detail
-      } else if (error.response.data.message) {
-        errorMessage = error.response.data.message
+
+    // 安全地处理错误对象
+    try {
+      if (error && typeof error === 'object') {
+        // 检查是否是Axios错误
+        if (error.response && error.response.data) {
+          const responseData = error.response.data
+
+          // 处理422验证错误
+          if (error.response.status === 422 && responseData.detail) {
+            if (Array.isArray(responseData.detail)) {
+              errorMessage = responseData.detail.map(e => {
+                if (typeof e === 'object' && e.msg) {
+                  return e.msg
+                } else if (typeof e === 'string') {
+                  return e
+                }
+                return String(e)
+              }).join(', ')
+            } else if (typeof responseData.detail === 'string') {
+              errorMessage = responseData.detail
+            } else if (typeof responseData.detail === 'object' && responseData.detail.msg) {
+              errorMessage = responseData.detail.msg
+            }
+          }
+          // 处理其他错误
+          else if (responseData.detail) {
+            errorMessage = typeof responseData.detail === 'string' ? responseData.detail :
+                          (responseData.detail.msg || JSON.stringify(responseData.detail))
+          } else if (responseData.message) {
+            errorMessage = responseData.message
+          }
+        }
+        // 处理非HTTP错误
+        else if (error.message) {
+          errorMessage = error.message
+        }
+      } else if (typeof error === 'string') {
+        errorMessage = error
       }
-    } else if (error && error.message) {
-      errorMessage = error.message
+    } catch (parseError) {
+      console.error('解析错误信息时发生异常:', parseError)
+      errorMessage = '解析错误信息失败'
     }
 
     try {

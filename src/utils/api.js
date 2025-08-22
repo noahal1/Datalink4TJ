@@ -367,7 +367,6 @@ export function post(endpoint, data = {}, config = {}) {
 
   // 在开发环境中检查循环引用
   if (import.meta.env.DEV && hasCircularReference(data)) {
-    console.warn('⚠️ 检测到循环引用，已自动处理:', endpoint)
     console.log('原始数据:', data)
     console.log('处理后数据:', processedData)
   }
@@ -401,7 +400,6 @@ export function put(endpoint, data = {}) {
 
   // 在开发环境中检查循环引用
   if (import.meta.env.DEV && hasCircularReference(data)) {
-    console.warn('⚠️ 检测到循环引用，已自动处理:', endpoint)
     console.log('原始数据:', data)
     console.log('处理后数据:', processedData)
   }
