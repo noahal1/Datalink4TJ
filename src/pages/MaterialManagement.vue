@@ -113,7 +113,7 @@
           :loading="loading"
           item-value="id"
           density="compact"
-          hover
+          :hover="false"
           class="unified-table"
           @update:options="handleTableUpdate"
         >

@@ -70,7 +70,7 @@
             <v-text-field
               v-model="filters.search"
               label="搜索"
-              placeholder="请购单号、物品名称或编码"
+              placeholder="请购单号、PR编号、物品名称或编码"
               prepend-inner-icon="mdi-magnify"
               variant="outlined"
               density="compact"
@@ -113,7 +113,7 @@
           :loading="loading"
           item-value="id"
           density="compact"
-          hover
+          :hover="false"
           class="unified-table"
           @update:options="handleTableUpdate"
         >
@@ -183,6 +183,13 @@
           <!-- 申请人 -->
           <template #item.requester="{ item }">
             {{ item.requester?.name }}
+          </template>
+
+          <!-- 请购单号 -->
+          <template #item.purchase_order_number="{ item }">
+            <span class="font-weight-medium" :class="{ 'text-grey': !item.purchase_order_number }">
+              {{ item.purchase_order_number || '-' }}
+            </span>
           </template>
 
           <!-- 申请日期 -->
@@ -347,6 +354,7 @@ const headers = [
   { title: '品牌', key: 'brand', sortable: false},
   { title: '数量', key: 'quantity', sortable: false },
   { title: '物料编码', key: 'material_code', sortable: false},
+  { title: '请购单号', key: 'purchase_order_number', sortable: false},
   { title: '申请人', key: 'requester', sortable: false },
   { title: '申请日期', key: 'requested_date', sortable: true },
   { title: '状态', key: 'status', sortable: false },
@@ -544,7 +552,8 @@ const savePr = async (prData) => {
       specification: prData.specification || null,
       quantity: parseFloat(prData.quantity) || 0,
       brand: prData.brand || null,
-      remarks: prData.remarks || null
+      remarks: prData.remarks || null,
+      purchase_order_number: prData.purchase_order_number || null
     }
 
     // 调试：打印发送的数据
@@ -729,9 +738,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.unified-table {
-  border-radius: 8px;
-}
 
 .cursor-pointer {
   cursor: pointer;

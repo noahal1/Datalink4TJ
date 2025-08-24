@@ -298,7 +298,7 @@
 
 .v-data-table tbody tr:hover {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(147, 197, 253, 0.03) 100%) !important;
-  transform: scale(1.001) !important;
+  /* 移除 transform: scale 以防止滚动条闪烁 */
 }
 
 .v-data-table tbody tr td {
@@ -513,6 +513,36 @@ body > div[id*="confirm"] * {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
   backdrop-filter: blur(20px) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+/* 禁用菜单列表的滚动条动画以防止闪烁 */
+.v-menu .v-list ::-webkit-scrollbar-thumb {
+  transition: none !important;
+  transform: none !important;
+}
+
+.v-menu .v-list ::-webkit-scrollbar-thumb:hover {
+  transform: none !important;
+  background: linear-gradient(135deg,
+    var(--primary-400) 0%,
+    var(--primary-500) 50%,
+    var(--primary-600) 100%
+  ) !important;
+}
+
+/* 禁用所有v-list组件中的滚动条动画 */
+.v-list ::-webkit-scrollbar-thumb {
+  transition: none !important;
+  transform: none !important;
+}
+
+.v-list ::-webkit-scrollbar-thumb:hover {
+  transform: none !important;
+  background: linear-gradient(135deg,
+    var(--primary-400) 0%,
+    var(--primary-500) 50%,
+    var(--primary-600) 100%
+  ) !important;
 }
 
 /* 面包屑增强 */

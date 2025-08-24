@@ -143,7 +143,7 @@ const props = defineProps({
   },
   hover: {
     type: Boolean,
-    default: true
+    default: false
   },
   search: {
     type: String,
@@ -206,22 +206,28 @@ const safeItems = computed(() => {
 
 .unified-data-table-footer {
   padding: var(--spacing-sm) var(--spacing-lg);
-  background-color: var(--grey-50);
 }
 
-/* 表格行悬停效果 - 优化版，避免闪烁 */
+/* 完全禁用表格行悬停效果 */
 :deep(.v-data-table__tr) {
-  transition: background-color 0.15s ease !important;
+  transition: none !important;
   position: relative;
 }
 
 :deep(.v-data-table__tr:hover) {
-  background-color: rgba(var(--v-theme-primary), 0.05) !important;
+  background-color: transparent !important;
+  background: transparent !important;
+  transform: none !important;
 }
 
-/* 确保表格行悬停效果优先级最高 */
+:deep(.v-data-table tbody tr) {
+  transition: none !important;
+}
+
 :deep(.v-data-table tbody tr:hover) {
-  background-color: rgba(var(--v-theme-primary), 0.05) !important;
+  background-color: transparent !important;
+  background: transparent !important;
+  transform: none !important;
 }
 
 :deep(.v-data-table__th) {
@@ -234,6 +240,46 @@ const safeItems = computed(() => {
 
 :deep(.v-data-table__td) {
   padding: 0.5rem 1rem !important;
+}
+
+/* 禁用表格容器滚动条的动画效果 */
+:deep(.v-data-table) ::-webkit-scrollbar-thumb {
+  transition: none !important;
+  transform: none !important;
+}
+
+:deep(.v-data-table) ::-webkit-scrollbar-thumb:hover {
+  transform: none !important;
+  background: linear-gradient(135deg,
+    var(--primary-400) 0%,
+    var(--primary-500) 50%,
+    var(--primary-600) 100%
+  ) !important;
+}
+
+:deep(.v-data-table__wrapper) ::-webkit-scrollbar-thumb {
+  transition: none !important;
+  transform: none !important;
+}
+
+:deep(.v-data-table__wrapper) ::-webkit-scrollbar-thumb:hover {
+  transform: none !important;
+  background: linear-gradient(135deg,
+    var(--primary-400) 0%,
+    var(--primary-500) 50%,
+    var(--primary-600) 100%
+  ) !important;
+}
+
+/* 只在需要时显示滚动条，避免闪烁 */
+:deep(.v-data-table__wrapper) {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+}
+
+:deep(.v-data-table) {
+  overflow-x: auto !important;
+  overflow-y: auto !important;
 }
 
 @media (max-width: 600px) {

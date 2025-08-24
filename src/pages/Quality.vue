@@ -764,7 +764,7 @@ onMounted(async () => {
 
 /* 优化月份选择器，确保完整显示 */
 .month-selector-container {
-  overflow-x: auto;
+  overflow-x: hidden;
   max-width: 100%;
   padding: 4px 0;
 }
@@ -772,7 +772,7 @@ onMounted(async () => {
 .month-selector {
   flex-wrap: nowrap;
   white-space: nowrap;
-  overflow-x: auto;
+  overflow-x: hidden;
   padding-bottom: 5px;
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -791,7 +791,7 @@ onMounted(async () => {
 
 @media (max-width: 960px) {
   .month-selector-container {
-    overflow-x: auto;
+    overflow-x: hidden;
     width: 100%;
     max-width: 300px;
   }

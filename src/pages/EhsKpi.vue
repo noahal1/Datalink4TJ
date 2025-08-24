@@ -125,7 +125,7 @@
         :loading="loading"
         density="comfortable"
         class="ehs-kpi-table ehs-data-table frozen-header-table"
-        hover
+        :hover="false"
         hide-default-footer=""
         :items-per-page="-1"
         :fixed-header="true"

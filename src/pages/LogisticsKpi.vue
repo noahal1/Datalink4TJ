@@ -102,7 +102,7 @@
         class="logistics-kpi-table logistics-data-table frozen-header-table"
         hide-default-footer=""
         :items-per-page="-1"
-        hover
+        :hover="false"
         :fixed-header="true"
         :height="'calc(100vh - 280px)'"
       >

@@ -1,4 +1,5 @@
 <script setup>
+// 核心导入
 import { ref, computed, onMounted } from 'vue'
 import { useUserStore } from '../stores/user'
 import { useActivityStore } from '../stores/activity'
@@ -7,271 +8,176 @@ import RecentActivities from '../components/RecentActivities.vue'
 import Message from '../utils/notification'
 import api from '../utils/api'
 
+// Store和基础配置
 const userStore = useUserStore()
 const activityStore = useActivityStore()
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 const currentMonth = new Date().getMonth() + 1
-const isLoadingQualityData = ref(false)
+
+// 响应式数据
+const isLoading = ref(false)
+const selectedPeriod = ref('month')
 const qualityData = ref([])
-const isLoadingTrendData = ref(false)
 const trendData = ref(null)
 
-// 图表选项
-const chartOption = computed(() => {
-  if (!trendData.value) {
-    return {
-      tooltip: {
-        trigger: 'axis',
-      },
-      legend: {
-        data: ['生产', '质量', 'EHS']
-      },
-      grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '3%',
-        containLabel: true
-      },
-      xAxis: {
-        type: 'category',
-        boundaryGap: false,
-        data: []
-      },
-      yAxis: {
-        type: 'value'
-      },
-      series: []
-    }
-  }
-
-  return {
-    tooltip: {
-      trigger: 'axis',
-    },
-    legend: {
-      data: trendData.value.legend
-    },
-    grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      containLabel: true
-    },
-    xAxis: {
-      type: 'category',
-      boundaryGap: false,
-      data: trendData.value.xAxis
-    },
-    yAxis: {
-      type: 'value'
-    },
-    series: trendData.value.series
-  }
+// 加载状态
+const loadingStates = ref({
+   quality: false,
+   trend: false
 })
+
+// 统计字段配置
+const FIELD_CONFIGS = {
+   standard: ['swi', 'rwh', 'w01', 'hf', 'lc'],
+   scrap: ['scrapswi', 'scraprwh', 'scrapw01', 'scraphf', 'scraplc']
+}
+
+// 模拟数据生成器
+const createMockTrendData = () => ({
+   legend: ['生产', '质量', 'EHS'],
+   xAxis: ['1月', '2月', '3月', '4月', '5月', '6月', '7月'],
+   series: [
+     { name: '生产', type: 'line', data: [120, 132, 101, 134, 90, 230, 210] },
+     { name: '质量', type: 'line', data: [220, 182, 191, 234, 290, 330, 310] },
+     { name: 'EHS', type: 'line', data: [15, 12, 11, 14, 9, 23, 21] }
+   ]
+})
+
+// 通用API调用包装器
+const handleApiCall = async (apiCall, errorMsg, mockData = null) => {
+   try {
+     const response = await apiCall()
+     return response?.data || mockData
+   } catch (error) {
+     console.error(errorMsg, error)
+     Message.error(`${errorMsg}: ${error.message || '未知错误'}`)
+     return mockData
+   }
+}
 
 // 获取趋势数据
 const fetchTrendData = async (period = 'month') => {
-  isLoadingTrendData.value = true
-  try {
-    //const response = await api.get('/dashboard/trend', { period })
-    if (response && response.data) {
-      trendData.value = response.data
-    } else {
-      // 如果API不可用，使用模拟数据
-      trendData.value = {
-        legend: ['生产', '质量', 'EHS'],
-        xAxis: ['1月', '2月', '3月', '4月', '5月', '6月', '7月'],
-        series: [
-          {
-            name: '生产',
-            type: 'line',
-            data: [120, 132, 101, 134, 90, 230, 210]
-          },
-          {
-            name: '质量',
-            type: 'line',
-            data: [220, 182, 191, 234, 290, 330, 310]
-          },
-          {
-            name: 'EHS',
-            type: 'line',
-            data: [15, 12, 11, 14, 9, 23, 21]
-          }
-        ]
-      }
-    }
-  } catch (error) {
-    console.error('获取趋势数据失败:', error)
-    // 使用模拟数据
-    trendData.value = {
-      legend: ['生产', '质量', 'EHS'],
-      xAxis: ['1月', '2月', '3月', '4月', '5月', '6月', '7月'],
-      series: [
-        {
-          name: '生产',
-          type: 'line',
-          data: [120, 132, 101, 134, 90, 230, 210]
-        },
-        {
-          name: '质量',
-          type: 'line',
-          data: [220, 182, 191, 234, 290, 330, 310]
-        },
-        {
-          name: 'EHS',
-          type: 'line',
-          data: [15, 12, 11, 14, 9, 23, 21]
-        }
-      ]
-    }
-  } finally {
-    isLoadingTrendData.value = false
-  }
+   loadingStates.value.trend = true
+   try {
+     const response = await api.get('/dashboard/trend', { period })
+     trendData.value = response?.data || createMockTrendData()
+   } catch (error) {
+     console.error('获取趋势数据失败:', error)
+     trendData.value = createMockTrendData()
+   } finally {
+     loadingStates.value.trend = false
+   }
 }
-
-// 质量数据统计
-const standardFields = ['swi', 'rwh', 'w01', 'hf', 'lc']
-const scrapFields = ['scrapswi', 'scraprwh', 'scrapw01', 'scraphf', 'scraplc']
-
-// 统计数据
-const totalWelding = computed(() => {
-  return qualityData.value.reduce((sum, item) => sum + (item.welding || 0), 0);
-});
-
-const totalStamping = computed(() => {
-  return qualityData.value.reduce((sum, item) => sum + (item.stamping || 0), 0);
-});
-
-const totalGP12 = computed(() => {
-  return totalWelding.value + totalStamping.value;
-});
-
-const totalScrap = computed(() => {
-  return qualityData.value.reduce((sum, item) => {
-    return sum + scrapFields.reduce((fieldSum, field) => fieldSum + (parseInt(item[field]) || 0), 0);
-  }, 0);
-});
-
-const scrapRate = computed(() => {
-  if (totalGP12.value === 0) return "0.00";
-  
-  const rate = (totalScrap.value / (totalGP12.value + totalScrap.value)) * 100;
-  return rate.toFixed(2);
-});
-
-// 是否正在加载
-const isLoading = ref(false)
-const selectedPeriod = ref('month')
 
 // 获取质量数据
 const fetchQualityData = async () => {
-  isLoadingQualityData.value = true;
-  try {
-    const response = await api.get('/qa/', { params: { month: currentMonth.toString() } });
-    
-    // 获取响应数据
-    const fetchedData = response.data || [];
-    
-    const daysInMonth = new Date(new Date().getFullYear(), currentMonth, 0).getDate();
-    const generatedData = Array.from({ length: daysInMonth }, (_, i) => ({
-      date: (i + 1).toString(),
-      swi: 0,
-      rwh: 0,
-      w01: 0,
-      hf: 0,
-      lc: 0,
-      scrapswi: 0,
-      scraprwh: 0,
-      scrapw01: 0,
-      scraphf: 0,
-      scraplc: 0,
-      welding: 0,
-      stamping: 0
-    }));
+   loadingStates.value.quality = true
 
-    fetchedData.forEach(item => {
-      const day = generatedData.find(d => d.date === item.day);
-      if (day) {
-        const line = item.line.toLowerCase();
-        day[item.scrapflag ? `scrap${line}` : line] = parseInt(item.value, 10);
-        // 更新welding和stamping字段
-        day.welding = day.swi + day.rwh + day.w01;
-        day.stamping = day.hf + day.lc;
-      }
-    });
-    
-    qualityData.value = generatedData;
-  } catch (error) {
-    console.error('获取质量数据错误:', error);
-    Message.error('获取质量数据失败: ' + (error.message || '未知错误'));
-  } finally {
-    isLoadingQualityData.value = false;
-  }
+   const response = await handleApiCall(
+     () => api.get('/qa/', { params: { month: currentMonth.toString() } }),
+     '获取质量数据失败'
+   )
+
+   if (response) {
+     const daysInMonth = new Date(new Date().getFullYear(), currentMonth, 0).getDate()
+     const generatedData = Array.from({ length: daysInMonth }, (_, i) => ({
+       date: (i + 1).toString(),
+       ...Object.fromEntries([...FIELD_CONFIGS.standard, ...FIELD_CONFIGS.scrap].map(field => [field, 0])),
+       welding: 0,
+       stamping: 0
+     }))
+
+     response.forEach(item => {
+       const day = generatedData.find(d => d.date === item.day)
+       if (day) {
+         const line = item.line.toLowerCase()
+         const field = item.scrapflag ? `scrap${line}` : line
+         day[field] = parseInt(item.value, 10)
+         day.welding = day.swi + day.rwh + day.w01
+         day.stamping = day.hf + day.lc
+       }
+     })
+
+     qualityData.value = generatedData
+   }
+
+   loadingStates.value.quality = false
 }
 
-// 刷新所有数据
-const refreshAllData = async () => {
-  isLoading.value = true;
-  try {
-    await Promise.all([
-      fetchQualityData(),
-      fetchTrendData(selectedPeriod.value),
-      activityStore.fetchActivities()
-    ]);
-    Message.success('数据刷新成功');
-  } catch (error) {
-    Message.error('数据刷新失败: ' + (error.message || '未知错误'));
-  } finally {
-    isLoading.value = false;
-  }
-}
+// 统计计算函数
+const calculateTotal = (field) => computed(() =>
+   qualityData.value.reduce((sum, item) => sum + (item[field] || 0), 0)
+)
+
+const calculateScrapTotal = () => computed(() =>
+   qualityData.value.reduce((sum, item) =>
+     sum + FIELD_CONFIGS.scrap.reduce((fieldSum, field) =>
+       fieldSum + (parseInt(item[field]) || 0), 0), 0)
+)
+
+// 计算属性
+const totalWelding = calculateTotal('welding')
+const totalStamping = calculateTotal('stamping')
+const totalGP12 = computed(() => totalWelding.value + totalStamping.value)
+const totalScrap = calculateScrapTotal()
+
+const scrapRate = computed(() => {
+   if (totalGP12.value === 0) return "0.00"
+   const rate = (totalScrap.value / (totalGP12.value + totalScrap.value)) * 100
+   return rate.toFixed(2)
+})
+
+// 图表配置
+const chartOption = computed(() => ({
+   tooltip: { trigger: 'axis' },
+   legend: { data: trendData.value?.legend || ['生产', '质量', 'EHS'] },
+   grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+   xAxis: {
+     type: 'category',
+     boundaryGap: false,
+     data: trendData.value?.xAxis || []
+   },
+   yAxis: { type: 'value' },
+   series: trendData.value?.series || []
+}))
 
 // 统计卡片数据
 const statsCards = [
-  {
-    title: '生产计划完成率',
-    value: '94.5%',
-    icon: 'mdi-chart-line',
-    color: 'success',
-    change: '+2.5%'
-  },
-  {
-    title: '质量合格率',
-    value: '99.2%',
-    icon: 'mdi-check-circle',
-    color: 'primary',
-    change: '+0.3%'
-  },
-  {
-    title: '设备稼动率',
-    value: '87.8%',
-    icon: 'mdi-cog',
-    color: 'warning',
-    change: '-1.2%'
-  },
-  {
-    title: '安全无事故天数',
-    value: '128',
-    icon: 'mdi-shield-check',
-    color: 'info',
-    change: '+1'
-  }
+   { title: '生产计划完成率', value: '94.5%', icon: 'mdi-chart-line', color: 'success', change: '+2.5%' },
+   { title: '质量合格率', value: '99.2%', icon: 'mdi-check-circle', color: 'primary', change: '+0.3%' },
+   { title: '设备稼动率', value: '87.8%', icon: 'mdi-cog', color: 'warning', change: '-1.2%' },
+   { title: '安全无事故天数', value: '128', icon: 'mdi-shield-check', color: 'info', change: '+1' }
 ]
 
-// 监听周期变化，重新获取数据
+// 事件处理
 const handlePeriodChange = (period) => {
-  selectedPeriod.value = period
-  fetchTrendData(period)
+   selectedPeriod.value = period
+   fetchTrendData(period)
 }
 
+const refreshAllData = async () => {
+   isLoading.value = true
+   try {
+     await Promise.all([
+       fetchQualityData(),
+       fetchTrendData(selectedPeriod.value),
+       activityStore.fetchActivities()
+     ])
+     Message.success('数据刷新成功')
+   } catch (error) {
+     Message.error('数据刷新失败: ' + (error.message || '未知错误'))
+   } finally {
+     isLoading.value = false
+   }
+}
+
+// 生命周期
 onMounted(async () => {
-  console.log('Dashboard loaded')
-  // 异步加载质量数据
-  fetchQualityData()
-  // 获取趋势数据
-  fetchTrendData('month')
-  // 获取最近活动数据
-  activityStore.fetchActivities()
+   console.log('Dashboard loaded')
+   await Promise.all([
+     fetchQualityData(),
+     fetchTrendData('month'),
+     activityStore.fetchActivities()
+   ])
 })
 </script>
 
@@ -549,649 +455,373 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-
-@keyframes backgroundFloat {
-  0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  33% { transform: translate(-20px, -10px) rotate(1deg); }
-  66% { transform: translate(20px, 10px) rotate(-1deg); }
+/* CSS变量定义 */
+:root {
+   --primary-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%);
+   --primary-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(59, 130, 246, 0.1);
+   --primary-shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.12), 0 8px 24px rgba(59, 130, 246, 0.15);
+   --dark-gradient: linear-gradient(135deg, rgba(44, 44, 44, 0.95) 0%, rgba(30, 30, 30, 0.9) 100%);
+   --dark-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 4px 16px rgba(33, 150, 243, 0.1);
+   --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+   --border-radius: 16px;
+   --glass-bg: rgba(255, 255, 255, 0.8);
+   --glass-border: rgba(255, 255, 255, 0.3);
+   --shimmer-bg: linear-gradient(90deg, transparent 0%, rgba(59, 130, 246, 0.1) 50%, transparent 100%);
 }
 
-.fill-height {
-  flex: 1;
-  min-height: 0;
-}
-
-.chart {
-  height: clamp(260px, 42vh, 460px);
-  width: 100%;
-  border-radius: 16px;
-  overflow: hidden;
-  background: linear-gradient(135deg,
-    rgba(255, 255, 255, 0.95) 0%,
-    rgba(248, 250, 252, 0.9) 100%
-  );
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.08),
-    0 4px 16px rgba(59, 130, 246, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  position: relative;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.chart:hover {
-  transform: translateY(-4px);
-  box-shadow:
-    0 16px 48px rgba(0, 0, 0, 0.12),
-    0 8px 24px rgba(59, 130, 246, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-}
-
-/* 深色主题下的图表样式 */
-:deep(.v-theme--dark) .chart {
-  background: linear-gradient(135deg,
-    rgba(44, 44, 44, 0.95) 0%,
-    rgba(30, 30, 30, 0.9) 100%
-  ) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.6),
-    0 4px 16px rgba(33, 150, 243, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-}
-
-:deep(.v-theme--dark) .chart:hover {
-  box-shadow:
-    0 16px 48px rgba(0, 0, 0, 0.8),
-    0 8px 24px rgba(33, 150, 243, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
-}
-
-.h-100 {
-  height: 100%;
-}
-
-.match-height {
-  display: flex;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-}
-
-.match-height .v-col {
-  display: flex;
-  animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  transform-origin: bottom;
-}
-
-.match-height .v-col:nth-child(1) {
-  animation-delay: 0.1s;
-  animation-name: fadeInUpScale;
-}
-.match-height .v-col:nth-child(2) {
-  animation-delay: 0.2s;
-  animation-name: fadeInUpScale;
-}
-.match-height .v-col:nth-child(3) {
-  animation-delay: 0.3s;
-  animation-name: fadeInUpScale;
-}
-.match-height .v-col:nth-child(4) {
-  animation-delay: 0.4s;
-  animation-name: fadeInUpScale;
-}
-
-/* 列表项美化 - 增强版 */
-:deep(.v-list-item) {
-  min-height: 60px;
-  border-radius: 16px;
-  margin: 8px 0;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  background: linear-gradient(135deg,
-    rgba(255, 255, 255, 0.8) 0%,
-    rgba(248, 250, 252, 0.7) 100%
-  );
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  position: relative;
-  overflow: hidden;
-}
-
-/* 深色主题下的列表项 */
-:deep(.v-theme--dark .v-list-item) {
-  background: linear-gradient(135deg,
-    rgba(44, 44, 44, 0.8) 0%,
-    rgba(30, 30, 30, 0.7) 100%
-  ) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-}
-
-:deep(.v-list-item)::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(59, 130, 246, 0.1) 50%,
-    transparent 100%
-  );
-  transition: left 0.6s ease;
-}
-
-:deep(.v-list-item:hover) {
-  transform: translateX(12px) translateY(-2px);
-  background: linear-gradient(135deg,
-    rgba(59, 130, 246, 0.12) 0%,
-    rgba(147, 197, 253, 0.08) 100%
-  );
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.12),
-    0 4px 12px rgba(59, 130, 246, 0.2);
-  border-color: rgba(59, 130, 246, 0.3);
-}
-
-:deep(.v-list-item:hover)::before {
-  left: 100%;
-}
-
-.quick-link-item {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-}
-
-.quick-link-item:hover {
-  background: linear-gradient(135deg,
-    rgba(var(--v-theme-primary), 0.12) 0%,
-    rgba(var(--v-theme-primary), 0.06) 100%
-  );
-}
-
-
-.quality-overview-wrapper {
-  width: 100%;
-  overflow: hidden;
-  padding: 24px;
-  background: linear-gradient(135deg,
-    rgba(255, 255, 255, 0.98) 0%,
-    rgba(248, 250, 252, 0.95) 50%,
-    rgba(236, 254, 255, 0.9) 100%
-  );
-  border-radius: 20px;
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  position: relative;
-}
-
-.quality-overview-wrapper::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg,
-    var(--primary-500) 0%,
-    var(--secondary-500) 50%,
-    var(--primary-500) 100%
-  );
-  border-radius: 20px 20px 0 0;
-}
-
-.quality-stats-row {
-  margin: 0;
-  width: 100%;
-}
-
-:deep(.unified-data-table) {
-  background: linear-gradient(135deg,
-    rgba(255, 255, 255, 0.98) 0%,
-    rgba(248, 250, 252, 0.95) 100%
-  );
-  backdrop-filter: blur(25px);
-  border-radius: 20px;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.08),
-    0 4px 16px rgba(59, 130, 246, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-:deep(.unified-data-table:not(.doh-table):not(.master-data-table):not(.quality-kpi-table):not(.production-kpi-table):not(.ehs-kpi-table):not(.logistics-kpi-table):hover) {
-  transform: translateY(-4px);
-  box-shadow:
-    0 16px 48px rgba(0, 0, 0, 0.12),
-    0 8px 24px rgba(59, 130, 246, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-}
-
-/* 只对非表格的统一数据表格应用光泽效果 */
-:deep(.unified-data-table:not(.table-container))::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(59, 130, 246, 0.03) 50%,
-    transparent 100%
-  );
-  transition: left 0.8s ease;
-  z-index: 0;
-}
-
-:deep(.unified-data-table:not(.table-container):hover)::before {
-  left: 100%;
-}
-
-:deep(.data-overview .v-card-text) {
-  padding: 0;
-  overflow: hidden;
-  position: relative;
-  z-index: 1;
-}
-
-/* 按钮组美化 - 增强版 */
-:deep(.v-btn-toggle) {
-  background: linear-gradient(135deg,
-    rgba(255, 255, 255, 0.9) 0%,
-    rgba(248, 250, 252, 0.8) 100%
-  );
-  backdrop-filter: blur(15px);
-  border-radius: 16px;
-  padding: 6px;
-  box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-:deep(.v-btn-toggle .v-btn) {
-  border-radius: 12px;
-  margin: 0 3px;
-  font-weight: 600;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-:deep(.v-btn-toggle .v-btn)::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.3) 50%,
-    transparent 100%
-  );
-  transition: left 0.6s ease;
-}
-
-:deep(.v-btn-toggle .v-btn:hover)::before {
-  left: 100%;
-}
-
-:deep(.v-btn-toggle .v-btn--active) {
-  background: linear-gradient(135deg,
-    var(--primary-500) 0%,
-    var(--primary-600) 50%,
-    var(--primary-700) 100%
-  );
-  color: white;
-  box-shadow:
-    0 4px 16px rgba(59, 130, 246, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  transform: scale(1.05);
-}
-
-/* 头部操作按钮美化 - 增强版 */
-:deep(.unified-page-header .v-btn) {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  font-weight: 600;
-  border-radius: 12px;
-  position: relative;
-  overflow: hidden;
-  backdrop-filter: blur(10px);
-}
-
-:deep(.unified-page-header .v-btn)::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.2) 50%,
-    transparent 100%
-  );
-  transition: left 0.6s ease;
-}
-
-:deep(.unified-page-header .v-btn:hover) {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.15),
-    0 4px 12px rgba(59, 130, 246, 0.2);
-}
-
-:deep(.unified-page-header .v-btn:hover)::before {
-  left: 100%;
-}
-
-/* 芯片美化 - 增强版 */
-:deep(.v-chip) {
-  font-weight: 600;
-  letter-spacing: 0.025em;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 12px;
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  position: relative;
-  overflow: hidden;
-}
-
-:deep(.v-chip)::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.3) 50%,
-    transparent 100%
-  );
-  transition: left 0.5s ease;
-}
-
-:deep(.v-chip:hover) {
-  transform: scale(1.08) translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-:deep(.v-chip:hover)::before {
-  left: 100%;
-}
-
-/* 统计卡片增强 - 增强版 */
-:deep(.unified-stats-card) {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 20px;
-  background: linear-gradient(135deg,
-    rgba(255, 255, 255, 0.98) 0%,
-    rgba(248, 250, 252, 0.95) 100%
-  );
-  backdrop-filter: blur(25px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  position: relative;
-  overflow: hidden;
-}
-
-:deep(.unified-stats-card)::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg,
-    var(--primary-500) 0%,
-    var(--secondary-500) 50%,
-    var(--primary-500) 100%
-  );
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-:deep(.unified-stats-card:hover) {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.15),
-    0 8px 24px rgba(59, 130, 246, 0.2);
-}
-
-:deep(.unified-stats-card:hover)::before {
-  opacity: 1;
-}
-
-/* 动画效果 - 增强版 */
+/* 动画定义 */
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+   from { opacity: 0; transform: translateY(30px); }
+   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes fadeInUpScale {
-  from {
-    opacity: 0;
-    transform: translateY(30px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+   from { opacity: 0; transform: translateY(30px) scale(0.95); }
+   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+   0% { transform: translateX(-100%); }
+   100% { transform: translateX(100%); }
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
+/* 工具类 */
+.fill-height { flex: 1; min-height: 0; }
+.h-100 { height: 100%; }
+
+/* 玻璃态容器 */
+.glass-card {
+   background: var(--primary-gradient);
+   backdrop-filter: blur(20px);
+   border: 1px solid var(--glass-border);
+   border-radius: var(--border-radius);
+   transition: var(--transition);
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+.glass-card:hover {
+   transform: translateY(-4px);
+   box-shadow: var(--primary-shadow-hover), inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
-/* 新增元素样式 */
-.dashboard-template {
-  position: relative;
+/* 图表样式 */
+.chart {
+   height: clamp(260px, 42vh, 460px);
+   width: 100%;
+   border-radius: var(--border-radius);
+   overflow: hidden;
+   @extend .glass-card;
+   box-shadow: var(--primary-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+   position: relative;
 }
 
-.status-chip {
-  animation: pulse 2s ease-in-out infinite;
-  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+/* 统计卡片布局 */
+.match-height {
+   display: flex;
+   flex-wrap: wrap;
+   margin-bottom: 12px;
 }
+
+.match-height .v-col {
+   display: flex;
+   animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+   transform-origin: bottom;
+}
+
+.match-height .v-col:nth-child(1) { animation-delay: 0.1s; animation-name: fadeInUpScale; }
+.match-height .v-col:nth-child(2) { animation-delay: 0.2s; animation-name: fadeInUpScale; }
+.match-height .v-col:nth-child(3) { animation-delay: 0.3s; animation-name: fadeInUpScale; }
+.match-height .v-col:nth-child(4) { animation-delay: 0.4s; animation-name: fadeInUpScale; }
+
+/* 列表项样式 */
+:deep(.v-list-item) {
+   min-height: 60px;
+   border-radius: var(--border-radius);
+   margin: 8px 0;
+   transition: var(--transition);
+   background: var(--primary-gradient);
+   backdrop-filter: blur(20px);
+   border: 1px solid var(--glass-border);
+   position: relative;
+   overflow: hidden;
+}
+
+:deep(.v-list-item)::before {
+   content: '';
+   position: absolute;
+   top: 0;
+   left: -100%;
+   width: 100%;
+   height: 100%;
+   background: var(--shimmer-bg);
+   transition: left 0.6s ease;
+}
+
+:deep(.v-list-item:hover) {
+   transform: translateX(12px) translateY(-2px);
+   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(59, 130, 246, 0.2);
+   border-color: rgba(59, 130, 246, 0.3);
+}
+
+:deep(.v-list-item:hover)::before {
+   left: 100%;
+}
+
+/* 简化的工具类 */
+.quick-link-item {
+   transition: var(--transition);
+   position: relative;
+}
+
+.quick-link-item:hover {
+   background: linear-gradient(135deg, rgba(var(--v-theme-primary), 0.12) 0%, rgba(var(--v-theme-primary), 0.06) 100%);
+}
+
+/* 质量总览容器 */
+.quality-overview-wrapper {
+   width: 100%;
+   padding: 24px;
+   @extend .glass-card;
+   box-shadow: var(--primary-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+   position: relative;
+}
+
+.quality-overview-wrapper::before {
+   content: '';
+   position: absolute;
+   top: 0;
+   left: 0;
+   right: 0;
+   height: 2px;
+   background: linear-gradient(90deg, var(--primary-500, #3b82f6) 0%, var(--secondary-500, #6366f1) 50%, var(--primary-500, #3b82f6) 100%);
+   border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.quality-stats-row {
+   margin: 0;
+   width: 100%;
+}
+
+/* 数据表格样式 */
+:deep(.unified-data-table) {
+   @extend .glass-card;
+   box-shadow: var(--primary-shadow), 0 4px 16px rgba(59, 130, 246, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+   transition: var(--transition);
+   position: relative;
+   overflow: hidden;
+}
+
+:deep(.unified-data-table:not(.doh-table):not(.master-data-table):not(.quality-kpi-table):not(.production-kpi-table):not(.ehs-kpi-table):not(.logistics-kpi-table):hover) {
+   transform: translateY(-4px);
+   box-shadow: var(--primary-shadow-hover), 0 8px 24px rgba(59, 130, 246, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* 按钮组样式 */
+:deep(.v-btn-toggle) {
+   @extend .glass-card;
+   padding: 6px;
+   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+:deep(.v-btn-toggle .v-btn) {
+   border-radius: 12px;
+   margin: 0 3px;
+   font-weight: 600;
+   transition: var(--transition);
+   position: relative;
+   overflow: hidden;
+}
+
+:deep(.v-btn-toggle .v-btn--active) {
+   background: linear-gradient(135deg, var(--primary-500, #3b82f6) 0%, var(--primary-600, #2563eb) 50%, var(--primary-700, #1d4ed8) 100%);
+   color: white;
+   box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+   transform: scale(1.05);
+}
+
+/* 页面头部按钮 */
+:deep(.unified-page-header .v-btn) {
+   transition: var(--transition);
+   font-weight: 600;
+   border-radius: 12px;
+   position: relative;
+   overflow: hidden;
+   backdrop-filter: blur(10px);
+}
+
+:deep(.unified-page-header .v-btn:hover) {
+   transform: translateY(-3px) scale(1.02);
+   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+/* 芯片样式 */
+:deep(.v-chip) {
+   font-weight: 600;
+   letter-spacing: 0.025em;
+   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+   border-radius: 12px;
+   backdrop-filter: blur(15px);
+   border: 1px solid var(--glass-border);
+   position: relative;
+   overflow: hidden;
+}
+
+:deep(.v-chip:hover) {
+   transform: scale(1.08) translateY(-1px);
+   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 统计卡片 */
+:deep(.unified-stats-card) {
+   transition: var(--transition);
+   @extend .glass-card;
+   position: relative;
+   overflow: hidden;
+}
+
+:deep(.unified-stats-card)::before {
+   content: '';
+   position: absolute;
+   top: 0;
+   left: 0;
+   right: 0;
+   height: 3px;
+   background: linear-gradient(90deg, var(--primary-500, #3b82f6) 0%, var(--secondary-500, #6366f1) 50%, var(--primary-500, #3b82f6) 100%);
+   opacity: 0;
+   transition: opacity 0.3s ease;
+}
+
+:deep(.unified-stats-card:hover) {
+   transform: translateY(-8px) scale(1.02);
+   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 8px 24px rgba(59, 130, 246, 0.2);
+}
+
+:deep(.unified-stats-card:hover)::before {
+   opacity: 1;
+}
+
+/* 深色主题适配 */
+:deep(.v-theme--dark) {
+   --primary-gradient: var(--dark-gradient);
+   --primary-shadow: var(--dark-shadow);
+}
+
+/* 自定义元素样式 */
+.dashboard-template { position: relative; }
 
 .refresh-btn {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border-width: 2px;
+   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+   border-width: 2px;
 }
 
 .refresh-btn:hover {
-  transform: rotate(180deg) scale(1.05);
-  border-color: var(--primary-600);
-  background: rgba(var(--v-theme-primary), 0.08);
+   transform: rotate(180deg) scale(1.05);
+   border-color: var(--primary-600, #2563eb);
+   background: rgba(var(--v-theme-primary), 0.08);
 }
 
 .today-btn {
-  background: linear-gradient(135deg,
-    var(--primary-500) 0%,
-    var(--primary-600) 50%,
-    var(--primary-700) 100%
-  );
-  box-shadow:
-    0 4px 16px rgba(59, 130, 246, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+   background: linear-gradient(135deg, var(--primary-500, #3b82f6) 0%, var(--primary-600, #2563eb) 50%, var(--primary-700, #1d4ed8) 100%);
+   box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+   transition: var(--transition);
 }
 
 .today-btn:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow:
-    0 8px 24px rgba(59, 130, 246, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+   transform: translateY(-2px) scale(1.02);
+   box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
+/* 响应式设计 */
 @media (max-width: 1200px) {
-  .match-height {
-    gap: 12px;
-  }
-
-  .quality-overview-wrapper {
-    padding: 20px;
-  }
-
-  .quality-stats-row {
-    gap: 16px;
-  }
+   .match-height { gap: 12px; }
+   .quality-overview-wrapper { padding: 20px; }
+   .quality-stats-row { gap: 16px; }
 }
 
 @media (max-width: 960px) {
-  :deep(.unified-page-content)::before {
-    animation-duration: 30s;
-  }
+   .chart {
+     height: clamp(240px, 36vh, 380px);
+     border-radius: var(--border-radius);
+   }
 
-  .chart {
-    height: clamp(240px, 36vh, 380px);
-    border-radius: 16px;
-  }
+   .quality-overview-wrapper {
+     padding: 18px;
+     border-radius: var(--border-radius);
+   }
 
-  .quality-overview-wrapper {
-    padding: 18px;
-    border-radius: 16px;
-  }
+   :deep(.unified-data-table, .unified-stats-card) {
+     border-radius: var(--border-radius);
+   }
 
-  :deep(.unified-data-table) {
-    border-radius: 16px;
-  }
-
-  :deep(.unified-stats-card) {
-    border-radius: 16px;
-  }
-
-  .match-height .v-col {
-    animation-duration: 0.6s;
-  }
+   .match-height .v-col { animation-duration: 0.6s; }
 }
 
 @media (max-width: 768px) {
-  .match-height {
-    gap: 8px;
-    margin-bottom: 24px;
-  }
+   .match-height {
+     gap: 8px;
+     margin-bottom: 24px;
+   }
 
-  .quality-overview-wrapper {
-    padding: 16px;
-  }
+   .quality-overview-wrapper { padding: 16px; }
+   .quality-stats-row { gap: 12px; }
 
-  .quality-stats-row {
-    gap: 12px;
-  }
-
-  :deep(.v-list-item) {
-    min-height: 52px;
-    border-radius: 12px;
-  }
+   :deep(.v-list-item) {
+     min-height: 52px;
+     border-radius: 12px;
+   }
 }
 
 @media (max-width: 600px) {
-  :deep(.unified-page-content) {
-    background: linear-gradient(135deg,
-      rgba(59, 130, 246, 0.02) 0%,
-      rgba(255, 255, 255, 0.98) 50%,
-      rgba(248, 250, 252, 0.95) 100%
-    );
-  }
+   .chart {
+     height: clamp(220px, 32vh, 320px);
+     border-radius: 12px;
+   }
 
-  .chart {
-    height: clamp(220px, 32vh, 320px);
-    border-radius: 12px;
-  }
+   .quality-overview-wrapper {
+     padding: 14px;
+     border-radius: 12px;
+   }
 
-  .quality-overview-wrapper {
-    padding: 14px;
-    border-radius: 12px;
-  }
+   :deep(.v-btn-toggle) {
+     margin-top: 8px;
+     border-radius: 12px;
+     padding: 4px;
+   }
 
-  :deep(.v-btn-toggle) {
-    margin-top: 8px;
-    border-radius: 12px;
-    padding: 4px;
-  }
+   :deep(.unified-data-table, .unified-stats-card) {
+     border-radius: 12px;
+   }
 
-  :deep(.unified-data-table) {
-    border-radius: 12px;
-  }
+   :deep(.v-list-item) {
+     border-radius: 10px;
+     min-height: 48px;
+   }
 
-  :deep(.unified-stats-card) {
-    border-radius: 12px;
-  }
+   .match-height .v-col { animation-duration: 0.5s; }
 
-  :deep(.v-list-item) {
-    border-radius: 10px;
-    min-height: 48px;
-  }
-
-  .match-height .v-col {
-    animation-duration: 0.5s;
-  }
-
-  :deep(.v-list-item:hover) {
-    transform: translateX(8px) translateY(-1px);
-  }
+   :deep(.v-list-item:hover) {
+     transform: translateX(8px) translateY(-1px);
+   }
 }
 
 @media (max-width: 480px) {
-  .chart {
-    height: clamp(200px, 28vh, 280px);
-    border-radius: 8px;
-  }
+   .chart {
+     height: clamp(200px, 28vh, 280px);
+     border-radius: 8px;
+   }
 
-  .quality-overview-wrapper {
-    padding: 12px;
-    border-radius: 8px;
-  }
+   .quality-overview-wrapper {
+     padding: 12px;
+     border-radius: 8px;
+   }
 
-  .quality-stats-row {
-    gap: 8px;
-  }
+   .quality-stats-row { gap: 8px; }
 
-  :deep(.unified-data-table) {
-    border-radius: 8px;
-  }
+   :deep(.unified-data-table, .unified-stats-card, .v-btn-toggle, .v-list-item) {
+     border-radius: 8px;
+   }
 
-  :deep(.unified-stats-card) {
-    border-radius: 8px;
-  }
-
-  :deep(.v-list-item) {
-    border-radius: 8px;
-    min-height: 44px;
-  }
-
-  :deep(.v-btn-toggle) {
-    border-radius: 8px;
-  }
-
-  .match-height {
-    gap: 6px;
-  }
+   :deep(.v-list-item) { min-height: 44px; }
+   .match-height { gap: 6px; }
 }
 </style>
 

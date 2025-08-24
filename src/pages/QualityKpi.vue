@@ -99,7 +99,7 @@
         :loading="loading"
         density="comfortable"
         class="quality-kpi-table kpi-data-table frozen-header-table"
-        hover
+        :hover="false"
         hide-default-footer=""
         :items-per-page="-1"
         :fixed-header="true"

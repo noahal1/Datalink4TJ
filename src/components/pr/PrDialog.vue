@@ -138,6 +138,20 @@
                     />
                   </v-col>
 
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model="localPr.purchase_order_number"
+                      label="请购单号"
+                      variant="outlined"
+                      density="comfortable"
+                      prepend-inner-icon="mdi-file-document-outline"
+                      placeholder="请输入请购单号（可选）"
+                      hint="外部系统或供应商的请购单号"
+                      persistent-hint
+                      clearable
+                    />
+                  </v-col>
+
                   <v-col cols="12">
                     <v-textarea
                       v-model="localPr.description"
@@ -375,6 +389,10 @@
                         <div class="text-caption text-grey">物料编码</div>
                         <div class="text-body-1">{{ localPr.material_code }}</div>
                       </v-col>
+                      <v-col cols="12" v-if="localPr.purchase_order_number">
+                        <div class="text-caption text-grey">请购单号</div>
+                        <div class="text-body-1">{{ localPr.purchase_order_number }}</div>
+                      </v-col>
                       <v-col cols="12" v-if="localPr.specification">
                         <div class="text-caption text-grey">规格说明</div>
                         <div class="text-body-1">{{ localPr.specification }}</div>
@@ -490,6 +508,21 @@
                   readonly
                   hint="状态变更为已批准时自动记录"
                   persistent-hint
+                />
+              </v-col>
+
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model="localPr.purchase_order_number"
+                  label="请购单号"
+                  variant="outlined"
+                  density="comfortable"
+                  prepend-inner-icon="mdi-file-document-outline"
+                  :readonly="!canEditBasicInfo"
+                  :placeholder="canEditBasicInfo ? '请输入请购单号（可选）' : '当前状态下不可编辑'"
+                  :hint="canEditBasicInfo ? '外部系统或供应商的请购单号' : '当前状态下不可编辑'"
+                  persistent-hint
+                  :clearable="canEditBasicInfo"
                 />
               </v-col>
 
@@ -895,6 +928,7 @@ const previewHeaders = computed(() => [
   { title: '物品名称', key: 'material_name', sortable: false },
   { title: '数量', key: 'quantity', sortable: false },
   { title: '品牌', key: 'brand', sortable: false },
+  { title: '请购单号', key: 'purchase_order_number', sortable: false },
   { title: '规格', key: 'specification', sortable: false },
   { title: '需求日期', key: 'required_date', sortable: false }
 ])
@@ -1216,8 +1250,10 @@ const handleExcelImport = async () => {
     }
     console.log('overwriteExisting.value:', overwriteExisting.value)
 
-    // 使用统一的API系统，确保正确的认证和Content-Type
-    const response = await api.post('/pr/excel/import', formData)
+    // 使用直接的axios调用，确保正确的multipart/form-data格式
+    const response = await axios.post('http://10.227.122.217:8000/api/v1/pr/excel/import', formData, {
+      headers: getAuthHeaders()
+    })
 
     console.log('Import response:', response.data)
     console.log('Response success:', response.data.success)

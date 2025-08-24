@@ -93,6 +93,15 @@
                   <div class="info-value">{{ pr.specification || '-' }}</div>
                 </div>
               </v-col>
+              <v-col v-if="pr.purchase_order_number" cols="12" md="6">
+                <div class="info-item">
+                  <div class="info-label">
+                    <v-icon size="small" class="mr-1">mdi-file-document-outline</v-icon>
+                    请购单号
+                  </div>
+                  <div class="info-value">{{ pr.purchase_order_number }}</div>
+                </div>
+              </v-col>
               <v-col v-if="pr.description" cols="12">
                 <div class="info-item">
                   <div class="info-label">
