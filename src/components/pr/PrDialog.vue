@@ -886,6 +886,7 @@ const hasEditableFields = computed(() => {
   return canEditBasicInfo.value || canEditMaterialInfo.value || canEditDeliveryDate.value || canEditRemarks.value
 })
 
+// 步骤导航相关的计算属性
 // 检查是否可以进入下一步
 const canProceedToNextStep = computed(() => {
   switch (currentStep.value) {
@@ -912,16 +913,6 @@ const canProceedToNextStep = computed(() => {
   }
 })
 
-// 获取认证头部
-const getAuthHeaders = () => {
-  const headers = {
-    'Content-Type': 'multipart/form-data'
-  }
-  if (userStore.token) {
-    headers['Authorization'] = `Bearer ${userStore.token.trim()}`
-  }
-  return headers
-}
 
 // 预览表格表头
 const previewHeaders = computed(() => [
@@ -956,7 +947,6 @@ const nextStep = () => {
 const previousStep = () => {
   if (currentStep.value > 1) {
     if (createMode.value === 'excel' && currentStep.value === 3) {
-      // Excel导入模式：从第三步直接回到第一步
       currentStep.value = 1
     } else {
       currentStep.value--
@@ -1039,6 +1029,10 @@ const handleFileChange = async () => {
     validatingFile.value = true
     const formData = new FormData()
     formData.append('file', file)
+    
+    console.log('FormData调试信息:')
+    console.log('formData是FormData实例:', formData instanceof FormData)
+    console.log('formData构造函数:', formData.constructor.name)
     for (let [key, value] of formData.entries()) {
       console.log(`FormData entry: ${key} =`, value)
     }
@@ -1049,9 +1043,7 @@ const handleFileChange = async () => {
     } else if (file.size < 100) {
       console.warn('文件非常小，可能不是有效的Excel文件')
     }
-    const response = await axios.post('http://10.227.122.217:8000/api/v1/pr/excel/validate', formData, {
-      headers: getAuthHeaders()
-    })
+    const response = await api.post('/pr/excel/validate', formData)
 
     validationResult.value = response.data
 
@@ -1244,16 +1236,16 @@ const handleExcelImport = async () => {
     formData.append('file', file)
     formData.append('overwrite_existing', overwriteExisting.value.toString())
 
-    console.log('Import FormData:')
+    console.log('Import FormData调试信息:')
+    console.log('formData是FormData实例:', formData instanceof FormData)
+    console.log('formData构造函数:', formData.constructor.name)
     for (let [key, value] of formData.entries()) {
       console.log(`${key}:`, value)
     }
     console.log('overwriteExisting.value:', overwriteExisting.value)
 
-    // 使用直接的axios调用，确保正确的multipart/form-data格式
-    const response = await axios.post('http://10.227.122.217:8000/api/v1/pr/excel/import', formData, {
-      headers: getAuthHeaders()
-    })
+    // 使用 api 工具而不是直接使用 axios，确保正确的 multipart/form-data 格式
+    const response = await api.post('/pr/excel/import', formData)
 
     console.log('Import response:', response.data)
     console.log('Response success:', response.data.success)

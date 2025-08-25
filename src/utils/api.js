@@ -44,9 +44,7 @@ const CACHE_PREFIX = 'api_cache_';
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000,
-  headers: {
-    'Content-Type': 'application/json',
-  }
+  // 不设置默认的Content-Type，让请求拦截器根据数据类型动态设置
 })
 
 /**
@@ -110,9 +108,10 @@ api.interceptors.request.use(
       // 不阻止请求，但记录错误
     }
 
-    // 确保Content-Type设置正确
+    // 设置默认Content-Type（FormData请求会绕过拦截器）
     if (!config.headers['Content-Type']) {
       config.headers['Content-Type'] = 'application/json';
+      debug('设置默认Content-Type为application/json')
     }
     
     // 检查是否是公开API
@@ -362,27 +361,37 @@ export function get(endpoint, options = {}) {
  * @returns {Promise} - 请求Promise
  */
 export function post(endpoint, data = {}, config = {}) {
-  // 自动处理响应式对象，避免循环引用
+  // 如果是FormData，完全绕过拦截器直接处理
+  if (data instanceof FormData) {
+    debug('FormData终极处理：直接使用axios，绕过拦截器')
+    const userStore = useUserStore()
+    
+    return axios.post(`${API_BASE_URL}${endpoint}`, data, {
+      timeout: 15000,
+      headers: {
+        // 只设置认证头，不设置Content-Type让浏览器自动处理
+        ...(userStore.token ? { 'Authorization': `Bearer ${userStore.token}` } : {}),
+        ...config.headers
+      },
+      ...config
+    })
+  }
+
+  // 非FormData的正常处理流程
   const processedData = prepareApiData(data)
+
+  debug('POST请求调试信息:', {
+    endpoint,
+    dataType: typeof data,
+    isFormData: data instanceof FormData,
+    processedDataType: typeof processedData,
+    isProcessedFormData: processedData instanceof FormData
+  })
 
   // 在开发环境中检查循环引用
   if (import.meta.env.DEV && hasCircularReference(data)) {
     console.log('原始数据:', data)
     console.log('处理后数据:', processedData)
-  }
-
-  // 如果是FormData，需要特殊处理headers
-  if (processedData instanceof FormData) {
-    // 删除Content-Type，让浏览器自动设置（包括boundary）
-    const formDataConfig = {
-      ...config,
-      headers: {
-        ...config.headers
-      }
-    }
-    // 删除Content-Type，让浏览器自动设置
-    delete formDataConfig.headers['Content-Type']
-    return api.post(endpoint, processedData, formDataConfig)
   }
 
   return api.post(endpoint, processedData, config)
