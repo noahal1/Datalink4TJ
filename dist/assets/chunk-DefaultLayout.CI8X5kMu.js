@@ -1,0 +1,1 @@
+import{y as a,G as e}from"./chunk-vue-core.CxEQweee.js";import{a1 as s,ae as t,ac as r,ad as u,H as o}from"./chunk-vendors.D0_dqILu.js";import"./chunk-chart-core.HkgdsJMe.js";const c={__name:"DefaultLayout",setup:c=>(c,n)=>{const f=s("router-view");return r(),t(e,null,{default:u((()=>[o(a,{fluid:""},{default:u((()=>[o(f)])),_:1})])),_:1})}};export{c as default};

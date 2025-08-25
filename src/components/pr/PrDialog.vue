@@ -1243,8 +1243,6 @@ const handleExcelImport = async () => {
       console.log(`${key}:`, value)
     }
     console.log('overwriteExisting.value:', overwriteExisting.value)
-
-    // 使用 api 工具而不是直接使用 axios，确保正确的 multipart/form-data 格式
     const response = await api.post('/pr/excel/import', formData)
 
     console.log('Import response:', response.data)
