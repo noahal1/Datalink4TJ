@@ -65,9 +65,7 @@
           ref="formRef"
           v-model="valid"
         >
-          <!-- 新建模式：步骤式表单 -->
           <div v-if="isNew">
-            <!-- 第一步：创建方式选择 -->
             <div v-show="currentStep === 1">
               <div class="text-h6 mb-4 d-flex align-center">
                 <v-icon icon="mdi-information" class="mr-2" color="primary" />
@@ -117,7 +115,7 @@
                 </v-col>
               </v-row>
 
-              <!-- 手动创建模式的基本信息 -->
+              <!-- 手动的基本信息 -->
               <div v-if="createMode === 'manual'">
                 <div class="text-subtitle-1 mb-3 d-flex align-center">
                   <v-icon icon="mdi-information-outline" class="mr-2" color="primary" />
@@ -175,7 +173,6 @@
                   Excel文件导入
                 </div>
 
-                <!-- 下载模板按钮 -->
                 <v-row class="mb-4">
                   <v-col cols="12">
                     <v-alert
@@ -209,7 +206,6 @@
                   </v-col>
                 </v-row>
 
-                <!-- 文件上传区域 -->
                 <v-row>
                   <v-col cols="12">
                     <v-file-input
@@ -458,14 +454,12 @@
                     导入选项
                   </v-card-title>
                   <v-card-text class="pa-4">
-                    <v-checkbox
-                      v-model="overwriteExisting"
-                      label="覆盖已存在的相同物品申请"
-                      density="compact"
-                      color="warning"
-                    />
+                    <div class="text-body-2">
+                      <v-icon icon="mdi-information" class="mr-2" color="primary" />
+                      重复数据处理：将根据请购单号检查重复项，已存在的请购单号将被跳过
+                    </div>
                     <div class="text-caption text-grey mt-1">
-                      如果勾选，将更新已存在的相同物品名称的待提交状态PR；否则跳过重复项
+                      确保请购单号唯一以避免重复导入
                     </div>
                   </v-card-text>
                 </v-card>
@@ -748,19 +742,15 @@
 
         <div v-if="importSuccessDetails" class="text-body-1">
           <v-row class="text-center">
-            <v-col cols="3">
+            <v-col cols="4">
               <div class="text-h4 text-success">{{ importSuccessDetails.imported_rows || 0 }}</div>
               <div class="text-caption">新增</div>
             </v-col>
-            <v-col cols="3">
-              <div class="text-h4 text-info">{{ importSuccessDetails.updated_rows || 0 }}</div>
-              <div class="text-caption">更新</div>
-            </v-col>
-            <v-col cols="3">
+            <v-col cols="4">
               <div class="text-h4 text-warning">{{ importSuccessDetails.skipped_rows || 0 }}</div>
               <div class="text-caption">跳过</div>
             </v-col>
-            <v-col cols="3">
+            <v-col cols="4">
               <div class="text-h4 text-error">{{ importSuccessDetails.error_rows || 0 }}</div>
               <div class="text-caption">错误</div>
             </v-col>
@@ -830,7 +820,6 @@ const currentStep = ref(1)
 const createMode = ref('manual') // 'manual' | 'excel'
 const excelFile = ref(null)
 const validationResult = ref(null)
-const overwriteExisting = ref(false)
 const downloadingTemplate = ref(false)
 const validatingFile = ref(false)
 const importingData = ref(false)
@@ -1185,7 +1174,6 @@ const getStatusColor = (status) => {
   }
 }
 
-// 获取编辑权限提示
 const getEditPermissionHint = (statusName) => {
   switch (statusName) {
     case '待提交':
@@ -1234,15 +1222,10 @@ const handleExcelImport = async () => {
     const file = Array.isArray(excelFile.value) ? excelFile.value[0] : excelFile.value
     const formData = new FormData()
     formData.append('file', file)
-    formData.append('overwrite_existing', overwriteExisting.value.toString())
 
-    console.log('Import FormData调试信息:')
-    console.log('formData是FormData实例:', formData instanceof FormData)
-    console.log('formData构造函数:', formData.constructor.name)
     for (let [key, value] of formData.entries()) {
       console.log(`${key}:`, value)
     }
-    console.log('overwriteExisting.value:', overwriteExisting.value)
     const response = await api.post('/pr/excel/import', formData)
 
     console.log('Import response:', response.data)
@@ -1253,11 +1236,9 @@ const handleExcelImport = async () => {
       const { Message } = await import('@/utils/notification')
 
       if (response.data.success) {
-        // 显示详细的成功信息
         const successMsg = `导入成功！${response.data.message || ''}`
         const details = []
         if (response.data.imported_rows) details.push(`新增: ${response.data.imported_rows}条`)
-        if (response.data.updated_rows) details.push(`更新: ${response.data.updated_rows}条`)
         if (response.data.skipped_rows) details.push(`跳过: ${response.data.skipped_rows}条`)
 
         const fullMessage = details.length > 0 ? `${successMsg} (${details.join(', ')})` : successMsg
@@ -1353,11 +1334,9 @@ const handleExcelImport = async () => {
 const close = () => {
   // 重置步骤
   currentStep.value = 1
-  // 重置Excel导入相关状态
   createMode.value = 'manual'
   excelFile.value = null
   validationResult.value = null
-  overwriteExisting.value = false
   // 重置成功对话框状态
   importSuccessDialog.value = false
   importSuccessMessage.value = ''

@@ -204,7 +204,6 @@ export default defineConfig(({ mode }) => {
           return false;
         }
       },
-      // 开启source map（仅开发环境）
       sourcemap: mode === 'development',
       // 最小化混淆 - 增强配置
       minify: 'terser',
@@ -252,7 +251,6 @@ export default defineConfig(({ mode }) => {
       emptyOutDir: true,
     },
     
-    // 性能优化 - 依赖预构建
     optimizeDeps: {
       include: [
         'vue',
