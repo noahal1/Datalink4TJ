@@ -698,8 +698,28 @@ const closeDetailDialog = () => {
 
 const handleStatusChange = async (statusData) => {
   try {
-    await api.put(`/pr/${selectedPr.value.id}/status`, statusData)
-    Message.success('状态更新成功')
+    // 使用新的批量API更新单个PR状态
+    const params = {
+      pr_ids: [selectedPr.value.id],
+      status_id: statusData.status_id,
+      comments: statusData.comments || '详情对话框状态更新'
+    }
+
+    const response = await api.put('/pr/batch/status', {}, { params })
+
+    // 显示结果
+    const result = response.data
+    if (result.success) {
+      Message.success('状态更新成功')
+    } else {
+      Message.error(result.message || '状态更新失败')
+    }
+
+    // 如果有错误详情，记录到控制台
+    if (result.errors && result.errors.length > 0) {
+      console.error('状态更新详情:', result.errors)
+    }
+
     closeDetailDialog()
     loadPrList()
   } catch (error) {
@@ -784,12 +804,33 @@ const canMarkDelivered = (item) => {
   return item.status?.name === '已下单' || item.status?.name === '采购中'
 }
 
-// 快速状态变更操作
+// 快速状态变更操作 - 使用批量API
 const changeStatus = async (item, newStatus) => {
   try {
     console.log('正在更新状态:', { itemId: item.id, newStatusId: newStatus.id, newStatusName: newStatus.name })
-    await api.put(`/pr/${item.id}/status`, { status_id: newStatus.id })
-    Message.success(`状态已更新为：${newStatus.name}`)
+
+    // 使用新的批量API更新单个PR状态
+    const params = {
+      pr_ids: [item.id],
+      status_id: newStatus.id,
+      comments: '单个PR状态更新'
+    }
+
+    const response = await api.put('/pr/batch/status', {}, { params })
+
+    // 显示结果
+    const result = response.data
+    if (result.success) {
+      Message.success(`状态已更新为：${newStatus.name}`)
+    } else {
+      Message.error(result.message || '状态更新失败')
+    }
+
+    // 如果有错误详情，记录到控制台
+    if (result.errors && result.errors.length > 0) {
+      console.error('状态更新详情:', result.errors)
+    }
+
     loadPrList()
   } catch (error) {
     console.error('状态更新失败:', error)
