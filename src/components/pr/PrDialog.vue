@@ -73,9 +73,9 @@
               </div>
 
               <!-- 创建方式选择 -->
-              <v-row class="mb-4">
+              <v-row class="mb-2">
                 <v-col cols="12">
-                  <v-card variant="outlined" class="pa-4">
+                  <v-card variant="outlined">
                     <v-card-title class="text-subtitle-1 pa-0 mb-3">
                       请选择创建方式
                     </v-card-title>

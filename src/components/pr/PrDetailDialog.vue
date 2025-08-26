@@ -17,14 +17,6 @@
           >
             {{ pr.status?.name }}
           </v-chip>
-          <v-chip
-            color="info"
-            size="small"
-            variant="outlined"
-            class="ml-2"
-          >
-            {{ pr.pr_number }}
-          </v-chip>
         </div>
         <v-btn
           icon="mdi-close"

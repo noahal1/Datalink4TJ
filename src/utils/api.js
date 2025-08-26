@@ -44,7 +44,6 @@ const CACHE_PREFIX = 'api_cache_';
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000,
-  // 不设置默认的Content-Type，让请求拦截器根据数据类型动态设置
 })
 
 /**
@@ -335,9 +334,18 @@ export function get(endpoint, options = {}) {
   // 添加默认的参数序列化器，确保参数不会被嵌套
   const defaultOptions = {
     paramsSerializer: params => {
-      // 使用URLSearchParams确保参数格式正确
+      // 自定义参数序列化器，正确处理数组参数
+      const serializeParam = (key, value) => {
+        if (Array.isArray(value)) {
+          // 对于数组参数，展开为多个重复的参数
+          return value.map(item => `${encodeURIComponent(key)}=${encodeURIComponent(item)}`).join('&');
+        } else {
+          return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+        }
+      };
+
       return Object.entries(params)
-        .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+        .map(([key, value]) => serializeParam(key, value))
         .join('&');
     }
   };
@@ -401,9 +409,32 @@ export function post(endpoint, data = {}, config = {}) {
  * PUT请求
  * @param {string} endpoint - API端点
  * @param {object} data - 请求体数据
+ * @param {object} config - 请求配置（包含params等）
  * @returns {Promise} - 请求Promise
  */
-export function put(endpoint, data = {}) {
+export function put(endpoint, data = {}, config = {}) {
+  // 添加默认的参数序列化器，确保参数不会被嵌套
+  const defaultOptions = {
+    paramsSerializer: params => {
+      // 自定义参数序列化器，正确处理数组参数
+      const serializeParam = (key, value) => {
+        if (Array.isArray(value)) {
+          // 对于数组参数，展开为多个重复的参数
+          return value.map(item => `${encodeURIComponent(key)}=${encodeURIComponent(item)}`).join('&');
+        } else {
+          return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+        }
+      };
+
+      return Object.entries(params)
+        .map(([key, value]) => serializeParam(key, value))
+        .join('&');
+    }
+  };
+
+  // 合并用户提供的选项和默认选项
+  const mergedConfig = { ...defaultOptions, ...config };
+
   // 自动处理响应式对象，避免循环引用
   const processedData = prepareApiData(data)
 
@@ -413,7 +444,13 @@ export function put(endpoint, data = {}) {
     console.log('处理后数据:', processedData)
   }
 
-  return api.put(endpoint, processedData)
+  // 记录实际发送的请求参数
+  if (isDebugMode && config.params) {
+    debug('PUT请求参数:', config.params);
+    debug('序列化后的查询字符串:', mergedConfig.paramsSerializer(config.params));
+  }
+
+  return api.put(endpoint, processedData, mergedConfig)
 }
 
 /**

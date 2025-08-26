@@ -104,7 +104,52 @@
         </v-chip>
       </v-card-title>
       <v-card-text>
+        <!-- 批量操作工具栏 -->
+        <v-row v-if="selectedItems.length > 0" class="mb-4">
+          <v-col cols="12">
+            <v-card
+              color="primary"
+              variant="tonal"
+              class="pa-3"
+            >
+              <v-row align="center">
+                <v-col cols="12" md="6">
+                  <div class="d-flex align-center">
+                    <v-icon class="mr-2">mdi-checkbox-multiple-marked</v-icon>
+                    <span class="font-weight-medium">
+                      已选择 {{ selectedItems.length }} 项
+                    </span>
+                  </div>
+                </v-col>
+                <v-col cols="12" md="6">
+                  <div class="d-flex justify-end">
+                    <v-btn
+                      variant="outlined"
+                      color="primary"
+                      prepend-icon="mdi-playlist-check"
+                      class="mr-2"
+                      @click="openBatchStatusDialog"
+                    >
+                      批量更改状态
+                    </v-btn>
+                    <v-btn
+                      variant="outlined"
+                      color="grey"
+                      prepend-icon="mdi-close"
+                      @click="clearSelection"
+                    >
+                      取消选择
+                    </v-btn>
+                  </div>
+                </v-col>
+              </v-row>
+            </v-card>
+          </v-col>
+        </v-row>
+
         <v-data-table-server
+          v-model="selectedItems"
+          show-select
           v-model:items-per-page="pagination.page_size"
           v-model:page="pagination.page"
           :headers="headers"
@@ -117,18 +162,6 @@
           class="unified-table"
           @update:options="handleTableUpdate"
         >
-          <!-- PR编号 -->
-          <template #item.pr_number="{ item }">
-            <v-chip
-              color="primary"
-              variant="outlined"
-              size="small"
-              class="cursor-pointer"
-              @click="viewPrDetail(item)"
-            >
-              {{ item.pr_number }}
-            </v-chip>
-          </template>
 
           <!-- 状态 -->
           <template #item.status="{ item }">
@@ -298,6 +331,78 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- 批量状态更改对话框 -->
+    <v-dialog
+      v-model="batchStatusDialog"
+      max-width="500"
+      persistent
+    >
+      <v-card>
+        <v-card-title class="d-flex align-center">
+          <v-icon icon="mdi-playlist-check" class="mr-2" />
+          批量更改状态
+        </v-card-title>
+        <v-card-text class="pa-6">
+          <div class="mb-4">
+            <div class="text-body-1 mb-2">
+              已选择 <strong>{{ selectedItems.length }}</strong> 项进行批量状态更改
+            </div>
+          </div>
+
+          <v-select
+            v-model="batchNewStatus"
+            :items="statusOptions"
+            item-title="name"
+            item-value="id"
+            label="选择新状态"
+            variant="outlined"
+            density="comfortable"
+            prepend-inner-icon="mdi-flag"
+            :rules="[rules.required]"
+          >
+            <template #item="{ props, item }">
+              <v-list-item v-bind="props">
+                <template #prepend>
+                  <v-icon :color="getStatusColor(item)" size="small">
+                    {{ getStatusIcon(item) }}
+                  </v-icon>
+                </template>
+              </v-list-item>
+            </template>
+          </v-select>
+
+          <v-textarea
+            v-model="batchComment"
+            label="备注（可选）"
+            rows="3"
+            variant="outlined"
+            density="comfortable"
+            prepend-inner-icon="mdi-note-text"
+            placeholder="请填写状态变更备注..."
+            class="mt-4"
+          />
+        </v-card-text>
+        <v-card-actions class="pa-6 pt-0">
+          <v-spacer />
+          <v-btn
+            variant="outlined"
+            @click="closeBatchStatusDialog"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="primary"
+            :loading="batchUpdating"
+            :disabled="!batchNewStatus"
+            @click="confirmBatchStatusChange"
+          >
+            <v-icon icon="mdi-check" class="mr-1" />
+            确认更改
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </unified-page-template>
 </template>
 
@@ -319,6 +424,13 @@ const deleting = ref(false)
 const prDialog = ref(false)
 const detailDialog = ref(false)
 const deleteDialog = ref(false)
+
+// 批量操作相关
+const selectedItems = ref([])
+const batchStatusDialog = ref(false)
+const batchNewStatus = ref(null)
+const batchComment = ref('')
+const batchUpdating = ref(false)
 
 // 列表数据
 const prList = ref([])
@@ -367,23 +479,16 @@ const canEdit = computed(() => () => {
   return true
 })
 
+// 验证规则
+const rules = {
+  required: value => !!value || '此字段为必填项'
+}
+
 const canDelete = computed(() => (item) => {
   // 只有在"待提交"状态下才能删除
   const isDeletableStatus = ['待提交'].includes(item.status?.name)
   // 只能删除自己的PR (考虑数据类型转换)
   const isOwnPr = String(item.requester_id) === String(userStore.userId)
-
-  // 调试信息
-  console.log('删除权限检查:', {
-    prId: item.id,
-    statusName: item.status?.name,
-    isDeletableStatus,
-    requester_id: item.requester_id,
-    current_user_id: userStore.userId,
-    isOwnPr,
-    canDelete: isDeletableStatus && isOwnPr
-  })
-
   return isDeletableStatus && isOwnPr
 })
 
@@ -399,10 +504,6 @@ const loadBasicData = async () => {
     const requesterResponse = await api.get('/pr/requesters')
     requesterOptions.value = requesterResponse.data
     console.log('申请人选项加载成功:', requesterOptions.value)
-
-    // 加载类型选项 - 已删除
-    // const typeResponse = await api.get('/pr/types')
-    // typeOptions.value = typeResponse.data
 
   } catch (error) {
     console.error('加载基础数据失败:', error)
@@ -562,7 +663,7 @@ const savePr = async (prData) => {
     if (editedIndex.value === -1) {
       // 创建新PR
       const response = await api.post('/pr/', cleanData)
-      Message.success(`PR创建成功！编号：${response.data.pr_number || ''}`)
+      Message.success(`PR创建成功！${response.data.material_name || ''}`)
     } else {
       // 更新PR
       await api.put(`/pr/${editedPr.value.id}`, cleanData)
@@ -717,6 +818,73 @@ const markDelivered = async (item) => {
   }
 }
 
+// 批量操作方法
+const clearSelection = () => {
+  selectedItems.value = []
+}
+
+const openBatchStatusDialog = () => {
+  if (selectedItems.value.length === 0) {
+    Message.warning('请先选择要更改状态的记录')
+    return
+  }
+  batchStatusDialog.value = true
+}
+
+const closeBatchStatusDialog = () => {
+  batchStatusDialog.value = false
+  batchNewStatus.value = null
+  batchComment.value = ''
+}
+
+const confirmBatchStatusChange = async () => {
+  if (!batchNewStatus.value) {
+    Message.warning('请选择新状态')
+    return
+  }
+
+  if (selectedItems.value.length === 0) {
+    Message.warning('请先选择要更改状态的记录')
+    return
+  }
+
+  try {
+    batchUpdating.value = true
+
+    const params = {
+      pr_ids: selectedItems.value,
+      status_id: batchNewStatus.value,
+      comments: batchComment.value || '批量状态更新'
+    }
+
+    const response = await api.put('/pr/batch/status', {}, { params })
+
+    // 显示结果
+    const result = response.data
+    if (result.success) {
+      Message.success(result.message)
+    } else {
+      Message.error(result.message || '批量更新失败')
+    }
+
+    // 如果有错误详情，显示详细信息
+    if (result.errors && result.errors.length > 0) {
+      console.error('批量更新详情:', result.errors)
+    }
+
+    // 关闭对话框并刷新列表
+    closeBatchStatusDialog()
+    clearSelection()
+    loadPrList()
+
+  } catch (error) {
+    console.error('批量状态更新失败:', error)
+    Message.error('批量状态更新失败: ' + (error.response?.data?.detail || error.message))
+  } finally {
+    batchUpdating.value = false
+  }
+}
+
 // 搜索防抖
 let searchTimeout = null
 
@@ -728,6 +896,20 @@ watch(() => filters.search, () => {
     pagination.page = 1
     loadPrList()
   }, 500)
+})
+
+// 监听分页变化时清空选择
+watch(() => pagination.page, () => {
+  clearSelection()
+})
+
+watch(() => pagination.page_size, () => {
+  clearSelection()
+})
+
+// 监听筛选条件变化时清空选择
+watch(() => [filters.status_id, filters.requester_id], () => {
+  clearSelection()
 })
 
 // 组件挂载时加载数据
